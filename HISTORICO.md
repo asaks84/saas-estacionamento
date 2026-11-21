@@ -4,6 +4,13 @@ Alterações do ERP Local, da mais nova para a mais antiga. Cada alteração ent
 
 ---
 
+## 21/11/2026 — PDV: conserto do voltar que recarregava o app (splash)
+
+- O botão Voltar do celular estava recarregando o PDV (aparecia o splash) em vez de ser capturado dentro do app. Numa tela interna isso caía no Início e parecia funcionar; no Início, o recarregamento aparecia puro (splash). Causa: a âncora no histórico que segura o Voltar só era criada se ainda não existisse; quando o Android reabria o app reaproveitando o estado antigo (tela fixada, volta do segundo plano), vinha sem âncora e o Voltar saía do app.
+- A âncora passa a ser criada sempre na abertura, e é reposta também quando o app é reaberto a partir do cache do navegador (evento pageshow/bfcache). Agora o Voltar volta uma etapa e, no Início, não faz nada — sem splash.
+- Versão do cache do PDV subida (pdv-app-v4 → v5) para os aparelhos já instalados pegarem a correção.
+- Arquivos: resources/js/pdv/voltar.js, resources/js/pdv/offline/prontidao.js, public/pdv-sw.js.
+
 ## 21/11/2026 — PDV: formas de pagamento e tamanhos sempre atualizados na estadia
 
 - O PDV buscava a lista de formas de pagamento, tamanhos e convênios da estadia uma vez só, ao abrir o app. Forma desativada na gestão continuava aparecendo até recarregar a página. Agora busca de novo a cada entrada e saída de estadia. A lavagem e o caixa já buscavam ao abrir a tela, e o servidor já mandava só as formas ativas.

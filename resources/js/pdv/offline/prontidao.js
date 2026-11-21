@@ -51,7 +51,7 @@ export async function prontidao() {
  * antigo para sempre (o celular nunca via a versão nova). Com a versão no endereço, cada versão é um arquivo novo.
  * Mudou o pdv-sw.js? Suba a versão aqui (igual à constante CAIXA de lá).
  */
-export const SW_URL = '/pdv-sw.js?v=pdv-app-v4'
+export const SW_URL = '/pdv-sw.js?v=pdv-app-v5'
 
 export function registrarSw() {
     return navigator.serviceWorker.register(SW_URL, { scope: '/pdv', updateViaCache: 'none' })

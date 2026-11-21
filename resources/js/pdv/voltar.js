@@ -27,10 +27,15 @@ export function instalarVoltar() {
     if (instalado || typeof window === 'undefined') return
     instalado = true
     const marcar = () => window.history.pushState({ pdv: true }, '')
-    if (!window.history.state?.pdv) marcar()
+    // sempre cria a âncora, mesmo que já exista uma. Quando o Android reabre o app reaproveitando o estado
+    // antigo (tela fixada, volta do segundo plano), o histórico pode vir sem a âncora; sem ela o voltar sai do
+    // app e recarrega (splash). Criar sempre garante que o voltar caia aqui, inclusive no Início.
+    marcar()
     window.addEventListener('popstate', () => {
-        marcar() // repõe o passo, para o próximo voltar também cair aqui
+        marcar() // repõe a âncora, para o próximo voltar também cair aqui
         const fazer = pilha[pilha.length - 1]
         if (fazer) fazer()
     })
+    // reaberto a partir do cache do navegador (bfcache): repõe a âncora se o histórico a tiver perdido
+    window.addEventListener('pageshow', (e) => { if (e.persisted && ! window.history.state?.pdv) marcar() })
 }
