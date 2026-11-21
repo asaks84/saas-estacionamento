@@ -26,6 +26,7 @@ class Cliente extends Modelo
             'campos_locais' => 'array',
             'cliente_desde' => 'date:Y-m-d',
             'dia_vencimento' => 'integer',
+            'desconto_pontualidade' => 'decimal:2',
             'anonimizado_em' => 'datetime',
         ];
     }

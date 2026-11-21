@@ -114,6 +114,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/mensalidades/{contrato}/desfazer-encerramento', [ContratoController::class, 'desfazerEncerramento']);
         Route::post('/mensalidades/{contrato}/pausar', [ContratoController::class, 'pausar']);
         Route::delete('/pausas/{pausa}', [ContratoController::class, 'removerPausa']);
+        Route::post('/pausas/{pausa}/voltar', [ContratoController::class, 'voltar']);
 
         Route::delete('/pagadores/{pagador}', [PagadorController::class, 'destroy']);
 
@@ -212,6 +213,7 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('permissao:mensalidade_valor')->group(function () {
         Route::post('/mensalidades/{contrato}/reajustar', [ContratoController::class, 'reajustar']);
+        Route::put('/clientes/{cliente}/desconto-pontualidade', [ClienteController::class, 'descontoPontualidade']);
     });
 
     Route::middleware('permissao:excluir_cadastro')->group(function () {
@@ -300,6 +302,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/configuracoes/inter/pix', [InterController::class, 'pix']);
         Route::post('/configuracoes/inter/testar-pix', [InterController::class, 'testarPix']);
         Route::put('/configuracoes/inter/regras', [InterController::class, 'regras']);
+        Route::put('/configuracoes/cobrancas/regras', [InterController::class, 'regras']); // Configurações › Cobranças
         Route::get('/configuracoes/backup', [BackupController::class, 'index']);
         Route::post('/configuracoes/backup/google', [BackupController::class, 'salvar']);
         Route::post('/configuracoes/backup/google/conectar', [BackupController::class, 'conectar']);

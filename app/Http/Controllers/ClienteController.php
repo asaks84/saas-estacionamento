@@ -115,6 +115,12 @@ class ClienteController extends Controller
             'pagadores',
         ]);
         $hoje = now()->startOfDay();
+        // mensalidades recentes de cada veículo: a pausa no meio do mês pergunta o que fazer com a do mês
+        $mensalidades = OrdemServico::where('tipo', 'mensalidade')->where('situacao', '<>', 'cancelada')
+            ->whereIn('veiculo_id', $cliente->veiculos->pluck('id'))->where('competencia', '>=', now()->subMonth()->format('Y-m'))
+            ->orderBy('id')->get()->groupBy('veiculo_id');
+        $cobrancasAbertas = Cobranca::whereIn('id', $mensalidades->flatten()->pluck('cobranca_id')->filter()->unique())
+            ->whereIn('situacao', ['aberta', 'parcial'])->get()->keyBy('id');
 
         return Inertia::render('Clientes/Show', [
             'cliente' => [
@@ -123,6 +129,7 @@ class ClienteController extends Controller
                 'cliente_desde' => $cliente->cliente_desde?->format('Y-m-d'),
                 'convenio' => $cliente->convenio?->ativo ? $cliente->convenio->resumo() : null,
                 'regras_boleto' => $cliente->regras_boleto,
+                'desconto_pontualidade' => $cliente->desconto_pontualidade === null ? null : (float) $cliente->desconto_pontualidade,
                 'anonimizado_em' => $cliente->anonimizado_em?->format('d/m/Y'),
             ],
             // LGPD: o que impede anonimizar agora (a tela mostra antes de pedir a confirmação)
@@ -145,10 +152,16 @@ class ClienteController extends Controller
                     'fim' => $c->fim?->format('Y-m-d'),
                     'motivo_fim' => $c->motivo_fim,
                     'situacao' => $c->inicio->gt($hoje) ? 'futuro' : ($c->fim && $c->fim->lt($hoje) ? 'encerrado' : 'vigente'),
+                    'mensalidades' => ($mensalidades[$v->id] ?? collect())->map(fn ($o) => [
+                        'competencia' => $o->competencia, 'numero' => $o->numero, 'valor' => (float) $o->valor, 'situacao' => $o->situacao,
+                        'descricao' => $o->descricao, 'do_sistema_atual' => (bool) ($o->legado_id && config('erp.espelho_ativo')),
+                        'cobranca' => ($cob = $cobrancasAbertas[$o->cobranca_id] ?? null) ? ['numero' => $cob->numero, 'boleto' => (bool) Boletos::ativo($cob)] : null,
+                    ])->values(),
                     'pausas' => $c->pausas->map(fn ($p) => [
                         'id' => $p->id, 'inicio' => $p->inicio->format('Y-m-d'), 'fim' => $p->fim->format('Y-m-d'),
                         'taxa_tipo' => $p->taxa_tipo, 'taxa_valor' => (float) $p->taxa_valor, 'motivo' => $p->motivo,
                         'pode_remover' => $p->inicio->gte(now()->startOfMonth()),
+                        'pode_voltar' => $p->inicio->lte($hoje) && $p->fim->gte($hoje),
                     ]),
                 ]),
             ]),
@@ -371,6 +384,22 @@ class ClienteController extends Controller
     }
 
     /** LGPD: anonimiza a pedido do cliente ou por prazo vencido; confirma digitando o nome atual */
+    /**
+     * Desconto de pontualidade do cliente: o total em R$ por mês (o usuário soma; ex.: 2 carros com R$ 20 cada =
+     * R$ 40). Vazio = segue Configurações › Cobranças; 0 = sem desconto. Vale até o vencimento, em qualquer forma.
+     */
+    public function descontoPontualidade(Request $request, Cliente $cliente): RedirectResponse
+    {
+        $d = $request->validate(['valor' => ['nullable', 'numeric', 'min:0', 'max:99999']], ['valor.numeric' => 'Informe um valor.']);
+        $antes = $cliente->desconto_pontualidade;
+        $novo = isset($d['valor']) && $d['valor'] !== '' ? round((float) $d['valor'], 2) : null;
+        $cliente->update(['desconto_pontualidade' => $novo]);
+        $t = fn ($v) => $v === null ? 'regra da empresa' : Formato::moeda((float) $v);
+        Atividades::registrar('cliente_desconto_pontualidade', $cliente->nome.': '.$t($antes).' → '.$t($novo));
+
+        return back()->with('sucesso', 'Desconto de pontualidade salvo.');
+    }
+
     public function anonimizar(Request $request, Cliente $cliente): RedirectResponse
     {
         $d = $request->validate([

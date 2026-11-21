@@ -2,7 +2,7 @@ import Campo from './Campo'
 import CampoValor from './CampoValor'
 import { moeda } from '../lib/formato'
 
-// Regras do boleto do Inter (multa, juros, desconto, baixa): usadas em Configurações › Banco Inter
+// Regras do boleto do Inter (multa, juros, desconto, baixa): usadas em Configurações › Cobranças
 // e nas regras particulares do cliente.
 
 export const TIPOS = {

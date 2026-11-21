@@ -10,7 +10,6 @@ use App\Servicos\Inter\Boletos;
 use App\Servicos\Inter\InterCliente;
 use App\Servicos\Inter\InterErro;
 use App\Servicos\Pdv\PixPdv;
-use App\Servicos\Pontualidade;
 use App\Support\Atividades;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,7 +20,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Configurações › Banco Inter: credenciais da integração (guardadas criptografadas), teste de conexão
+ * Configurações › API do banco (hoje o Banco Inter): credenciais da integração (guardadas criptografadas), teste de conexão
  * e regras do boleto (multa, juros, desconto e baixa automática).
  */
 class InterController extends Controller
@@ -50,7 +49,6 @@ class InterController extends Controller
                 'testado_em' => $i->testado_em?->format('Y-m-d H:i'),
                 'ultimo_erro' => $i->ultimo_erro,
             ],
-            'regras' => Boletos::regras() + ['boleto_prazo_dias' => Boletos::prazo(), 'desconto_pontualidade_geral' => Pontualidade::ativa()],
             'pix' => ['chave' => PixPdv::chave(), 'ligado' => PixPdv::ligado()],
             'boletos' => ['ativos' => Boleto::whereIn('situacao', Boleto::ATIVAS)->count(), 'com_erro' => Boleto::whereNotNull('erro')->whereIn('situacao', ['recebido', 'falha'])->where('criado_em', '>=', now()->subDays(30))->count()],
         ]);
@@ -215,15 +213,13 @@ class InterController extends Controller
         $d = array_map(fn ($v) => $v ?? 0, $d);
         // prazo do boleto é da empresa (não entra nas regras específicas do cliente)
         $d['boleto_prazo_dias'] = (int) ($request->validate(['boleto_prazo_dias' => ['nullable', 'integer', 'min:0', 'max:30']])['boleto_prazo_dias'] ?? 0);
-        // desconto de pontualidade também fora do boleto (cobrança, balcão, extrato): da empresa
-        $d['desconto_pontualidade_geral'] = $request->boolean('desconto_pontualidade_geral');
         $e = Empresa::atual();
         $e->configuracoes = array_merge($e->configuracoes ?? [], $d);
         $e->save();
-        Atividades::registrar('empresa_config_alterada', 'regras do boleto: multa '.$d['boleto_multa_tipo'].' '.$d['boleto_multa_valor'].', juros '.$d['boleto_juros_tipo'].' '.$d['boleto_juros_valor']
-            .', desconto '.$d['boleto_desconto_tipo'].' '.$d['boleto_desconto_valor'].($d['desconto_pontualidade_geral'] ? ' (qualquer forma de pagamento)' : ' (só no boleto)').', baixa em '.$d['boleto_baixa_dias'].' dia(s), boleto vence '.$d['boleto_prazo_dias'].' dia(s) depois do vencimento do cliente');
+        Atividades::registrar('empresa_config_alterada', 'regras da cobrança: multa '.$d['boleto_multa_tipo'].' '.$d['boleto_multa_valor'].', juros '.$d['boleto_juros_tipo'].' '.$d['boleto_juros_valor']
+            .', desconto de pontualidade '.$d['boleto_desconto_tipo'].' '.$d['boleto_desconto_valor'].', baixa em '.$d['boleto_baixa_dias'].' dia(s), boleto vence '.$d['boleto_prazo_dias'].' dia(s) depois do vencimento do cliente');
 
-        return back()->with('sucesso', 'Regras do boleto salvas. Valem para os próximos boletos.');
+        return back()->with('sucesso', 'Regras da cobrança salvas. Valem para os próximos boletos e cobranças.');
     }
 
     /**

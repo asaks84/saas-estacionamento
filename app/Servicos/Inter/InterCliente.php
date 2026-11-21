@@ -36,7 +36,7 @@ class InterCliente
     public function __construct(private Integracao $integracao)
     {
         if (! $integracao->completa()) {
-            throw new InterErro('Banco Inter não configurado: preencha as credenciais em Configurações › Banco Inter.');
+            throw new InterErro('Banco Inter não configurado: preencha as credenciais em Configurações › API do banco.');
         }
     }
 

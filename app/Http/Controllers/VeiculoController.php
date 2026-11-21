@@ -96,7 +96,8 @@ class VeiculoController extends Controller
         });
         Atividades::registrar('veiculo_removido', $veiculo->rotulo().', cliente '.$veiculo->cliente_id);
 
-        return back()->with('sucesso', 'Veículo removido. A mensalidade dele foi encerrada hoje.');
+        return back()->with('sucesso', 'Veículo removido. A mensalidade dele foi encerrada hoje.')
+            ->with('revisar_desconto', Contratos::revisarDesconto($veiculo->cliente, 'Veículo removido.'));
     }
 
     public function reativar(Veiculo $veiculo): RedirectResponse

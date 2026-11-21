@@ -175,7 +175,7 @@ function Nova({ eu, opcoes, onVoltar, onFeito }) {
             {etapa === 'veiculo' && (
                 <div className="mt-2">
                     <label className="form-label fw-semibold mb-1" htmlFor="modelo">Modelo</label>
-                    <input id="modelo" className="form-control form-control-lg mb-3" value={modelo} maxLength={60} autoFocus enterKeyHint="done" onFocus={(e) => cursorNoFim(e.target)}
+                    <input id="modelo" className="form-control form-control-lg mb-3" value={modelo} maxLength={60} autoFocus={!modelo} enterKeyHint="done" onFocus={(e) => cursorNoFim(e.target)}
                         onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur() }} autoCapitalize="characters" onChange={(e) => setModelo(e.target.value.toUpperCase())} placeholder="Ex.: ONIX" />
                     <div className="fw-semibold mb-1">Tamanho</div>
                     <div className="pdv-opcoes">

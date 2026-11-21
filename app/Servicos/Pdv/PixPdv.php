@@ -73,7 +73,7 @@ class PixPdv
     public static function criar(float $valor, ?string $descricao = null): PixCobranca
     {
         if (! self::ligado()) {
-            self::erro('Pix com QR desligado: ligue o Inter e cadastre a chave Pix em Configurações › Banco Inter.');
+            self::erro('Pix com QR desligado: ligue o Inter e cadastre a chave Pix em Configurações › API do banco.');
         }
         $valor = round($valor, 2);
         if ($valor < 0.01) {

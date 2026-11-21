@@ -4,8 +4,10 @@ namespace Tests\Feature;
 
 use App\Models\Ajuste;
 use App\Models\Cobranca;
+use App\Models\Veiculo;
 use App\Servicos\Cobrancas;
 use App\Servicos\FormasPagamento;
+use App\Servicos\Inter\Boletos;
 use App\Servicos\Ordens;
 use App\Servicos\Pontualidade;
 use App\Support\EmpresaAtual;
@@ -39,9 +41,10 @@ class PontualidadeTest extends TestCase
         parent::tearDown();
     }
 
-    private function config(bool $geral): void
+    /** desde 21/11/2026 o desconto vale em qualquer forma de pagamento; "desligado" = sem desconto configurado */
+    private function config(bool $comDesconto): void
     {
-        $this->a->empresa->update(['configuracoes' => ['boleto_desconto_tipo' => 'valor', 'boleto_desconto_valor' => 20, 'desconto_pontualidade_geral' => $geral]]);
+        $this->a->empresa->update(['configuracoes' => $comDesconto ? ['boleto_desconto_tipo' => 'valor', 'boleto_desconto_valor' => 20] : ['boleto_desconto_tipo' => 'nenhum']]);
     }
 
     private function cobranca(): Cobranca
@@ -53,7 +56,7 @@ class PontualidadeTest extends TestCase
         return Cobrancas::emitir($this->x->cliente, '2026-11', '2026-11-20');
     }
 
-    public function test_desligada_nao_muda_nada(): void
+    public function test_sem_desconto_configurado_nao_muda_nada(): void
     {
         $this->config(false);
         $c = $this->cobranca();
@@ -110,12 +113,43 @@ class PontualidadeTest extends TestCase
         $this->assertNull(Pontualidade::resumo($c->refresh()));
     }
 
-    public function test_configuracao_salva_a_opcao(): void
+    public function test_regras_ficam_em_configuracoes_cobrancas(): void
     {
         $base = ['boleto_multa_tipo' => 'nenhuma', 'boleto_juros_tipo' => 'nenhum', 'boleto_desconto_tipo' => 'valor', 'boleto_desconto_valor' => 20, 'boleto_baixa_dias' => 30];
-        $this->actingAs($this->a->admin)->put('/configuracoes/inter/regras', $base + ['desconto_pontualidade_geral' => true])->assertSessionHasNoErrors();
-        $this->assertTrue(Pontualidade::ativa($this->a->empresa->refresh()));
-        $this->actingAs($this->a->admin)->put('/configuracoes/inter/regras', $base)->assertSessionHasNoErrors();
-        $this->assertFalse(Pontualidade::ativa($this->a->empresa->refresh()));
+        $this->actingAs($this->a->admin)->put('/configuracoes/cobrancas/regras', $base)->assertSessionHasNoErrors();
+        $this->actingAs($this->a->admin)->get('/configuracoes/pagamentos')->assertOk()
+            ->assertInertia(fn ($p) => $p->component('Configuracoes/Pagamentos')->where('regras.boleto_desconto_valor', 20)->where('regras.boleto_baixa_dias', 30));
+        $this->actingAs($this->a->operador)->put('/configuracoes/cobrancas/regras', $base)->assertForbidden();
+        // sem opção "só no boleto": vale no balcão também
+        $c = $this->cobranca();
+        $this->assertSame(20.0, Pontualidade::resumo($c)['valor']);
+    }
+
+    public function test_desconto_do_cliente_vale_no_lugar_da_regra_uma_vez_por_mes(): void
+    {
+        $this->config(true);
+        $outro = Veiculo::create(['cliente_id' => $this->x->cliente->id, 'tipo_veiculo_id' => $this->a->tipo->id, 'placa' => 'XYZ9K88']);
+        // 2 carros: o usuário digita o total (R$ 40), não R$ 20 por mensalidade calculado pelo sistema
+        Ordens::lancar(['tipo' => 'mensalidade', 'cliente_id' => $this->x->cliente->id, 'veiculo_id' => $outro->id, 'valor' => 250, 'descricao' => 'Mensalidade', 'data' => '2026-11-01', 'vencimento' => '2026-11-20', 'competencia' => '2026-11']);
+        $this->actingAs($this->a->admin)->put('/clientes/'.$this->x->cliente->id.'/desconto-pontualidade', ['valor' => 35])->assertSessionHasNoErrors();
+        $c = $this->cobranca();
+        $this->assertSame(35.0, Pontualidade::resumo($c)['valor']);
+        $this->assertSame(35.0, Boletos::descontoPontualidade($c, Boletos::regras(null, $this->x->cliente->fresh())));
+        // 0 = sem desconto para este cliente, mesmo com a regra da empresa
+        $this->actingAs($this->a->admin)->put('/clientes/'.$this->x->cliente->id.'/desconto-pontualidade', ['valor' => 0])->assertSessionHasNoErrors();
+        $this->assertNull(Pontualidade::resumo($c->refresh()));
+        // vazio = volta para a regra da empresa (R$ 20 por mensalidade: 2 × 20)
+        $this->actingAs($this->a->admin)->put('/clientes/'.$this->x->cliente->id.'/desconto-pontualidade', ['valor' => null])->assertSessionHasNoErrors();
+        $this->assertSame(40.0, Pontualidade::resumo($c->refresh())['valor']);
+        // quem não pode mudar valor de mensalidade não mexe
+        $this->actingAs($this->a->operador)->put('/clientes/'.$this->x->cliente->id.'/desconto-pontualidade', ['valor' => 99])->assertForbidden();
+    }
+
+    public function test_proporcional_e_pausa_nao_tem_desconto(): void
+    {
+        $this->x->cliente->update(['desconto_pontualidade' => 20]);
+        Ordens::lancar(['tipo' => 'mensalidade', 'cliente_id' => $this->x->cliente->id, 'valor' => 125, 'descricao' => 'Mensalidade proporcional 01/11 a 15/11 (pausa)', 'data' => '2026-11-01', 'vencimento' => '2026-11-20', 'competencia' => '2026-11']);
+        $c = Cobrancas::emitir($this->x->cliente, '2026-11', '2026-11-20');
+        $this->assertNull(Pontualidade::resumo($c));
     }
 }

@@ -7,10 +7,39 @@ import Janela from '../../Components/Janela'
 import Campo from '../../Components/Campo'
 import CampoValor from '../../Components/CampoValor'
 import { moeda } from '../../lib/formato'
+import { Regra } from '../../Components/RegrasBoleto'
+
+/**
+ * Regras da cobrança (21/11/2026, antes em Banco Inter): desconto de pontualidade, que vale em qualquer forma de
+ * pagamento (o cliente pode ter valor próprio na ficha), e multa, juros, prazo e baixa, que só existem no boleto.
+ */
+function Regras({ regras }) {
+    const form = useForm(regras)
+    return (
+        <form className="card mb-4" onSubmit={(e) => { e.preventDefault(); form.put('/configuracoes/cobrancas/regras', { preserveScroll: true }) }}>
+            <div className="card-header">Regras da cobrança</div>
+            <div className="card-body">
+                <Regra nome="desconto" rotulo="Desconto de pontualidade" form={form} />
+                <p className="form-text mt-n2 mb-3">Só nas mensalidades cheias do mês, pagas até o vencimento do cliente, em qualquer forma de pagamento: aparece na cobrança, no link do WhatsApp e no boleto e entra no balcão e no extrato. Não vale na primeira mensalidade, no proporcional nem com desconto negociado. O cliente pode ter um valor próprio na ficha, que vale no lugar deste.</p>
+                <h3 className="fs-6 fw-semibold mt-3">No boleto</h3>
+                <Regra nome="multa" rotulo="Multa por atraso" form={form} ajuda="Para pessoa física, o Código de Defesa do Consumidor limita a 2%." />
+                <Regra nome="juros" rotulo="Juros por atraso" form={form} />
+                <p className="form-text mt-n2 mb-3">Multa e juros são calculados e cobrados pelo banco, só no boleto, depois do vencimento do boleto; quando ele é pago, entram como receita.</p>
+                <div className="row g-2">
+                    <div className="col-sm-6"><Campo rotulo="Prazo do boleto (dias)" type="number" min="0" max="30" value={form.data.boleto_prazo_dias} onChange={(e) => form.setData('boleto_prazo_dias', e.target.value)} erro={form.errors.boleto_prazo_dias} ajuda="Quantos dias depois do vencimento do cliente o boleto vence. Ex.: cliente dia 5, boleto dia 10 = 5." /></div>
+                    <div className="col-sm-6"><Campo rotulo="Baixa automática (dias)" type="number" min="0" max="60" value={form.data.boleto_baixa_dias} onChange={(e) => form.setData('boleto_baixa_dias', e.target.value)} erro={form.errors.boleto_baixa_dias} ajuda="Dias depois do vencimento do boleto; depois disso ele não pode mais ser pago (a dívida continua no sistema). Máximo 60." /></div>
+                </div>
+            </div>
+            <div className="card-footer bg-transparent d-flex justify-content-end">
+                <button type="submit" className="btn btn-primary" disabled={form.processing}>Salvar regras</button>
+            </div>
+        </form>
+    )
+}
 
 const FORMA_VAZIA = { nome: '', tipo: 'pix', conta_financeira_id: '', taxa_pct: 0, taxa_fixa: 0, parcelas_max: 1, taxas_parcelas: {}, prazo_dias: 0, ativa: true }
 
-export default function Pagamentos({ contas, formas, tipos_forma, tipos_conta }) {
+export default function Pagamentos({ contas, formas, tipos_forma, tipos_conta, regras }) {
     const [janela, setJanela] = useState(null) // {tipo: 'forma'|'conta', item}
     const form = useForm({})
 
@@ -32,10 +61,11 @@ export default function Pagamentos({ contas, formas, tipos_forma, tipos_conta })
         <div className="pagina">
             <AbasConfiguracoes />
             <div>
-            <TituloPagina titulo="Formas de pagamento" descricao="Como os clientes pagam, em que conta o dinheiro entra, a taxa cobrada e em quantos dias cai. Nada é apagado: desative o que não usa mais." />
+            <TituloPagina titulo="Cobranças" descricao="Regras da cobrança (desconto de pontualidade, multa e juros do boleto) e formas de pagamento: como os clientes pagam, em que conta o dinheiro entra, a taxa cobrada e em quantos dias cai. Nada é apagado: desative o que não usa mais." />
 
             <div className="row g-4">
             <div className="col-xl-8">
+            <Regras regras={regras} />
             <div className="card">
                 <div className="card-header d-flex align-items-center">
                     <span className="flex-grow-1">Formas de pagamento</span>

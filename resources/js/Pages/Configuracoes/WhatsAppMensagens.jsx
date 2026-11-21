@@ -184,7 +184,7 @@ function Editor({ modelo, novo, props, aoCancelar }) {
                     <Previa texto={form.data.texto} cabecalho={form.data.cabecalho} rodape={form.data.rodape} botao={form.data.finalidade === 'cobranca' && form.data.botao} rotuloBotao={rotuloBotao} exemplos={exemplos} />
                     <div className="form-text">No envio manual (wa.me) não existe cabeçalho nem rodapé: o cabeçalho vai em negrito no começo do texto e o rodapé no fim.</div>
                     {form.data.texto.includes('{valor_com_desconto}') || form.data.texto.includes('{desconto_ate}')
-                        ? <div className="form-text">Sem desconto de pontualidade (opção desligada, cobrança atrasada ou com desconto negociado), "valor pagando em dia" mostra o valor cheio e a data limite é o vencimento.</div>
+                        ? <div className="form-text">Sem desconto de pontualidade (sem desconto configurado, cobrança atrasada ou com desconto negociado), "valor pagando em dia" mostra o valor cheio e a data limite é o vencimento.</div>
                         : null}
                 </div>
             </div>

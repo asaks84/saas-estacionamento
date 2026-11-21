@@ -3,6 +3,7 @@
 namespace App\Servicos\Inter;
 
 use App\Models\Boleto;
+use App\Models\Cliente;
 use App\Models\Cobranca;
 use App\Models\Empresa;
 use App\Models\FormaPagamento;
@@ -12,6 +13,7 @@ use App\Servicos\Baixa;
 use App\Support\Atividades;
 use App\Support\Formato;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -21,7 +23,7 @@ use Throwable;
  * Boleto com Pix do Inter a partir de uma cobrança:
  * emitir → consulta periódica (inter:consultar) → pago: baixa nas ordens da cobrança pelo serviço único de baixa.
  * Cobrança paga por outro meio, cancelada ou levada para a seguinte: o boleto é cancelado no Inter
- * (o cliente não paga duas vezes). Regras de multa, juros, desconto e baixa em Configurações › Banco Inter.
+ * (o cliente não paga duas vezes). Regras de multa, juros, desconto e baixa em Configurações › Cobranças.
  */
 class Boletos
 {
@@ -103,27 +105,56 @@ class Boletos
     }
 
     /**
-     * Desconto de pontualidade: só sobre as mensalidades da cobrança que ainda não venceram
-     * (mensalidade atrasada trazida como saldo anterior não ganha); % sobre a soma delas ou
-     * R$ fixo por mensalidade. Vale até o vencimento da cobrança (o dia combinado com o cliente).
+     * Desconto de pontualidade: só sobre as mensalidades cheias da cobrança que ainda não venceram (mensalidade
+     * atrasada trazida como saldo anterior, proporcional e reserva de pausa não ganham). Vale até o vencimento da
+     * cobrança (o dia combinado com o cliente).
+     * - Cliente com desconto próprio (clientes.desconto_pontualidade, total em R$ por mês digitado pelo usuário):
+     *   esse valor uma vez por mês de referência das mensalidades, no lugar da regra.
+     * - Senão, a regra (da empresa ou específica do cliente): % sobre a soma delas ou R$ fixo por mensalidade.
      */
-    public static function descontoPontualidade(Cobranca $cob, array $regras, ?\Illuminate\Support\Carbon $dia = null): float
+    public static function descontoPontualidade(Cobranca $cob, array $regras, ?Carbon $dia = null): float
     {
         $dia = ($dia ?? today())->copy()->startOfDay();
-        $tipo = $regras['boleto_desconto_tipo'] ?? 'nenhum';
-        $valor = (float) ($regras['boleto_desconto_valor'] ?? 0);
-        if ($tipo === 'nenhum' || $valor <= 0 || $cob->vencimento->copy()->startOfDay()->lt($dia)) {
+        if (! empty($regras['sem_regras']) || $cob->vencimento->copy()->startOfDay()->lt($dia)) {
             return 0.0;
         }
-        $mens = OrdemServico::abertas()->where('cobranca_id', $cob->id)->where('tipo', 'mensalidade')
-            ->where(fn ($q) => $q->whereNull('vencimento')->orWhere('vencimento', '>=', $dia->toDateString()))->get(['valor']);
+        $mens = self::mensalidadesComDesconto($cob, $dia);
         if ($mens->isEmpty()) {
             return 0.0;
         }
         $base = (float) $mens->sum('valor');
+        // direto do banco: telas carregam o cliente com só algumas colunas
+        $doCliente = $cob->cliente_id ? Cliente::whereKey($cob->cliente_id)->value('desconto_pontualidade') : null;
+        if ($doCliente !== null) {
+            $meses = max(1, $mens->pluck('competencia')->filter()->unique()->count());
+
+            return round(min((float) $doCliente * $meses, $base), 2);
+        }
+        $tipo = $regras['boleto_desconto_tipo'] ?? 'nenhum';
+        $valor = (float) ($regras['boleto_desconto_valor'] ?? 0);
+        if ($tipo === 'nenhum' || $valor <= 0) {
+            return 0.0;
+        }
         $d = $tipo === 'percentual' ? $base * min($valor, 100) / 100 : $valor * $mens->count();
 
         return round(min($d, $base), 2);
+    }
+
+    /** mensalidades em aberto da cobrança que dão desconto de pontualidade no dia (cheias e não vencidas) */
+    public static function mensalidadesComDesconto(Cobranca $cob, Carbon $dia): Collection
+    {
+        return OrdemServico::abertas()->where('cobranca_id', $cob->id)->where('tipo', 'mensalidade')
+            ->where(fn ($q) => $q->whereNull('vencimento')->orWhere('vencimento', '>=', $dia->toDateString()))
+            ->get(['id', 'valor', 'competencia', 'descricao'])
+            ->reject(fn ($o) => self::mensalidadeParcial($o->descricao))->values();
+    }
+
+    /** proporcional (entrada, pausa, volta) ou reserva de vaga em pausa: não é a mensalidade cheia */
+    public static function mensalidadeParcial(?string $descricao): bool
+    {
+        $d = mb_strtolower((string) $descricao);
+
+        return str_contains($d, 'proporcional') || str_contains($d, 'pausa');
     }
 
     /** regras sem multa, juros e desconto (a baixa automática continua) */
@@ -136,7 +167,7 @@ class Boletos
     {
         $i = Integracao::inter();
         if (! $i || ! $i->ativo || ! $i->completa()) {
-            self::erro('Banco Inter não está ligado: configure e teste em Configurações › Banco Inter.');
+            self::erro('Banco Inter não está ligado: configure e teste em Configurações › API do banco.');
         }
 
         return $i;

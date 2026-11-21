@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Ajuste;
 use App\Models\Boleto;
 use App\Models\Cobranca;
+use App\Models\FormaPagamento;
 use App\Models\Integracao;
 use App\Models\OrdemServico;
 use App\Models\Pagamento;
@@ -13,12 +14,15 @@ use App\Servicos\Cobrancas;
 use App\Servicos\FormasPagamento;
 use App\Servicos\Inter\Boletos;
 use App\Servicos\Ordens;
+use App\Servicos\Resultado;
 use App\Support\EmpresaAtual;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
@@ -203,7 +207,7 @@ class InterTest extends TestCase
         $this->assertSame(1, Pagamento::where('origem', 'inter')->count());
         $p = Pagamento::find($b->pagamento_id);
         $this->assertSame(204.5, (float) $p->valor);
-        $this->assertSame('pix', $p->forma->tipo ?? \App\Models\FormaPagamento::find($p->forma_pagamento_id)->tipo);
+        $this->assertSame('pix', $p->forma->tipo ?? FormaPagamento::find($p->forma_pagamento_id)->tipo);
         $this->assertSame('2026-11-22', $p->recebido_em->toDateString());
         $this->assertSame('paga', $cob->refresh()->situacao);
         $enc = OrdemServico::where('descricao', 'Multa e juros do boleto')->first();
@@ -213,7 +217,7 @@ class InterTest extends TestCase
 
         // resultado: linha própria de multa e juros nos dois olhares; nada sobra em "outras receitas"
         foreach (['caixa', 'referencia'] as $regime) {
-            $r = \App\Servicos\Resultado::mes('2026-11', $regime);
+            $r = Resultado::mes('2026-11', $regime);
             $linhas = collect($r['receitas'])->keyBy('id');
             $this->assertSame(4.5, $linhas['multa_juros']['valor'], $regime);
             $this->assertSame(204.5, $r['total_receitas'], $regime);
@@ -276,10 +280,10 @@ class InterTest extends TestCase
 
         $this->assertNotNull($b->refresh()->pagamento_id);
         $this->assertSame(10.0, (float) Ajuste::where('tipo', 'desconto')->value('valor'));
-        $this->assertSame('boleto', \App\Models\FormaPagamento::find(Pagamento::find($b->pagamento_id)->forma_pagamento_id)->tipo);
+        $this->assertSame('boleto', FormaPagamento::find(Pagamento::find($b->pagamento_id)->forma_pagamento_id)->tipo);
 
         // caixa: mensalidade 200 e "(−) Descontos dados" 10, sem "outras receitas" negativas
-        $r = \App\Servicos\Resultado::mes('2026-11', 'caixa');
+        $r = Resultado::mes('2026-11', 'caixa');
         $linhas = collect($r['receitas'])->keyBy('id');
         $this->assertSame(-10.0, $linhas['descontos']['valor']);
         $this->assertSame(190.0, $r['total_receitas']);
@@ -294,7 +298,7 @@ class InterTest extends TestCase
         $b = Boletos::emitir($cob);
 
         // pagou em dinheiro no balcão
-        $dinheiro = \App\Models\FormaPagamento::where('tipo', 'dinheiro')->first();
+        $dinheiro = FormaPagamento::where('tipo', 'dinheiro')->first();
         Baixa::receber($this->x->cliente, ['ordens' => OrdemServico::where('cobranca_id', $cob->id)->pluck('id')->all(), 'valor' => 200, 'forma_pagamento_id' => $dinheiro->id]);
         [$cancelados] = Boletos::cancelarResolvidos();
         $this->assertSame(1, $cancelados);
@@ -338,7 +342,9 @@ class InterTest extends TestCase
     {
         $this->actingAs($this->a->admin)->get('/configuracoes/inter')->assertOk()
             ->assertInertia(fn ($p) => $p->component('Configuracoes/Inter')->where('integracao.client_id', '••••id')->where('integracao.ativo', true)
-                ->where('regras.boleto_baixa_dias', 30)->missing('integracao.client_secret'));
+                ->missing('integracao.client_secret'));
+        // as regras foram para Configurações › Cobranças (21/11/2026)
+        $this->actingAs($this->a->admin)->get('/configuracoes/pagamentos')->assertOk()->assertInertia(fn ($p) => $p->where('regras.boleto_baixa_dias', 30));
         $this->actingAs($this->a->operador)->get('/configuracoes/inter')->assertForbidden();
 
         $this->actingAs($this->a->admin)->put('/configuracoes/inter/regras', ['boleto_multa_tipo' => 'valor', 'boleto_multa_valor' => '5', 'boleto_juros_tipo' => 'valor_dia',
@@ -348,16 +354,16 @@ class InterTest extends TestCase
         $this->assertSame(10, (int) $r['boleto_baixa_dias']);
 
         // credenciais novas: guarda criptografado e desliga até testar
-        $crt = \Illuminate\Http\UploadedFile::fake()->createWithContent('inter.crt', "-----BEGIN CERTIFICATE-----\nAAA\n-----END CERTIFICATE-----\n");
-        $key = \Illuminate\Http\UploadedFile::fake()->createWithContent('inter.key', "-----BEGIN PRIVATE KEY-----\nBBB\n-----END PRIVATE KEY-----\n");
+        $crt = UploadedFile::fake()->createWithContent('inter.crt', "-----BEGIN CERTIFICATE-----\nAAA\n-----END CERTIFICATE-----\n");
+        $key = UploadedFile::fake()->createWithContent('inter.key', "-----BEGIN PRIVATE KEY-----\nBBB\n-----END PRIVATE KEY-----\n");
         $this->actingAs($this->a->admin)->post('/configuracoes/inter/credenciais', ['ambiente' => 'sandbox', 'client_id' => 'novo-id-1234', 'certificado' => $crt, 'chave' => $key])
             ->assertSessionHasNoErrors();
         $i = Integracao::inter();
         $this->assertFalse($i->ativo);
         $this->assertSame('novo-id-1234', $i->credencial('client_id'));
         $this->assertSame('segredo', $i->credencial('client_secret')); // vazio manteve
-        $this->assertStringNotContainsString('novo-id-1234', (string) \Illuminate\Support\Facades\DB::table('integracoes')->value('credenciais'));
-        $ruim = \Illuminate\Http\UploadedFile::fake()->createWithContent('x.crt', 'qualquer coisa');
+        $this->assertStringNotContainsString('novo-id-1234', (string) DB::table('integracoes')->value('credenciais'));
+        $ruim = UploadedFile::fake()->createWithContent('x.crt', 'qualquer coisa');
         $this->actingAs($this->a->admin)->post('/configuracoes/inter/credenciais', ['ambiente' => 'producao', 'certificado' => $ruim])->assertSessionHasErrors('certificado');
 
         // testar: liga

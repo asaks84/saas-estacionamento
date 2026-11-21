@@ -4,23 +4,27 @@ namespace App\Servicos;
 
 use App\Models\Cobranca;
 use App\Models\Empresa;
-use App\Models\OrdemServico;
 use App\Servicos\Inter\Boletos;
 use Illuminate\Support\Carbon;
 
 /**
- * Desconto de pontualidade fora do boleto (opção "vale para qualquer forma de pagamento", desligada de
- * início): o mesmo desconto das regras do boleto (só as mensalidades do mês, até o vencimento do cliente,
- * sem a primeira mensalidade, sem desconto negociado) aparece na cobrança impressa, na tela e no link,
- * e é aceito no balcão e no extrato sem precisar da permissão de desconto.
+ * Desconto de pontualidade em qualquer forma de pagamento: o mesmo desconto do boleto (só as mensalidades cheias
+ * do mês, até o vencimento do cliente, sem a primeira mensalidade, sem desconto negociado; valor do cliente ou
+ * regra de Configurações › Cobranças) aparece na cobrança impressa, na tela e no link, e é aceito no balcão e no
+ * extrato sem precisar da permissão de desconto.
  */
 class Pontualidade
 {
     public const MOTIVO = 'Desconto de pontualidade';
 
+    /**
+     * Desde 21/11/2026 o desconto de pontualidade vale para qualquer forma de pagamento (regra em Configurações ›
+     * Cobranças ou o valor do cliente); a antiga opção "vale para qualquer forma" saiu. Sem desconto configurado,
+     * daCobranca devolve null e nada muda.
+     */
     public static function ativa(?Empresa $e = null): bool
     {
-        return (bool) (($e ?? Empresa::atual())->configuracoes['desconto_pontualidade_geral'] ?? false);
+        return true;
     }
 
     /**
@@ -37,8 +41,7 @@ class Pontualidade
         if ($dia->gt($ate)) {
             return null;
         }
-        $ordens = OrdemServico::abertas()->where('cobranca_id', $c->id)->where('tipo', 'mensalidade')
-            ->where(fn ($q) => $q->whereNull('vencimento')->orWhere('vencimento', '>=', $dia->toDateString()))->get(['id', 'valor']);
+        $ordens = Boletos::mensalidadesComDesconto($c, $dia);
         if ($ordens->isEmpty()) {
             return null;
         }

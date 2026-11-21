@@ -3,7 +3,6 @@ import { useState } from 'react'
 import AbasConfiguracoes from '../../Components/AbasConfiguracoes'
 import TituloPagina from '../../Components/TituloPagina'
 import Campo from '../../Components/Campo'
-import { Regra } from '../../Components/RegrasBoleto'
 import { data as fData, dataHora } from '../../lib/formato'
 
 function Arquivo({ rotulo, id, tem, onChange, erro, aceita }) {
@@ -46,33 +45,6 @@ function Credenciais({ i }) {
     )
 }
 
-function Regras({ regras }) {
-    const form = useForm(regras)
-    return (
-        <form className="card h-100" onSubmit={(e) => { e.preventDefault(); form.put('/configuracoes/inter/regras', { preserveScroll: true }) }}>
-            <div className="card-header">Regras do boleto</div>
-            <div className="card-body">
-                <p className="small text-muted">Valem para os boletos gerados daqui em diante. O Inter calcula e cobra; quando o boleto é pago, a multa e os juros entram como receita e o desconto como desconto. O desconto vale só para as mensalidades do mês, até o vencimento do cliente; o boleto vence alguns dias depois, pelo prazo abaixo; multa e juros só depois do vencimento do boleto.</p>
-                <Regra nome="multa" rotulo="Multa por atraso" form={form} ajuda="Para pessoa física, o Código de Defesa do Consumidor limita a 2%." />
-                <Regra nome="juros" rotulo="Juros por atraso" form={form} />
-                <Regra nome="desconto" rotulo="Desconto de pontualidade" form={form} />
-                <div className="form-check form-switch mb-3">
-                    <input className="form-check-input" type="checkbox" role="switch" id="pont-geral" checked={!!form.data.desconto_pontualidade_geral} onChange={(e) => form.setData('desconto_pontualidade_geral', e.target.checked)} />
-                    <label className="form-check-label" htmlFor="pont-geral">Desconto de pontualidade vale para qualquer forma de pagamento</label>
-                    <div className="form-text">Ligado: aparece na cobrança impressa, na tela da cobrança e no link do WhatsApp, e entra no balcão (Receber) e no extrato quando o pagamento é até o vencimento, sem precisar da permissão de desconto. Desligado: só no boleto.</div>
-                </div>
-                <div className="row g-2">
-                    <div className="col-sm-6"><Campo rotulo="Prazo do boleto (dias)" type="number" min="0" max="30" value={form.data.boleto_prazo_dias} onChange={(e) => form.setData('boleto_prazo_dias', e.target.value)} erro={form.errors.boleto_prazo_dias} ajuda="Quantos dias depois do vencimento do cliente o boleto vence. Ex.: cliente dia 5, boleto dia 10 = 5." /></div>
-                    <div className="col-sm-6"><Campo rotulo="Baixa automática (dias)" type="number" min="0" max="60" value={form.data.boleto_baixa_dias} onChange={(e) => form.setData('boleto_baixa_dias', e.target.value)} erro={form.errors.boleto_baixa_dias} ajuda="Dias depois do vencimento do boleto; depois disso ele não pode mais ser pago (a dívida continua no sistema). Máximo 60." /></div>
-                </div>
-            </div>
-            <div className="card-footer bg-transparent d-flex justify-content-end">
-                <button type="submit" className="btn btn-primary" disabled={form.processing}>Salvar regras</button>
-            </div>
-        </form>
-    )
-}
-
 function PixPdv({ pix, ativo }) {
     const form = useForm({ pix_chave: pix.chave || '' })
     const [testando, setTestando] = useState(false)
@@ -97,7 +69,7 @@ function PixPdv({ pix, ativo }) {
     )
 }
 
-export default function Inter({ integracao: i, regras, boletos, pix }) {
+export default function Inter({ integracao: i, boletos, pix }) {
     const [testando, setTestando] = useState(false)
     const completo = i.client_id && i.tem_secret && i.tem_certificado && i.tem_chave
     const vence = i.certificado_validade ? Math.ceil((new Date(i.certificado_validade + 'T12:00:00') - new Date()) / 86400000) : null
@@ -105,7 +77,7 @@ export default function Inter({ integracao: i, regras, boletos, pix }) {
         <div className="pagina">
             <AbasConfiguracoes />
             <div>
-                <TituloPagina titulo="Banco Inter" descricao="Boleto com Pix gerado a partir da cobrança (o sistema consulta o Inter a cada 10 minutos: boleto pago dá baixa sozinho) e extrato e saldo em Extrato bancário." />
+                <TituloPagina titulo="API do banco" descricao="Banco ligado: Banco Inter. Boleto com Pix gerado a partir da cobrança (o sistema consulta o banco a cada 10 minutos: boleto pago dá baixa sozinho), Pix com QR do PDV e extrato e saldo em Extrato bancário. Desconto, multa, juros e prazo do boleto ficam em Configurações › Cobranças." />
                 {vence !== null && vence <= 30 && (
                     <div className={`alert ${vence <= 7 ? 'alert-danger' : 'alert-warning'}`}>
                         {vence < 0 ? 'O certificado venceu' : `O certificado vence em ${vence} dia(s)`}: boleto, baixa automática e extrato param juntos. Gere um certificado novo no Internet Banking do Inter (Integrações) e envie aqui.
@@ -133,7 +105,6 @@ export default function Inter({ integracao: i, regras, boletos, pix }) {
                 </div>
                 <div className="row g-4">
                     <div className="col-xl-6"><Credenciais i={i} /></div>
-                    <div className="col-xl-6"><Regras regras={regras} /></div>
                     <div className="col-xl-6"><PixPdv pix={pix} ativo={i.ativo} /></div>
                 </div>
             </div>

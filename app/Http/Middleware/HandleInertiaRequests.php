@@ -46,6 +46,8 @@ class HandleInertiaRequests extends Middleware
                 'aviso' => $request->session()->get('aviso'),
                 'imprimir' => $request->session()->get('imprimir'),
                 'codigo_pin' => $request->session()->get('codigo_pin'),
+                // mensalidade mudou e o cliente tem desconto de pontualidade: a ficha abre o campo para revisar
+                'revisar_desconto' => $request->session()->get('revisar_desconto'),
             ],
         ];
     }

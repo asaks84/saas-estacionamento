@@ -4,6 +4,31 @@ Alterações do ERP Local, da mais nova para a mais antiga. Cada alteração ent
 
 ---
 
+## 21/11/2026 — PDV: formas de pagamento e tamanhos sempre atualizados na estadia
+
+- O PDV buscava a lista de formas de pagamento, tamanhos e convênios da estadia uma vez só, ao abrir o app. Forma desativada na gestão continuava aparecendo até recarregar a página. Agora busca de novo a cada entrada e saída de estadia. A lavagem e o caixa já buscavam ao abrir a tela, e o servidor já mandava só as formas ativas.
+- Arquivo: resources/js/pdv/App.jsx.
+
+## 21/11/2026 — Cobranças: desconto de pontualidade por cliente, pausa no meio do mês e Configurações › Cobranças
+
+- **Desconto de pontualidade do cliente:** novo card na ficha. O valor é o total em R$ por mês, digitado pelo usuário (ex.: 2 carros = R$ 40), e vale no lugar da regra da empresa. Vazio = regra da empresa; 0 = sem desconto. Exige a permissão de mudar valor de mensalidade. O desconto saiu das regras específicas do boleto (multa, juros e baixa continuam lá).
+- **Avisos:** reajuste, encerramento e pausa da mensalidade e remoção do veículo de quem tem desconto abrem o card com o aviso para revisar o valor. O sistema não recalcula.
+- **Vale em qualquer forma de pagamento:** a opção "vale para qualquer forma de pagamento" saiu. O desconto aparece na cobrança, no link e no boleto e entra no balcão e no extrato. Só vale nas mensalidades cheias: proporcional e reserva de pausa não têm desconto.
+- **Cobrança, impressa e link:** total cheio, linha "Desconto de pontualidade das mensalidades (até dd/mm): −R$ X" e "Pagando até dd/mm: R$ Y".
+- **Pausa no meio do mês:** com a mensalidade do mês já gerada, a janela de pausa pergunta: proporcional dos dias que veio (último dia, valor ajustável), cancelar ou manter.
+  - Já paga: a diferença vira crédito só se o usuário escolher.
+  - Em cobrança emitida: aviso para cancelar e emitir de novo, com o boleto.
+  - Do sistema atual durante o paralelo: bloqueado.
+- **Volta da pausa:** botão "voltou" na pausa em andamento. O sistema gera o proporcional do resto do mês, para pagar agora (abre Receber) ou na conta do mês seguinte, e encerra a pausa no mês anterior.
+- **Configurações:** "Formas de pagamento" virou **Cobranças**, com o card "Regras da cobrança" (desconto de pontualidade; multa, juros, prazo e baixa "no boleto"). "Banco Inter" virou **API do banco**, com o banco ligado escrito na página.
+- Migration `2026_12_09_000001_clientes_desconto_pontualidade` (clientes.desconto_pontualidade).
+- Arquivos: database/migrations/2026_12_09_000001_clientes_desconto_pontualidade.php, app/Models/Cliente.php, app/Servicos/Inter/Boletos.php, app/Servicos/Pontualidade.php, app/Servicos/Contratos.php, app/Http/Controllers/ClienteController.php, app/Http/Controllers/ContratoController.php, app/Http/Controllers/VeiculoController.php, app/Http/Controllers/InterController.php, app/Http/Controllers/FormaPagamentoController.php, app/Http/Middleware/HandleInertiaRequests.php, app/Servicos/Inter/InterCliente.php, app/Servicos/Pdv/PixPdv.php, routes/web.php, resources/js/Pages/Clientes/Show.jsx, resources/js/Components/RegrasBoletoCliente.jsx, resources/js/Components/RegrasBoleto.jsx, resources/js/Pages/Configuracoes/Pagamentos.jsx, resources/js/Pages/Configuracoes/Inter.jsx, resources/js/Pages/Configuracoes/WhatsAppMensagens.jsx, resources/js/Pages/Cobrancas/Show.jsx, resources/js/Pages/Cobrancas/Imprimir.jsx, resources/js/Pages/Cobrancas/Publica.jsx, resources/js/Pages/Inicio.jsx, resources/js/lib/menu.js, tests/Feature/PontualidadeTest.php, tests/Feature/ContratosTest.php, tests/Feature/InterTest.php, docs/05-regras-de-negocio.md, docs/12-decisoes.md, docs/13-desenvolvimento.md.
+
+## 21/11/2026 — PDV: campo Modelo só abre o teclado quando está vazio
+
+- Entrada de estadia e nova lavagem: quando a placa já é conhecida e o modelo vem preenchido, o campo Modelo não ganha mais o foco, e o teclado do celular não abre sozinho. Com o modelo vazio, continua igual: o campo ganha o foco para digitar.
+- Arquivos: resources/js/pdv/telas/EstadiaEntrada.jsx, resources/js/pdv/telas/Lavagens.jsx.
+
 ## 21/11/2026 — Segurança: cadastro de PIN com o mesmo limite do login
 
 - Observação menor da auditoria: o cadastro de PIN no PDV aceitava 20 tentativas por minuto, contra 5 da tela de login. Agora 5 senhas erradas por minuto (por login e IP) travam até completar o minuto; com o código de cadastro (quem é só do PDV), 5 códigos errados por minuto por IP. PIN recusado por ser óbvio ou repetido não conta, para a pessoa poder escolher outro.

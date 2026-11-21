@@ -33,7 +33,7 @@ export default function CobrancaPublica({ empresa_publica: empresa, cobranca: c,
                             <>
                                 <div className="small text-muted">Pagando até {fData(pontualidade.ate)}</div>
                                 <div className="display-6 fw-bold">{moeda(pontualidade.a_pagar)}</div>
-                                <div className="small text-success-emphasis mb-1">Desconto de {moeda(pontualidade.valor)} por pagar em dia</div>
+                                <div className="small text-success-emphasis mb-1">Desconto de pontualidade das mensalidades: {moeda(pontualidade.valor)}</div>
                                 <div className="small text-muted">Depois de {fData(pontualidade.ate)}: {moeda(c.a_pagar)} · vencimento {fData(c.vencimento)}</div>
                             </>
                         ) : (

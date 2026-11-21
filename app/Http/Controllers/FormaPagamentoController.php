@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ContaFinanceira;
 use App\Models\FormaPagamento;
 use App\Servicos\FormasPagamento;
+use App\Servicos\Inter\Boletos;
 use App\Support\Atividades;
 use App\Support\EmpresaAtual;
 use Illuminate\Http\RedirectResponse;
@@ -32,6 +33,8 @@ class FormaPagamentoController extends Controller
                 ]),
             'tipos_forma' => collect(FormaPagamento::TIPOS)->except('nao_informada'),
             'tipos_conta' => ContaFinanceira::TIPOS,
+            // regras da cobrança (desconto de pontualidade; multa, juros, prazo e baixa do boleto)
+            'regras' => Boletos::regras() + ['boleto_prazo_dias' => Boletos::prazo()],
         ]);
     }
 

@@ -39,7 +39,7 @@ export default function Inicio({ aberto, recebido, anotacoes, conferencia, pagar
             {interVence && (
                 <div className={`alert ${interVence.dias <= 7 ? 'alert-danger' : 'alert-warning'}`}>
                     {interVence.dias < 0 ? `A integração com o Banco Inter venceu em ${fData(interVence.data)}` : `A integração com o Banco Inter vence em ${fData(interVence.data)} (${interVence.dias} dia(s))`}: boleto, baixa automática e extrato param juntos.
-                    {' '}Renove o certificado no Internet Banking do Inter e envie o novo em <Link href="/configuracoes/inter">Configurações › Banco Inter</Link>.
+                    {' '}Renove o certificado no Internet Banking do Inter e envie o novo em <Link href="/configuracoes/inter">Configurações › API do banco</Link>.
                 </div>
             )}
 

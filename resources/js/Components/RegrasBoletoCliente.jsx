@@ -5,7 +5,9 @@ import Campo from './Campo'
 import { GRUPOS, Regra, regrasDoCliente, textoRegra } from './RegrasBoleto'
 import { usePode } from '../lib/permissoes'
 
-const TODOS = { multa: true, juros: true, desconto: true, baixa: true }
+// o desconto de pontualidade fica no card próprio da ficha (valor do cliente), fora das regras específicas
+const TODOS = { multa: true, juros: true, baixa: true }
+const GRUPOS_BOLETO = GRUPOS.filter(([g]) => g !== 'desconto')
 
 /** Ficha do cliente: regras do boleto — as da empresa ou específicas dele (ativado/desativado). */
 export default function RegrasBoletoCliente({ cliente, empresa }) {
@@ -26,7 +28,7 @@ export default function RegrasBoletoCliente({ cliente, empresa }) {
                 {pode('configuracoes') && <button type="button" className="btn btn-sm btn-outline-secondary" onClick={abrir}>Alterar</button>}
             </div>
             <ul className="list-group list-group-flush small">
-                {GRUPOS.map(([g]) => <li key={g} className="list-group-item bg-transparent">{textoRegra(g, valem)}</li>)}
+                {GRUPOS_BOLETO.map(([g]) => <li key={g} className="list-group-item bg-transparent">{textoRegra(g, valem)}</li>)}
             </ul>
 
             <Janela aberta={aberta} titulo={`Regras do boleto · ${cliente.nome}`} rotuloOk="Salvar" onFechar={() => setAberta(false)} onEnviar={salvar} ocupado={form.processing}>
@@ -42,15 +44,14 @@ export default function RegrasBoletoCliente({ cliente, empresa }) {
                 </div>
                 {!form.data.especificas ? (
                     <>
-                        <p className="small text-muted mb-2">Segue Configurações › Banco Inter, inclusive quando elas mudarem:</p>
-                        <ul className="small mb-0">{GRUPOS.map(([g]) => <li key={g}>{textoRegra(g, empresa)}</li>)}</ul>
+                        <p className="small text-muted mb-2">Segue Configurações › Cobranças, inclusive quando elas mudarem:</p>
+                        <ul className="small mb-0">{GRUPOS_BOLETO.map(([g]) => <li key={g}>{textoRegra(g, empresa)}</li>)}</ul>
                     </>
                 ) : (
                     <>
-                        <p className="small text-muted">Valem só para este cliente, nos próximos boletos. Mudanças nas regras da empresa não mudam estas.</p>
+                        <p className="small text-muted">Valem só para este cliente, nos próximos boletos. Mudanças nas regras da empresa não mudam estas. O desconto de pontualidade fica no card próprio.</p>
                         <Regra nome="multa" rotulo="Multa por atraso" form={form} />
                         <Regra nome="juros" rotulo="Juros por atraso" form={form} />
-                        <Regra nome="desconto" rotulo="Desconto de pontualidade" form={form} />
                         <Campo rotulo="Baixa automática (dias depois do vencimento)" type="number" min="0" max="60" value={form.data.boleto_baixa_dias} onChange={(e) => form.setData('boleto_baixa_dias', e.target.value)} erro={form.errors.boleto_baixa_dias} />
                     </>
                 )}

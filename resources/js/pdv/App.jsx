@@ -83,8 +83,9 @@ function Pdv() {
     const voltar = () => setTela('inicio')
     const carregarOpcoes = () => api('GET', '/estadias/opcoes').then(setOpcoes).catch((e) => avisos.erro(e.message))
     const abrirEstadias = () => { setTela('estadias'); carregarOpcoes() }
-    const estadiaEntrada = (de) => { setOrigem(de); setTela('estadia-entrada'); if (!opcoes) carregarOpcoes() }
-    const estadiaSaida = (id, de) => { setOrigem(de); setEstadiaId(id); setTela('estadia-saida'); if (!opcoes) carregarOpcoes() }
+    // sempre busca de novo (formas, tamanhos e convênios mudam na gestão); enquanto chega, a tela usa a lista anterior
+    const estadiaEntrada = (de) => { setOrigem(de); setTela('estadia-entrada'); carregarOpcoes() }
+    const estadiaSaida = (id, de) => { setOrigem(de); setEstadiaId(id); setTela('estadia-saida'); carregarOpcoes() }
     const feitoEstadia = (msg) => { avisos.ok(msg); setTela(origem) }
     const abrirLavagem = (inicio, id = null) => { setLavagem({ inicio, id }); setTela('lavagens') }
 
