@@ -4,6 +4,31 @@ Alterações do ERP Local, da mais nova para a mais antiga. Cada alteração ent
 
 ---
 
+## 22/11/2026 — Organização: consultas e regras que estavam em controladores vão para os serviços
+
+- Revisão do projeto, item 7. Sete funções que outras telas, o PDV e até um serviço chamavam direto de um controlador foram para `app/Servicos`, **com o mesmo conteúdo** (recortadas e coladas, sem mudar a regra):
+  - novo `Relatorios`: contas em aberto por cliente (antes em ContaController), recebido por categoria (RelatorioController) e total baixado (InicioController);
+  - `Inter\Boletos`: Inter ligado e cancelamento dos boletos resolvidos (antes em CobrancaController);
+  - `Estadias::tiposComTabela` e `Convenios::paraEscolher` (antes em EstadiaController; o `SemInternet`, que monta a cópia do sistema para o celular, chamava o controlador).
+- Chamadas atualizadas em todos os lugares; importações que sobraram saíram. Ficam nos controladores só as funções de tela (montar linha, validar formulário, identificar aparelho e PIN).
+- Regra registrada em docs/13: controlador não chama função de outro controlador para regra ou consulta; isso vai para Servicos/.
+- Testes: 306 de 307, igual a antes da mudança (o que falha é o do backup no Drive, que só falha no Windows por arquivo travado).
+- Arquivos: app/Servicos/Relatorios.php, app/Servicos/Inter/Boletos.php, app/Servicos/Estadias.php, app/Servicos/Convenios.php, app/Servicos/Pdv/SemInternet.php, app/Http/Controllers/ContaController.php, InicioController.php, RelatorioController.php, CobrancaController.php, EstadiaController.php, ExtratoController.php, Pdv/CaixaPdvController.php, Pdv/EstadiaPdvController.php, Pdv/LavagemPdvController.php, app/Http/Middleware/HandleInertiaRequests.php, tests/Feature/OperacaoTest.php, tests/Feature/PdvEstadiaTest.php, docs/13-desenvolvimento.md.
+
+## 22/11/2026 — Datas pelo CampoData; zip e SQL de limpeza fora do Git
+
+- **Datas:** os dois últimos `<input type="date">` viraram `CampoData` (dd/mm/aaaa com o calendário em pt-BR): vencimento do boleto na cobrança e data da retirada do sócio. O limite do vencimento (hoje até 90 dias) continua conferido pelo servidor, com a mensagem de sempre. Conserto junto: a data sugerida da retirada usava a hora de Londres (UTC) e, depois das 21h, vinha com o dia seguinte, que o servidor recusava.
+- **.gitignore:** `erp-base.zip` e a pasta `sql-limpeza/` (scripts que apagam dados) ficam só na máquina. Os arquivos continuam na pasta; a `sql-limpeza` só deixou de ser acompanhada pelo Git (versões antigas seguem no histórico).
+- Arquivos: resources/js/Components/BoletoCobranca.jsx, resources/js/Pages/Resultado/Caixas.jsx, .gitignore.
+
+## 22/11/2026 — Retirada do sócio: cancelar com motivo em vez de apagar; formatos só pelo sistema
+
+- **Retirada do sócio (Resultado e caixa › Caixa do PDV):** o botão "Apagar" virou **"Cancelar"**, com janela que pede o motivo (obrigatório). A retirada não some mais do banco: fica na lista, riscada, com o selo "Cancelada", data, quem cancelou e o motivo. Deixa de contar no Resultado ("Ficou na empresa"), no fluxo de caixa e no total do mês. Para corrigir valor ou data, cancela e registra a certa. A do PDV continua sem cancelamento pela gestão. Antes, apagar mudava o resultado de um mês já conferido e só deixava uma frase no registro de atividades.
+- Migration `2026_12_10_000001_caixa_movimentos_cancelamento` (caixa_movimentos.cancelada_em, cancelada_por, motivo_cancelamento). Rota nova `POST /resultado/retiradas/{id}/cancelar`; a de apagar saiu.
+- **Formatos:** cinco lugares formatavam número e data pelo navegador (`toLocaleString`) em vez de `lib/formato.js`: regras do boleto (multa/juros em %), margem no Resultado do mês, valores do ticket impresso do PDV e duas datas na tela Aparelho do PDV. Agora todos usam o formato do sistema; nova função `numero()` para percentuais. No ticket, o "R$" passa a sair com espaço comum, que a térmica imprime certo. A "hora do servidor" na tela Aparelho mostra a hora de São Paulo, como o servidor, e não convertida pelo fuso do celular.
+- Versão do cache do PDV subida (pdv-app-v5 → v6) para os aparelhos instalados pegarem a mudança.
+- Arquivos: database/migrations/2026_12_10_000001_caixa_movimentos_cancelamento.php, app/Models/CaixaMovimento.php, app/Servicos/Pdv/Caixas.php, app/Servicos/Resultado.php, app/Http/Controllers/CaixaController.php, routes/web.php, resources/js/Pages/Resultado/Caixas.jsx, resources/js/lib/formato.js, resources/js/Components/RegrasBoleto.jsx, resources/js/Pages/Resultado/Mes.jsx, resources/js/pdv/impressao/modelo.js, resources/js/pdv/telas/Aparelho.jsx, public/pdv-sw.js, tests/Feature/PdvCaixaTest.php, tests/js/formato.test.mjs, docs/12-decisoes.md, docs/13-desenvolvimento.md, docs/15-plano-pdv.md.
+
 ## 21/11/2026 — PDV: conserto do voltar que recarregava o app (splash)
 
 - O botão Voltar do celular estava recarregando o PDV (aparecia o splash) em vez de ser capturado dentro do app. Numa tela interna isso caía no Início e parecia funcionar; no Início, o recarregamento aparecia puro (splash). Causa: a âncora no histórico que segura o Voltar só era criada se ainda não existisse; quando o Android reabria o app reaproveitando o estado antigo (tela fixada, volta do segundo plano), vinha sem âncora e o Voltar saía do app.

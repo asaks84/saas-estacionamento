@@ -4,6 +4,7 @@ import QRCode from 'qrcode'
 import Janela from './Janela'
 import Campo from './Campo'
 import CampoValor from './CampoValor'
+import CampoData from './CampoData'
 import { data as fData, dataHora, moeda } from '../lib/formato'
 import { usePode } from '../lib/permissoes'
 
@@ -113,10 +114,8 @@ export default function BoletoCobranca({ cobranca, boletos, inter, emAberto, fal
                                 Gera um boleto de <strong>{moeda(valorBoleto)}</strong>{Number(desconto) > 0 && <> ({moeda(emAberto)} − {moeda(Number(desconto))} de desconto)</>}. Quando for pago, a baixa é automática.
                                 {mudouMes && <> O vencimento da cobrança ({fData(cobranca.vencimento)}) já passou: a data sugerida foi para o mês seguinte.</>}
                             </span>
-                            <div>
-                                <label className="form-label small mb-1" htmlFor="bol-venc">Vencimento do boleto</label>
-                                <input type="date" id="bol-venc" className="form-control" style={{ maxWidth: 170 }} value={vencimento} min={hoje} max={somarDias(hoje, 90)}
-                                    onChange={(e) => setVencimento(e.target.value)} />
+                            <div style={{ minWidth: 220 }} title={`Entre ${fData(hoje)} e ${fData(somarDias(hoje, 90))}`}>
+                                <CampoData rotulo="Vencimento do boleto" className="mb-0" value={vencimento} onChange={setVencimento} />
                             </div>
                             <button type="button" className="btn btn-primary align-self-end" disabled={ocupado || !vencimento}
                                 onClick={() => acao(`/cobrancas/${cobranca.id}/boleto`, podeDesconto ? { regras, vencimento, desconto: Number(desconto) || 0, desconto_motivo: motivo } : { regras, vencimento })}>{ocupado ? 'Gerando…' : 'Gerar boleto'}</button>

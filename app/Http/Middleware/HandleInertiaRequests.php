@@ -2,11 +2,11 @@
 
 namespace App\Http\Middleware;
 
-use App\Http\Controllers\CobrancaController;
 use App\Models\AtualizacaoCadastral;
 use App\Models\CadastroPendente;
 use App\Models\Empresa;
 use App\Models\PdvAcao;
+use App\Servicos\Inter\Boletos;
 use App\Support\EmpresaAtual;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -62,7 +62,7 @@ class HandleInertiaRequests extends Middleware
             'nome' => $empresa->nome,
             'logo_url' => $empresa->logo ? asset('storage/'.$empresa->logo) : null,
             // Banco Inter ligado: as telas de cobrança oferecem "gerar boleto"
-            'inter' => $id ? CobrancaController::interLigado() : false,
+            'inter' => $id ? Boletos::interLigado() : false,
         ] : null;
     }
 }

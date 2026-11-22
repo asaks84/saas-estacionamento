@@ -10,6 +10,7 @@ use App\Models\Servico;
 use App\Servicos\Baixa;
 use App\Servicos\Extrato;
 use App\Servicos\FormasPagamento;
+use App\Servicos\Inter\Boletos;
 use App\Support\Atividades;
 use App\Support\Formato;
 use Illuminate\Http\JsonResponse;
@@ -42,7 +43,7 @@ class ExtratoController extends Controller
                 'cliente' => $e->cliente?->only(['id', 'nome']), 'processado_em' => $e->processado_em->format('Y-m-d H:i'), 'usuario' => $e->usuario_nome,
             ]),
             'tamanho_max_kb' => Extrato::TAMANHO_MAX_KB,
-            'inter' => CobrancaController::interLigado(),
+            'inter' => Boletos::interLigado(),
             // saldo do Inter carregado depois da tela (não segura a página se o banco demorar)
             'saldo_inter' => Inertia::defer(fn () => self::saldoInter()),
             'periodo_inter' => ['de' => now()->subDays(7)->toDateString(), 'ate' => now()->toDateString()],
@@ -51,7 +52,7 @@ class ExtratoController extends Controller
 
     private static function saldoInter(): array
     {
-        if (! CobrancaController::interLigado()) {
+        if (! Boletos::interLigado()) {
             return ['valor' => null, 'erro' => null];
         }
         try {

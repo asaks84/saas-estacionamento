@@ -195,7 +195,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/resultado/fluxo', [ResultadoController::class, 'fluxo']);
         Route::get('/resultado/caixas', [CaixaController::class, 'index']);
         Route::post('/resultado/retiradas', [CaixaController::class, 'retirada']);
-        Route::delete('/resultado/retiradas/{movimento}', [CaixaController::class, 'apagarRetirada']);
+        Route::post('/resultado/retiradas/{movimento}/cancelar', [CaixaController::class, 'cancelarRetirada']);
     });
     Route::middleware('permissao:faturamento')->group(function () {
         Route::get('/relatorios/recebimentos', [RelatorioController::class, 'recebimentos']);

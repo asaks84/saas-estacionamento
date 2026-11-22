@@ -4,10 +4,13 @@ import TituloPagina from '../../Components/TituloPagina'
 import AbasResultado from '../../Components/AbasResultado'
 import Campo from '../../Components/Campo'
 import CampoValor from '../../Components/CampoValor'
+import CampoData from '../../Components/CampoData'
+import Janela from '../../Components/Janela'
 import { data, dataHora, mesAno, moeda } from '../../lib/formato'
 
 const mudarMes = (ym, n) => { const [a, m] = ym.split('-').map(Number); const d = new Date(a, m - 1 + n, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` }
-const hoje = () => new Date().toISOString().slice(0, 10)
+// data local (toISOString daria o dia seguinte depois das 21h, por ser em UTC)
+const hoje = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
 
 function Diferenca({ v }) {
     if (v === null || v === undefined) return <span className="text-muted">—</span>
@@ -73,7 +76,7 @@ function NovaRetirada({ contas }) {
     return (
         <form className="row g-2 align-items-start" onSubmit={(e) => { e.preventDefault(); form.post('/resultado/retiradas', { preserveScroll: true, onSuccess: () => form.reset('valor', 'motivo') }) }}>
             <div className="col-sm-3"><CampoValor rotulo="Valor" value={form.data.valor} onChange={(v) => form.setData('valor', v)} erro={form.errors.valor} /></div>
-            <div className="col-sm-3"><Campo rotulo="Data" type="date" value={form.data.data} max={hoje()} onChange={(e) => form.setData('data', e.target.value)} erro={form.errors.data} /></div>
+            <div className="col-sm-3"><CampoData rotulo="Data" value={form.data.data} onChange={(v) => form.setData('data', v)} erro={form.errors.data} /></div>
             <div className="col-sm-3">
                 <Campo as="select" rotulo="Saiu de" value={form.data.conta_financeira_id} onChange={(e) => form.setData('conta_financeira_id', e.target.value)} erro={form.errors.conta_financeira_id}>
                     {contas.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
@@ -89,7 +92,9 @@ function NovaRetirada({ contas }) {
 export default function Caixas({ mes, caixas, detalhe, retiradas, contas }) {
     const ir = (dados) => router.get('/resultado/caixas', { mes, ...dados }, { preserveScroll: true, preserveState: true })
     const [nova, setNova] = useState(false)
-    const totalRet = retiradas.reduce((s, r) => s + r.valor, 0)
+    const [cancelando, setCancelando] = useState(null)
+    const canc = useForm({ motivo: '' })
+    const totalRet = retiradas.filter((r) => !r.cancelada).reduce((s, r) => s + r.valor, 0)
     return (
         <div className="pagina">
             <AbasResultado />
@@ -144,16 +149,26 @@ export default function Caixas({ mes, caixas, detalhe, retiradas, contas }) {
                         <table className="table table-sm align-middle mb-0">
                             <thead><tr><th>Data</th><th>Saiu de</th><th>Observação</th><th className="text-end">Valor</th><th /></tr></thead>
                             <tbody>{retiradas.map((r) => (
-                                <tr key={r.id}>
-                                    <td>{data(r.data)}</td><td>{r.origem}</td><td className="small">{r.motivo}{r.quem && <span className="text-muted"> · {r.quem}</span>}</td>
-                                    <td className="text-end">{moeda(r.valor)}</td>
-                                    <td className="text-end">{!r.pdv && <button type="button" className="btn btn-sm btn-link text-danger" onClick={() => { if (window.confirm('Apagar esta retirada?')) router.delete(`/resultado/retiradas/${r.id}`, { preserveScroll: true }) }}>Apagar</button>}</td>
+                                <tr key={r.id} className={r.cancelada ? 'text-muted' : ''}>
+                                    <td>{r.cancelada ? <s>{data(r.data)}</s> : data(r.data)}</td><td>{r.origem}</td>
+                                    <td className="small">{r.motivo}{r.quem && <span className="text-muted"> · {r.quem}</span>}
+                                        {r.cancelada && <div><span className="selo">Cancelada</span> {dataHora(r.cancelada.em)}{r.cancelada.por && ` por ${r.cancelada.por}`}: {r.cancelada.motivo}</div>}
+                                    </td>
+                                    <td className="text-end">{r.cancelada ? <s>{moeda(r.valor)}</s> : moeda(r.valor)}</td>
+                                    <td className="text-end">{!r.pdv && !r.cancelada && <button type="button" className="btn btn-sm btn-link text-danger" onClick={() => { canc.reset(); setCancelando(r) }}>Cancelar</button>}</td>
                                 </tr>
                             ))}</tbody>
                         </table>
                     )}
                 </div>
             </div>
+
+            <Janela aberta={!!cancelando} perigo titulo={`Cancelar retirada · ${cancelando ? moeda(cancelando.valor) : ''}`} rotuloOk="Cancelar retirada" ocupado={canc.processing}
+                onFechar={() => setCancelando(null)}
+                onEnviar={() => canc.post(`/resultado/retiradas/${cancelando.id}/cancelar`, { preserveScroll: true, onSuccess: () => setCancelando(null) })}>
+                <p>A retirada não é apagada: fica na lista, riscada, com o motivo, e deixa de contar no resultado e no fluxo de caixa. Se o valor ou a data estavam errados, registre a certa depois.</p>
+                <Campo rotulo="Motivo" value={canc.data.motivo} onChange={(e) => canc.setData('motivo', e.target.value)} erro={canc.errors.motivo} maxLength={200} autoFocus />
+            </Janela>
         </div>
     )
 }

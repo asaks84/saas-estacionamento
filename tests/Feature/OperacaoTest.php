@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Http\Controllers\EstadiaController;
 use App\Models\Convenio;
 use App\Models\Estadia;
 use App\Models\EtapaLavagem;
@@ -126,7 +125,7 @@ class OperacaoTest extends TestCase
         $this->assertSame(8.0, Estadias::calcular($e, Carbon::parse('2026-11-10 11:30'))['valor']);
 
         // os tipos com o resumo da tabela (o PDV mostra na entrada)
-        $t = EstadiaController::tiposComTabela();
+        $t = Estadias::tiposComTabela();
         $this->assertSame(['Carro', 'Carros · 1h R$ 15,00 · cada 1h R$ 5,00'], [$t[0]['nome'], $t[0]['tabela']]);
         $this->assertSame('Motos · cada 1h R$ 4,00 · Diária (12h) R$ 10,00', $t[1]['tabela']);
     }

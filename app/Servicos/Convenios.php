@@ -191,4 +191,13 @@ class Convenios
     {
         return ConvenioRegra::MODOS;
     }
+
+    /** convênios ativos para escolher na tela: os que valem para estadia ($uso = estadia) ou para algum serviço */
+    public static function paraEscolher(string $uso): array
+    {
+        return Convenio::with('cliente:id,nome', 'regras.servico')->where('ativo', true)
+            ->whereHas('regras', fn ($q) => $uso === 'estadia' ? $q->whereNull('servico_id') : $q->whereNotNull('servico_id'))->get()
+            ->sortBy(fn ($c) => $c->cliente?->nome)->values()
+            ->map(fn ($c) => ['id' => $c->id, 'nome' => $c->cliente?->nome, 'resumo' => $c->resumo()])->all();
+    }
 }

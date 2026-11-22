@@ -3,7 +3,7 @@
 // - a página /pdv: tenta a internet primeiro (versão nova); sem internet, abre a guardada;
 // - os arquivos do app (/build, imagens, manifesto): guardados ao instalar, pela lista do Vite, e servidos daqui;
 // - a API (/api) nunca é guardada: sem internet quem responde é o próprio app (fila e cópia do servidor).
-const CAIXA = 'pdv-app-v5'
+const CAIXA = 'pdv-app-v6'
 const PAGINA = '/pdv'
 const FIXOS = [PAGINA, '/pdv.webmanifest', '/imagens/logo-local.png', '/imagens/logo-local-escuro.png', '/imagens/favicon-96.png', '/imagens/pdv-192.png']
 

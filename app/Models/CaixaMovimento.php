@@ -18,7 +18,18 @@ class CaixaMovimento extends Modelo
 
     protected function casts(): array
     {
-        return ['data' => 'date', 'valor' => 'decimal:2'];
+        return ['data' => 'date', 'valor' => 'decimal:2', 'cancelada_em' => 'datetime'];
+    }
+
+    /** só os que valem (retirada do sócio cancelada na gestão fica guardada, mas não conta) */
+    public function scopeValidos($q)
+    {
+        return $q->whereNull('caixa_movimentos.cancelada_em');
+    }
+
+    public function canceladaPor(): BelongsTo
+    {
+        return $this->belongsTo(Usuario::class, 'cancelada_por');
     }
 
     /** entra na gaveta (+1) ou sai (−1) */

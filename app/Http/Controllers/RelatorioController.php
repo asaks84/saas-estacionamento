@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\OrdemServico;
 use App\Models\Pagamento;
+use App\Servicos\Relatorios;
 use App\Support\Csv;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -15,20 +14,6 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 /** Recebimentos por período: por forma de pagamento e pelo que foi pago (mensalidades, serviços...). */
 class RelatorioController extends Controller
 {
-    /** soma do que foi baixado no período, por tipo de ordem (crédito usado entra negativo) */
-    public static function porCategoria(string $de, string $ate): array
-    {
-        $linhas = DB::table('pagamento_itens as i')
-            ->join('pagamentos as p', 'p.id', '=', 'i.pagamento_id')
-            ->join('ordens_servico as o', 'o.id', '=', 'i.ordem_id')
-            ->where('p.empresa_id', app(\App\Support\EmpresaAtual::class)->id())
-            ->where('p.situacao', 'confirmado')
-            ->whereBetween('p.recebido_em', [$de.' 00:00:00', $ate.' 23:59:59'])
-            ->groupBy('o.tipo')->selectRaw('o.tipo, SUM(i.valor) AS total, COUNT(*) AS qtd')->get();
-
-        return $linhas->map(fn ($l) => ['tipo' => $l->tipo, 'rotulo' => OrdemServico::TIPOS[$l->tipo] ?? $l->tipo, 'total' => round((float) $l->total, 2), 'qtd' => (int) $l->qtd])->values()->all();
-    }
-
     public function recebimentos(Request $request): Response|StreamedResponse
     {
         $f = $request->validate(['de' => ['nullable', 'date_format:Y-m-d'], 'ate' => ['nullable', 'date_format:Y-m-d'], 'forma' => ['nullable', 'integer']]);
@@ -59,7 +44,7 @@ class RelatorioController extends Controller
                 'qtd' => $validos->count(),
             ],
             'por_forma' => $validos->groupBy(fn ($p) => $p->forma?->nome ?? 'Não informada')->map(fn ($g, $nome) => ['nome' => $nome, 'qtd' => $g->count(), 'total' => round((float) $g->sum('valor'), 2)])->sortByDesc('total')->values(),
-            'por_categoria' => self::porCategoria($de, $ate),
+            'por_categoria' => Relatorios::porCategoria($de, $ate),
             'formas' => \App\Models\FormaPagamento::orderBy('ordem')->get(['id', 'nome']),
             'pagamentos' => $pagamentos->take(500)->map(fn (Pagamento $p) => [
                 'id' => $p->id,

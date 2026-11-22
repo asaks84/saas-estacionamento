@@ -80,7 +80,7 @@ class Caixas
             $porServico[] = ['servico' => 'Crédito do cliente usado', 'qtd' => $creditos->pluck('id')->unique()->count(), 'total' => round($creditos->sum('valor'), 2)];
         }
 
-        $movs = $c->movimentos()->with(['usuario:id,nome', 'contaFinanceira:id,nome', 'planoConta:id,nome'])->get();
+        $movs = $c->movimentos()->validos()->with(['usuario:id,nome', 'contaFinanceira:id,nome', 'planoConta:id,nome'])->get();
         $dinheiro = round($pags->where('forma_tipo', 'dinheiro')->sum('valor'), 2);
         $soma = fn (string $tipo) => round($movs->where('tipo', $tipo)->sum(fn ($m) => (float) $m->valor), 2);
         $esperado = round((float) $c->troco_inicial + $dinheiro + $soma('suprimento') - $soma('sangria') - $soma('pagamento') - $soma('retirada'), 2);
@@ -231,10 +231,30 @@ class Caixas
         return $m;
     }
 
-    /** total das retiradas dos sócios entre duas datas (entra no Resultado abaixo do lucro e no fluxo de caixa) */
+    /**
+     * Cancela a retirada do sócio registrada na gestão. Nunca apaga (regra do dinheiro): fica guardada com motivo,
+     * data e quem cancelou, e deixa de contar no Resultado e no fluxo de caixa. A do PDV faz parte do caixa e não se cancela.
+     */
+    public static function cancelarRetirada(CaixaMovimento $m, string $motivo): void
+    {
+        $motivo = trim($motivo);
+        if ($m->tipo !== 'retirada' || $m->caixa_id) {
+            self::erro('motivo', 'A retirada feita no PDV faz parte do caixa e não pode ser cancelada aqui.');
+        }
+        if ($m->cancelada_em) {
+            self::erro('motivo', 'Esta retirada já está cancelada.');
+        }
+        if ($motivo === '') {
+            self::erro('motivo', 'Informe o motivo do cancelamento.');
+        }
+        $m->update(['cancelada_em' => now(), 'cancelada_por' => Auth::id(), 'motivo_cancelamento' => mb_substr($motivo, 0, 200)]);
+        Atividades::registrar('caixa_movimento', 'retirada do sócio cancelada: '.Formato::moeda((float) $m->valor).' de '.$m->data->format('d/m/Y').' ('.$motivo.')');
+    }
+
+    /** total das retiradas dos sócios entre duas datas (entra no Resultado abaixo do lucro e no fluxo de caixa); canceladas não contam */
     public static function retiradas(string $de, string $ate): float
     {
-        return round((float) CaixaMovimento::where('tipo', 'retirada')->whereBetween('data', [$de, $ate])->sum('valor'), 2);
+        return round((float) CaixaMovimento::validos()->where('tipo', 'retirada')->whereBetween('data', [$de, $ate])->sum('valor'), 2);
     }
 
     /** contas em aberto do cliente para receber no balcão (as mais antigas primeiro) */

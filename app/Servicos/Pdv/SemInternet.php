@@ -52,7 +52,7 @@ class SemInternet
     {
         FormasPagamento::garantirPadrao();
         $unidade = Ordens::unidadePadrao();
-        $tipos = collect(EstadiaController::tiposComTabela())->filter(fn ($t) => $t['tabela'])->values();
+        $tipos = collect(Estadias::tiposComTabela())->filter(fn ($t) => $t['tabela'])->values();
         $tabelas = [];
         foreach ($tipos as $t) {
             $tarifa = Precos::tarifa($t['id'], $unidade);

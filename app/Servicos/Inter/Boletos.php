@@ -535,4 +535,21 @@ class Boletos
 
         return [$cancelados, $erros];
     }
+
+    /** Inter ligado e com a configuração completa (sem isso, a tela não oferece boleto) */
+    public static function interLigado(): bool
+    {
+        $i = Integracao::inter();
+
+        return (bool) ($i && $i->ativo && $i->completa());
+    }
+
+    /** cobrança levada, paga ou cancelada: cancela o boleto antigo no Inter (falhou agora, a consulta periódica tenta de novo) */
+    public static function tentarCancelarResolvidos(): void
+    {
+        try {
+            self::cancelarResolvidos();
+        } catch (Throwable) {
+        }
+    }
 }

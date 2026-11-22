@@ -3,6 +3,7 @@ import { prepararAgora, prontidao } from '../offline/prontidao'
 import { atualizarPacote } from '../offline/fila'
 import { usePin } from '../Pin'
 import { VERSAO } from '../api'
+import { dataHora } from '../../lib/formato'
 import { Icone, TopoEtapa, useAvisos } from '../visual'
 
 // instalado como app já abre em tela cheia (pdv.webmanifest); no navegador, só com um toque
@@ -31,7 +32,7 @@ function SemInternet() {
                 <div className="fw-semibold mb-1">{tudo ? 'Pronto para funcionar sem internet' : 'Ainda não funciona sem internet'}</div>
                 <ul className="list-unstyled small mb-2 d-flex flex-column gap-1">
                     {item(p.app, p.app ? 'App guardado no celular' : `App ainda não guardado${p.motivo ? `: ${p.motivo}` : ''}`)}
-                    {item(!!p.pacote, p.pacote ? `Cópia do sistema de ${p.pacote.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}` : 'Sem cópia do sistema ainda')}
+                    {item(!!p.pacote, p.pacote ? `Cópia do sistema de ${dataHora(p.pacote)}` : 'Sem cópia do sistema ainda')}
                     {item(p.pins.length > 0, p.pins.length ? `PIN sem internet de: ${p.pins.join(', ')}` : 'Nenhum PIN conhecido ainda: quem tem PIN aparece aqui depois de usar uma vez com internet')}
                 </ul>
                 <button type="button" className="btn btn-sm btn-outline-secondary" disabled={preparando} onClick={preparar}>{preparando ? 'Preparando…' : 'Preparar agora'}</button>
@@ -94,7 +95,7 @@ export default function Aparelho({ eu, tema, setTema, onVoltar, irPara, onDespar
                 <button type="button" onClick={() => irPara('cadastrar-pin')}><Icone nome="chave" tamanho={22} />Cadastrar ou trocar meu PIN</button>
             </div>
 
-            <p className="small text-muted text-center">Hora do servidor: {new Date(eu.servidor_hora).toLocaleString('pt-BR')}</p>
+            <p className="small text-muted text-center">Hora do servidor: {dataHora(eu.servidor_hora)}:{String(eu.servidor_hora).slice(17, 19)}</p>
             <div className="text-center mt-3">
                 {sair
                     ? <button type="button" className="btn btn-danger" onClick={onDesparear}>Confirmar: tirar o pareamento deste celular</button>

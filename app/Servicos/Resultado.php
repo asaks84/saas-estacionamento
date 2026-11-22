@@ -340,7 +340,7 @@ class Resultado
         }
 
         // retiradas dos sócios (da gaveta do PDV ou do banco)
-        $ret = DB::table('caixa_movimentos')->where('empresa_id', $e)->where('tipo', 'retirada')->whereBetween('data', [$de, $ate])->get(['data', 'valor']);
+        $ret = DB::table('caixa_movimentos')->where('empresa_id', $e)->where('tipo', 'retirada')->whereNull('cancelada_em')->whereBetween('data', [$de, $ate])->get(['data', 'valor']);
         foreach ($ret as $x) {
             $add((string) $x->data, 'saidas', 'Retirada do sócio', (float) $x->valor, false);
         }

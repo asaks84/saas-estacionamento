@@ -9,6 +9,7 @@ use App\Models\Cliente;
 use App\Models\Estadia;
 use App\Models\FormaPagamento;
 use App\Models\Pagamento;
+use App\Servicos\Convenios;
 use App\Servicos\Estadias;
 use App\Servicos\FormasPagamento;
 use App\Servicos\Pdv\SemInternet;
@@ -35,9 +36,9 @@ class EstadiaPdvController extends Controller
         FormasPagamento::garantirPadrao();
 
         return response()->json([
-            'tipos' => collect(EstadiaController::tiposComTabela())->filter(fn ($t) => $t['tabela'])->values(),
+            'tipos' => collect(Estadias::tiposComTabela())->filter(fn ($t) => $t['tabela'])->values(),
             'formas' => FormaPagamento::where('ativa', true)->orderBy('ordem')->get(['id', 'nome', 'tipo', 'parcelas_max']),
-            'convenios' => EstadiaController::convenios('estadia'),
+            'convenios' => Convenios::paraEscolher('estadia'),
         ]);
     }
 

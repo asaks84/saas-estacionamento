@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Http\Controllers\EstadiaController;
 use App\Models\Aparelho;
 use App\Models\Convenio;
 use App\Models\Estadia;
@@ -14,6 +13,7 @@ use App\Models\Tarifa;
 use App\Models\TarifaFaixa;
 use App\Models\TarifaPacote;
 use App\Servicos\Convenios;
+use App\Servicos\Estadias;
 use App\Servicos\FormasPagamento;
 use App\Servicos\Pdv\Aparelhos;
 use App\Servicos\Pdv\Pins;
@@ -194,7 +194,7 @@ class PdvEstadiaTest extends TestCase
 
     public function test_gestao_entrada_com_diaria_e_convenio_na_saida(): void
     {
-        $this->assertSame(40.0, EstadiaController::tiposComTabela()[0]['diarias'][0]['valor']);
+        $this->assertSame(40.0, Estadias::tiposComTabela()[0]['diarias'][0]['valor']);
         $this->actingAs($this->a->operador)->post('/estadias', ['placa' => 'GES1T11', 'modelo' => 'HB20', 'tipo_veiculo_id' => $this->a->tipo->id,
             'pacote_id' => $this->diaria->id, 'pagar_agora' => true, 'forma_pagamento_id' => $this->forma('dinheiro'), 'valor_recebido' => 50])->assertSessionHasNoErrors();
         $e = Estadia::first();

@@ -354,4 +354,17 @@ class Estadias
         $e->update(['situacao' => 'cancelada', 'cancelada_em' => now(), 'cancelada_por' => Auth::id(), 'motivo_cancelamento' => mb_substr($motivo, 0, 200)]);
         Atividades::registrar('estadia_cancelada', 'ticket '.$e->numero.' · '.$e->rotulo().' ('.$motivo.')');
     }
+
+    /** tipos de veículo com o resumo da tabela de estadia que vale hoje (vazio = sem tabela) */
+    public static function tiposComTabela(): array
+    {
+        $unidade = Ordens::unidadePadrao();
+
+        return TipoVeiculo::where('ativo', true)->ordenados()->get(['id', 'nome'])->map(function ($t) use ($unidade) {
+            $tarifa = Precos::tarifa($t->id, $unidade);
+
+            return ['id' => $t->id, 'nome' => $t->nome, 'tabela' => $tarifa ? $tarifa->nome.' · '.$tarifa->resumo() : null,
+                'diarias' => $tarifa ? Estadias::diarias($t->id)->map(fn ($p) => ['id' => $p->id, 'nome' => $p->nome, 'valor' => (float) $p->valor])->values()->all() : []];
+        })->all();
+    }
 }

@@ -50,6 +50,16 @@ export function moeda(valor) {
     return `${negativo ? '-' : ''}R$ ${comPontos},${centavos}`
 }
 
+/** número com até `casas` decimais, sem zeros sobrando: 2 → "2", 2.5 → "2,5", 1234.567 → "1.234,57" */
+export function numero(valor, casas = 2) {
+    const n = Number(valor || 0)
+    const negativo = n < 0
+    const [inteiro, decimais = ''] = Math.abs(n).toFixed(casas).split('.')
+    const comPontos = inteiro.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+    const resto = decimais.replace(/0+$/, '')
+    return `${negativo && (+inteiro || +resto) ? '-' : ''}${comPontos}${resto ? `,${resto}` : ''}`
+}
+
 /** iniciais para o avatar: "Cauê Lopes" → "CL" */
 export function iniciais(nome) {
     const partes = String(nome || '').trim().split(/\s+/).filter(Boolean)

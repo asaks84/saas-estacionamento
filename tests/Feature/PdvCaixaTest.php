@@ -149,13 +149,30 @@ class PdvCaixaTest extends TestCase
         $this->assertNull($m->caixa_id);
         $this->assertSame(1000.0, Resultado::mes('2026-11')['retiradas']);
         $this->actingAs($this->a->admin)->get('/resultado')->assertInertia(fn ($p) => $p->where('resultado.retiradas', 1000));
-        $this->actingAs($this->a->admin)->delete("/resultado/retiradas/{$m->id}")->assertSessionHas('sucesso');
+        // não se apaga: cancela com motivo obrigatório, e a cancelada fica guardada
+        $this->actingAs($this->a->operador)->post("/resultado/retiradas/{$m->id}/cancelar", ['motivo' => 'x'])->assertForbidden();
+        $this->actingAs($this->a->admin)->post("/resultado/retiradas/{$m->id}/cancelar", ['motivo' => ''])->assertSessionHasErrors('motivo');
+        $this->assertNull($m->fresh()->cancelada_em);
+        $this->actingAs($this->a->admin)->post("/resultado/retiradas/{$m->id}/cancelar", ['motivo' => 'Valor digitado errado'])->assertSessionHas('sucesso');
+        $m = $m->fresh();
+        $this->assertNotNull($m->cancelada_em);
+        $this->assertSame($this->a->admin->id, $m->cancelada_por);
+        $this->assertSame('Valor digitado errado', $m->motivo_cancelamento);
         $this->assertSame(0.0, Resultado::mes('2026-11')['retiradas']);
+        $this->assertNotContains('Retirada do sócio', collect(Resultado::fluxo('2026-11-01', '2026-11-30')['dias'])->flatMap(fn ($d) => array_column($d['itens'], 'rotulo'))->all());
+        $this->actingAs($this->a->admin)->get('/resultado/caixas?mes=2026-11')
+            ->assertInertia(fn ($p) => $p->has('retiradas', 1)->where('retiradas.0.cancelada.motivo', 'Valor digitado errado'));
+        // cancelar de novo não muda nada
+        $this->actingAs($this->a->admin)->post("/resultado/retiradas/{$m->id}/cancelar", ['motivo' => 'outra'])->assertSessionHasErrors('motivo');
+        $this->assertSame('Valor digitado errado', $m->fresh()->motivo_cancelamento);
+        // o botão antigo de apagar não existe mais
+        $this->actingAs($this->a->admin)->delete("/resultado/retiradas/{$m->id}")->assertNotFound();
+        $this->assertNotNull($m->fresh());
 
-        // a do PDV não se apaga pela gestão
+        // a do PDV não se cancela pela gestão
         $c = Caixa::create(['aberto_em' => now(), 'troco_inicial' => 0]);
         $p = CaixaMovimento::create(['caixa_id' => $c->id, 'tipo' => 'retirada', 'data' => '2026-11-10', 'valor' => 10]);
-        $this->actingAs($this->a->admin)->delete("/resultado/retiradas/{$p->id}")->assertSessionHas('erro');
-        $this->assertNotNull($p->fresh());
+        $this->actingAs($this->a->admin)->post("/resultado/retiradas/{$p->id}/cancelar", ['motivo' => 'x'])->assertSessionHas('erro');
+        $this->assertNull($p->fresh()->cancelada_em);
     }
 }

@@ -1,4 +1,5 @@
 import { Ticket } from './escpos'
+import { moeda } from '../../lib/formato'
 
 /*
  * Modelos de impressão (8.8): cada papel é uma lista de linhas (blocos) que o editor do ERP
@@ -8,7 +9,8 @@ import { Ticket } from './escpos'
  * A lista de chaves aceitas por papel também está no servidor (App\Servicos\Pdv\ImpressaoModelos).
  */
 
-export const moeda = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+// o mesmo formato do sistema (não depende do idioma do celular; espaço comum, que a térmica imprime certo)
+export { moeda }
 const semHttp = (u) => String(u || '').replace(/^https?:\/\//, '')
 const quando = (s) => (s || '').split(' ').map((p, i) => (i ? p : p.includes('-') ? p.split('-').reverse().join('/') : p)).join(' ')
 

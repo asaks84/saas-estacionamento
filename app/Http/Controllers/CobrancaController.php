@@ -7,7 +7,6 @@ use App\Models\Boleto;
 use App\Models\Cliente;
 use App\Models\Cobranca;
 use App\Models\Empresa;
-use App\Models\Integracao;
 use App\Models\OrdemServico;
 use App\Servicos\Cobrancas;
 use App\Servicos\Inter\Boletos;
@@ -79,13 +78,13 @@ class CobrancaController extends Controller
         $mes = $this->mes($request);
 
         $linhas = Cobrancas::previa($mes);
-        if (self::interLigado()) {
+        if (Boletos::interLigado()) {
             // quem tem a primeira mensalidade (ou proporcional) recebe o boleto sem as regras
             $primeiras = OrdemServico::abertas()->whereIn('cliente_id', $linhas->pluck('cliente_id'))->where('tipo', 'mensalidade')->get()->groupBy('cliente_id');
             $linhas = $linhas->map(fn ($l) => $l + ['boleto_sem_regras' => Boletos::temPrimeiraMensalidade($primeiras[$l['cliente_id']] ?? [])]);
         }
 
-        return Inertia::render('Cobrancas/Gerar', ['mes' => $mes, 'linhas' => $linhas, 'inter' => self::interLigado()]);
+        return Inertia::render('Cobrancas/Gerar', ['mes' => $mes, 'linhas' => $linhas, 'inter' => Boletos::interLigado()]);
     }
 
     public function emitirLote(Request $request): RedirectResponse
@@ -100,7 +99,7 @@ class CobrancaController extends Controller
             $msg .= ' '.$ok.' boleto(s) gerado(s).';
             $erros = array_merge($erros, $falhas);
         }
-        self::cancelarBoletosResolvidos();
+        Boletos::tentarCancelarResolvidos();
         $r = redirect('/cobrancas?mes='.$d['mes'])->with('sucesso', $msg);
         if ($erros) {
             $r->with('aviso', 'Ficaram de fora: '.implode(' ', array_slice($erros, 0, 5)).(count($erros) > 5 ? ' (e mais '.(count($erros) - 5).')' : ''));
@@ -136,16 +135,9 @@ class CobrancaController extends Controller
             [$ok, $falhas] = self::gerarBoletos([$c], array_key_exists('regras', $d) && $d['regras'] !== null ? (bool) $d['regras'] : null);
             $ok ? $r->with('sucesso', 'Cobrança '.$c->numero.' emitida com boleto.') : $r->with('aviso', 'Cobrança emitida, mas o boleto não saiu: '.($falhas[0] ?? ''));
         }
-        self::cancelarBoletosResolvidos();
+        Boletos::tentarCancelarResolvidos();
 
         return $r;
-    }
-
-    public static function interLigado(): bool
-    {
-        $i = Integracao::inter();
-
-        return (bool) ($i && $i->ativo && $i->completa());
     }
 
     /** gera o boleto de cada cobrança; devolve [quantos saíram, mensagens de erro] */
@@ -167,21 +159,12 @@ class CobrancaController extends Controller
         return [$ok, $erros];
     }
 
-    /** cobrança levada, paga ou cancelada: cancela o boleto antigo no Inter (falhou agora, a consulta periódica tenta de novo) */
-    public static function cancelarBoletosResolvidos(): void
-    {
-        try {
-            Boletos::cancelarResolvidos();
-        } catch (\Throwable) {
-        }
-    }
-
     public function show(Cobranca $cobranca): Response
     {
         $cobranca->load(['cliente', 'itens.ordem']);
 
         return Inertia::render('Cobrancas/Show', [
-            'inter' => self::interLigado(),
+            'inter' => Boletos::interLigado(),
             'boleto_vencimento' => Boletos::vencimentoSugerido($cobranca)->format('Y-m-d'),
             'pontualidade' => Pontualidade::resumo($cobranca),
             'regras_sugerido' => Boletos::aplicarRegrasSugerido($cobranca),
@@ -257,7 +240,7 @@ class CobrancaController extends Controller
     {
         $d = $request->validate(['motivo' => ['required', 'string', 'max:200']], ['motivo.required' => 'Informe o motivo do cancelamento.']);
         Cobrancas::cancelar($cobranca, $d['motivo']);
-        self::cancelarBoletosResolvidos();
+        Boletos::tentarCancelarResolvidos();
 
         return back()->with('sucesso', 'Cobrança '.$cobranca->numero.' cancelada; as contas continuam em aberto.');
     }

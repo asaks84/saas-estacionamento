@@ -24,13 +24,15 @@ app/
                           OrdemServico, Cobranca (+ itens), Pagamento (+ itens), Ajuste, FormaPagamento, ContaFinanceira, ExtratoLancamento
   Models/Concerns/        PertenceAEmpresa (filtro por empresa) e EmpresaScope
   Http/Controllers/       uma classe por tela (Usuario, Nivel, Empresa, Unidade, Atividade, Auth/Login)
+                          só recebe o pedido, valida e monta o que a tela mostra; consulta ou regra usada por outra tela, pelo PDV ou
+                          por um serviço vai para Servicos/ (controlador não chama função de outro controlador para isso)
   Http/Middleware/        Permissao, PermissaoDeclarada, Publica, HandleInertiaRequests, CabecalhosSeguranca
   Servicos/               regras de negócio num lugar só: Tarifador (estadia), Precos (preço vigente), Contratos (mensalidade),
                           Ordens (lançar/alterar/cancelar), Numeracao, Mensalidades (geração e primeira cobrança), Baixa (receber
                           e estornar), Cobrancas (emitir, cancelar, situação), Extrato (CSV do banco), FormasPagamento,
                           Estadias (entrada, cálculo, saída), Vendas (lavagens e serviços, etapas), EtapasLavagem (etapas configuráveis), Convenios (divisão do valor),
-                          PlanoContas (modelo, árvore, códigos), Despesas (contas a pagar: lançar, pagar, desfazer, cancelar, fixas), Folha (recibos de salário, diárias), LeitorDocumento (boleto, guias e recibos pelo texto, OCR ou código de barras), Resultado (resultado do mês e fluxo de caixa, só leitura), Cartoes (fatura de cartão: leitura do OFX/CSV, classificação, regras, cartão pessoal),
-                          Inter/ (InterCliente: API do Banco Inter com certificado e token; Boletos: emitir, consultar, baixa, cancelar, regras)
+                          PlanoContas (modelo, árvore, códigos), Despesas (contas a pagar: lançar, pagar, desfazer, cancelar, fixas), Folha (recibos de salário, diárias), LeitorDocumento (boleto, guias e recibos pelo texto, OCR ou código de barras), Resultado (resultado do mês e fluxo de caixa, só leitura), Relatorios (contas em aberto por cliente, recebido por categoria, total baixado: Início, Contas em aberto e Relatórios usam daqui), Cartoes (fatura de cartão: leitura do OFX/CSV, classificação, regras, cartão pessoal),
+                          Inter/ (InterCliente: API do Banco Inter com certificado e token; Boletos: emitir, consultar, baixa, cancelar, regras, Inter ligado)
   Support/                EmpresaAtual, Atividades (registro), Senha, Legado (banco atual), Placa, Documento (CPF/CNPJ), Formato, Csv
   Auth/UsuarioProvider    busca o usuário do login sem o filtro de empresa
   Console/Commands/       erp:instalar, legado:importar, legado:comparar, legado:espelhar, backup:banco, pagar:gerar-fixas
@@ -82,7 +84,7 @@ deploy/                   scripts que rodam no servidor na publicação (servido
 ## Testes
 
 - Rodam num banco MySQL separado, `erp_teste` (e `erp_teste_legado` para a importação). Criar os dois vazios no phpMyAdmin uma vez.
-- `php artisan test` roda todos. Hoje: 307 testes, mais os do JavaScript (`npm run test:js`: tarifador e PIN do celular contra o PHP) (Banco Inter com a API simulada, isolamento entre empresas, rotas, login, permissões, usuários e níveis, clientes, veículos, mensalidades, cadastro público, configurações, tarifador com as tabelas do Local, dinheiro: geração, primeira cobrança, baixa, estorno, cobranças, extrato; estadias, convênios e vendas; importação e comparação).
+- `php artisan test` roda todos. Hoje: 307 testes, mais os do JavaScript (`npm run test:js`: tarifador e PIN do celular contra o PHP, e os formatos de `lib/formato.js`) (Banco Inter com a API simulada, isolamento entre empresas, rotas, login, permissões, usuários e níveis, clientes, veículos, mensalidades, cadastro público, configurações, tarifador com as tabelas do Local, dinheiro: geração, primeira cobrança, baixa, estorno, cobranças, extrato; estadias, convênios e vendas; importação e comparação).
 - Regra de dinheiro nova: escrever o teste com casos reais antes de ligar na tela.
 
 ## Comandos

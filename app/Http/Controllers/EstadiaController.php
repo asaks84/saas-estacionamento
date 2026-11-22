@@ -4,13 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Convenio;
 use App\Models\Estadia;
-use App\Models\TipoVeiculo;
 use App\Servicos\Estadias;
-use App\Servicos\Ordens;
-use App\Servicos\Precos;
 use App\Servicos\Vendas;
 use App\Support\Formato;
-use App\Support\Placa;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Http\JsonResponse;
@@ -53,27 +49,6 @@ class EstadiaController extends Controller
             'destino_rotulo' => $e->destino ? Estadia::DESTINOS[$e->destino] : null,
             'motivo_cancelamento' => $e->motivo_cancelamento,
         ];
-    }
-
-    public static function convenios(string $uso): array
-    {
-        return Convenio::with('cliente:id,nome', 'regras.servico')->where('ativo', true)
-            ->whereHas('regras', fn ($q) => $uso === 'estadia' ? $q->whereNull('servico_id') : $q->whereNotNull('servico_id'))->get()
-            ->sortBy(fn ($c) => $c->cliente?->nome)->values()
-            ->map(fn ($c) => ['id' => $c->id, 'nome' => $c->cliente?->nome, 'resumo' => $c->resumo()])->all();
-    }
-
-    /** tipos de veículo com o resumo da tabela de estadia que vale hoje (vazio = sem tabela) */
-    public static function tiposComTabela(): array
-    {
-        $unidade = Ordens::unidadePadrao();
-
-        return TipoVeiculo::where('ativo', true)->ordenados()->get(['id', 'nome'])->map(function ($t) use ($unidade) {
-            $tarifa = Precos::tarifa($t->id, $unidade);
-
-            return ['id' => $t->id, 'nome' => $t->nome, 'tabela' => $tarifa ? $tarifa->nome.' · '.$tarifa->resumo() : null,
-                'diarias' => $tarifa ? Estadias::diarias($t->id)->map(fn ($p) => ['id' => $p->id, 'nome' => $p->nome, 'valor' => (float) $p->valor])->values()->all() : []];
-        })->all();
     }
 
     /** o que o sistema sabe da placa (cadastro, mensalista) antes da entrada */

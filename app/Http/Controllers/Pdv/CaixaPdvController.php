@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Pdv;
 
-use App\Http\Controllers\CobrancaController;
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use App\Models\ContaFinanceira;
 use App\Models\FormaPagamento;
 use App\Servicos\Baixa;
 use App\Servicos\FormasPagamento;
+use App\Servicos\Inter\Boletos;
 use App\Servicos\Pdv\Caixas;
 use App\Support\Formato;
 use Illuminate\Http\JsonResponse;
@@ -115,7 +115,7 @@ class CaixaPdvController extends Controller
             'parcelas' => $d['parcelas'] ?? 1, 'origem' => 'pdv',
             'observacao' => $troco > 0 ? 'Recebido '.Formato::moeda($recebido).' · troco '.Formato::moeda($troco) : null]);
         $p->update(['pdv_tipo' => 'conta']);
-        CobrancaController::cancelarBoletosResolvidos();
+        Boletos::tentarCancelarResolvidos();
 
         return response()->json([
             'mensagem' => 'Recebido de '.$cliente->nome.': '.Formato::moeda($total).' · '.$msg.'.',

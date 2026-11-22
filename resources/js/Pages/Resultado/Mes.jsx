@@ -1,7 +1,7 @@
 import { Link, router } from '@inertiajs/react'
 import TituloPagina from '../../Components/TituloPagina'
 import AbasResultado from '../../Components/AbasResultado'
-import { mesAno, moeda } from '../../lib/formato'
+import { mesAno, moeda, numero } from '../../lib/formato'
 
 const mudarMes = (ym, n) => { const [a, m] = ym.split('-').map(Number); const d = new Date(a, m - 1 + n, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` }
 
@@ -45,7 +45,7 @@ export default function Mes({ resultado: r, historico, atual }) {
                     {r.a_pagar > 0 && <div className="small text-muted">{moeda(r.a_pagar)} ainda a pagar</div>}</div></div></div>
                 <div className="col-sm-4"><div className="card h-100"><div className="card-body"><div className="small text-muted">{positivo ? 'Sobrou' : 'Faltou'}</div>
                     <div className={`fs-4 fw-semibold ${positivo ? 'text-success' : 'text-danger'}`}>{moeda(r.resultado)}</div>
-                    {r.margem !== null && <div className="small text-muted">{r.margem.toLocaleString('pt-BR')}% {r.regime === 'caixa' ? 'do que entrou' : 'das receitas'}</div>}
+                    {r.margem !== null && <div className="small text-muted">{numero(r.margem, 2)}% {r.regime === 'caixa' ? 'do que entrou' : 'das receitas'}</div>}
                     {extras && <div className="small">No fim: <strong className={r.resultado_final >= 0 ? 'text-success' : 'text-danger'}>{moeda(r.resultado_final)}</strong></div>}</div></div></div>
             </div>
             {atual && <div className="alert alert-info py-2 small">O mês ainda está em andamento: os números mudam até o fim do mês.</div>}

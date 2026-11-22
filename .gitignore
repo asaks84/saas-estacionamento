@@ -25,6 +25,9 @@ yarn-error.log
 *dump*.sql
 *backup*.sql
 localm43_senna*.sql
+# base antiga do projeto (zip solto na raiz) e scripts de limpeza que apagam dados do banco: ficam só na máquina
+/erp-base.zip
+/sql-limpeza/
 *.pem
 *.p12
 *.key

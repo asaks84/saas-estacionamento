@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Pdv;
 
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\EstadiaController;
 use App\Models\Estadia;
 use App\Models\EtapaLavagem;
 use App\Models\FormaPagamento;
@@ -11,6 +10,7 @@ use App\Models\OrdemServico;
 use App\Models\Pagamento;
 use App\Models\Servico;
 use App\Models\TipoVeiculo;
+use App\Servicos\Convenios;
 use App\Servicos\Estadias;
 use App\Servicos\EtapasLavagem;
 use App\Servicos\FormasPagamento;
@@ -75,7 +75,7 @@ class LavagemPdvController extends Controller
             'servicos' => $servicos->map(fn ($s) => ['id' => $s->id, 'nome' => $s->nome, 'preco_modo' => $s->preco_modo, 'precos' => $preco($s->id),
                 'adicionais' => $s->adicionais->map(fn ($a) => ['id' => $a->id, 'nome' => $a->nome, 'precos' => $preco($a->id)])->values()])->values(),
             'formas' => FormaPagamento::where('ativa', true)->where('tipo', '<>', 'nao_informada')->orderBy('ordem')->get(['id', 'nome', 'tipo', 'parcelas_max']),
-            'convenios' => EstadiaController::convenios('servico'),
+            'convenios' => Convenios::paraEscolher('servico'),
             'estadia_depois' => Lavagens::regraEstadia(),
         ]);
     }

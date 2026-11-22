@@ -6,7 +6,6 @@ use App\Models\Caixa;
 use App\Models\CaixaMovimento;
 use App\Models\ContaFinanceira;
 use App\Servicos\Pdv\Caixas;
-use App\Support\Atividades;
 use App\Support\Formato;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -39,11 +38,12 @@ class CaixaController extends Controller
                 'diferenca' => $c->diferenca !== null ? (float) $c->diferenca : null, 'observacao' => $c->observacao,
             ]),
             'detalhe' => $sel ? Caixas::resumo($sel) + ['observacao' => $sel->observacao] : null,
-            'retiradas' => CaixaMovimento::with(['usuario:id,nome', 'contaFinanceira:id,nome'])->where('tipo', 'retirada')
+            'retiradas' => CaixaMovimento::with(['usuario:id,nome', 'contaFinanceira:id,nome', 'canceladaPor:id,nome'])->where('tipo', 'retirada')
                 ->whereBetween('data', [$ini->toDateString(), $fim->toDateString()])->orderByDesc('data')->orderByDesc('id')->get()
                 ->map(fn (CaixaMovimento $m) => ['id' => $m->id, 'data' => $m->data->format('Y-m-d'), 'valor' => (float) $m->valor,
                     'origem' => $m->caixa_id ? 'Caixa do PDV' : ($m->contaFinanceira?->nome ?? '—'), 'motivo' => $m->motivo, 'quem' => $m->usuario?->nome,
-                    'pdv' => (bool) $m->caixa_id]),
+                    'pdv' => (bool) $m->caixa_id,
+                    'cancelada' => $m->cancelada_em ? ['em' => $m->cancelada_em->format('Y-m-d H:i'), 'por' => $m->canceladaPor?->nome, 'motivo' => $m->motivo_cancelamento] : null]),
             'contas' => ContaFinanceira::where('ativa', true)->orderBy('ordem')->orderBy('nome')->get(['id', 'nome', 'tipo']),
         ]);
     }
@@ -61,15 +61,15 @@ class CaixaController extends Controller
         return back()->with('sucesso', 'Retirada do sócio registrada: '.Formato::moeda((float) $d['valor']).'.');
     }
 
-    /** só a registrada na gestão (a do PDV faz parte de um caixa) */
-    public function apagarRetirada(CaixaMovimento $movimento): RedirectResponse
+    /** só a registrada na gestão (a do PDV faz parte de um caixa); não apaga: fica cancelada com motivo */
+    public function cancelarRetirada(Request $request, CaixaMovimento $movimento): RedirectResponse
     {
+        $d = $request->validate(['motivo' => ['required', 'string', 'max:200']], ['motivo.required' => 'Informe o motivo do cancelamento.']);
         if ($movimento->tipo !== 'retirada' || $movimento->caixa_id) {
-            return back()->with('erro', 'A retirada feita no PDV faz parte do caixa e não pode ser apagada aqui.');
+            return back()->with('erro', 'A retirada feita no PDV faz parte do caixa e não pode ser cancelada aqui.');
         }
-        Atividades::registrar('caixa_movimento', 'retirada do sócio apagada: '.Formato::moeda((float) $movimento->valor).' de '.$movimento->data->format('d/m/Y'));
-        $movimento->delete();
+        Caixas::cancelarRetirada($movimento, $d['motivo']);
 
-        return back()->with('sucesso', 'Retirada apagada.');
+        return back()->with('sucesso', 'Retirada cancelada. Ela fica na lista, riscada, e não conta mais no resultado.');
     }
 }

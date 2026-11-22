@@ -1,6 +1,6 @@
 import Campo from './Campo'
 import CampoValor from './CampoValor'
-import { moeda } from '../lib/formato'
+import { moeda, numero } from '../lib/formato'
 
 // Regras do boleto do Inter (multa, juros, desconto, baixa): usadas em Configurações › Cobranças
 // e nas regras particulares do cliente.
@@ -32,7 +32,7 @@ export function Regra({ nome, rotulo, form, ajuda }) {
 }
 
 
-const num = (v) => Number(v || 0).toLocaleString('pt-BR', { maximumFractionDigits: 2 })
+const num = (v) => numero(v, 2)
 
 /** texto curto de cada grupo: "Multa 2%", "Juros 1% ao mês", "Desconto R$ 10,00 até 5 dias antes", "Baixa 30 dias após o vencimento" */
 export function textoRegra(grupo, r) {
