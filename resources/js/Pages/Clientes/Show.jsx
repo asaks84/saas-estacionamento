@@ -177,7 +177,7 @@ function AcoesMensalidade({ veiculo, contrato, periodos, pausaPadrao, unidades }
                     </Janela>
 
                     <Janela aberta={janela === 'pausa'} titulo="Pausar mensalidade" onFechar={fechar} ocupado={pausa.processing}
-                        onEnviar={() => pausa.transform((d) => (doMes && !doMes.do_sistema_atual
+                        onEnviar={() => pausa.transform((d) => (doMes
                             ? { ...d, mes_valor: d.mes_acao === 'proporcional' ? propValor : null, mes_credito: doMes.situacao === 'paga' ? d.mes_credito : null }
                             : { ...d, mes_acao: 'manter', mes_valor: null, mes_credito: null })).post(`/mensalidades/${contrato.id}/pausar`, opcoes)}>
                         <p className="text-muted">Nos meses pausados a mensalidade cheia não é gerada; se houver taxa de reserva, ela é cobrada no lugar.</p>
@@ -203,9 +203,6 @@ function AcoesMensalidade({ veiculo, contrato, periodos, pausaPadrao, unidades }
                                 <p className="small mb-2">
                                     A mensalidade de <strong>{mesAno(doMes.competencia + '-01')}</strong> já foi gerada: {moeda(doMes.valor)} (#{doMes.numero}, {doMes.situacao === 'paga' ? 'paga' : 'em aberto'}). O que fazer com ela?
                                 </p>
-                                {doMes.do_sistema_atual ? (
-                                    <div className="alert alert-secondary small mb-0">Veio do sistema atual: durante o paralelo, ajuste por lá. A pausa vale para os próximos meses.</div>
-                                ) : (
                                     <>
                                         {[['proporcional', 'Cobrar o proporcional dos dias que ele veio'], ['cancelar', 'Cancelar a mensalidade do mês'], ['manter', 'Manter cheia']].map(([v, r]) => (
                                             <div className="form-check" key={v}>
@@ -238,7 +235,6 @@ function AcoesMensalidade({ veiculo, contrato, periodos, pausaPadrao, unidades }
                                             </div>
                                         )}
                                     </>
-                                )}
                             </div>
                         )}
                     </Janela>

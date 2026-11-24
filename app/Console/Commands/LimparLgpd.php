@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\DB;
  * 1. fila de espera: cadastro que não virou cliente é apagado depois de erp.lgpd_fila_dias (120);
  * 2. ex-cliente: inativo e sem nenhum movimento há erp.lgpd_ex_cliente_anos (5) é anonimizado, com os mesmos
  *    bloqueios do botão (conta ou crédito em aberto, mensalidade etc.). Valores e notas fiscais ficam.
- * Durante o paralelo, o que veio do sistema atual fica de fora (a importação traria de volta).
  */
 class LimparLgpd extends Command
 {
@@ -45,9 +44,6 @@ class LimparLgpd extends Command
     private function fila(bool $simular): int
     {
         $q = CadastroPendente::where('recebido_em', '<', now()->subDays((int) config('erp.lgpd_fila_dias')));
-        if (config('erp.espelho_ativo')) {
-            $q->whereNull('legado_id');
-        }
 
         return $simular ? $q->count() : $q->delete();
     }

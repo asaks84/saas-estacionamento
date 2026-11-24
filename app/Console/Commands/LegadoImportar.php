@@ -17,7 +17,8 @@ use Illuminate\Support\Facades\DB;
 /**
  * Importa os dados do sistema atual (CodeIgniter) para o ERP. Pode rodar quantas vezes
  * for preciso: cada registro guarda o id antigo (legado_id) e é atualizado, não duplicado.
- * Até a virada o sistema atual é o oficial, então ele sempre sobrescreve o que veio dele.
+ * Durante o paralelo o sistema atual era o oficial e sobrescrevia o que veio dele. Depois da virada
+ * (24/11/2026) o ERP é o oficial: com a empresa já criada, só roda com --sobrescrever.
  *
  * Etapa 1: níveis de acesso, usuários e registro de atividades.
  * Etapa 2: tipos, tabelas de estadia, serviços, clientes, veículos, mensalidades, convênios,
@@ -34,9 +35,10 @@ class LegadoImportar extends Command
     protected $signature = 'legado:importar
         {--empresa= : Nome da empresa (só na primeira importação)}
         {--unidade=Principal : Nome da unidade principal (só na primeira importação)}
-        {--sem-atividades : Não importa o registro de atividades}';
+        {--sem-atividades : Não importa o registro de atividades}
+        {--sobrescrever : Importa de novo num ERP que já tem dados (desfaz o que foi feito aqui)}';
 
-    protected $description = 'Importa os dados do sistema atual (pode rodar várias vezes)';
+    protected $description = 'Importa os dados do sistema atual (primeira instalação; depois da virada, só com --sobrescrever)';
 
     private array $resumo = [];
 
@@ -73,6 +75,14 @@ class LegadoImportar extends Command
     {
         $total = Empresa::count();
         if ($total === 1) {
+            // depois da virada o ERP é o oficial: importar de novo desfaria o que foi feito aqui
+            if (! $this->option('sobrescrever')) {
+                $this->error('O ERP já tem dados. Depois da virada, importar de novo sobrescreve o que foi feito aqui (cadastros, pagamentos, ordens).'
+                    .' Se for mesmo isso, rode com --sobrescrever (faça um backup antes).');
+
+                return null;
+            }
+
             return Empresa::first();
         }
         if ($total > 1) {

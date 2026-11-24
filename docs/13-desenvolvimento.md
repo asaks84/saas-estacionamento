@@ -35,7 +35,7 @@ app/
                           Inter/ (InterCliente: API do Banco Inter com certificado e token; Boletos: emitir, consultar, baixa, cancelar, regras, Inter ligado)
   Support/                EmpresaAtual, Atividades (registro), Senha, Legado (banco atual), Placa, Documento (CPF/CNPJ), Formato, Csv
   Auth/UsuarioProvider    busca o usuário do login sem o filtro de empresa
-  Console/Commands/       erp:instalar, legado:importar, legado:comparar, legado:espelhar, backup:banco, pagar:gerar-fixas
+  Console/Commands/       erp:instalar, legado:importar, legado:comparar, backup:banco, pagar:gerar-fixas
 config/erp.php            inatividade, faixas de IP do Cloudflare
 config/permissoes.php     catálogo de permissões (grupo, chave, rótulo, descrição)
 database/migrations/      estrutura do banco
@@ -51,7 +51,7 @@ resources/js/
   lib/                    formato.js (datas e R$ em pt-BR), mascaras.js (CPF, telefone, CEP, placa), menu.js, permissoes.js, inatividade.js
 resources/scss/           app.scss (cores, fonte, cantos, tema escuro), _layout.scss e _impressao.scss (cobrança e telas impressas)
 tests/Feature/            testes automáticos
-routes/console.php        agendamentos (espelho de hora em hora, backup diário)
+routes/console.php        agendamentos (backup diário, contas fixas, Inter, WhatsApp, LGPD)
 deploy/                   scripts que rodam no servidor na publicação (servidor.sh, voltar.sh), o que não vai ao servidor e o modelo do .env
 .github/workflows/        publicar.yml: o botão Publicar (testes, build, envio por SSH)
 ```
@@ -91,9 +91,8 @@ deploy/                   scripts que rodam no servidor na publicação (servido
 
 | Comando | Para quê |
 |---|---|
-| `php artisan legado:importar` | Traz do sistema atual: níveis, usuários (as senhas continuam valendo), registro de atividades, cadastros, configurações, ordens, pagamentos e extrato. Pode rodar várias vezes (o sistema atual manda até a virada). Na primeira, cria a empresa e a unidade principal |
+| `php artisan legado:importar` | Traz do sistema atual: níveis, usuários (as senhas continuam valendo), registro de atividades, cadastros, configurações, ordens, pagamentos e extrato. Na primeira, cria a empresa e a unidade principal. Depois da virada (24/11/2026) o ERP é o oficial: com a empresa já criada, só roda com `--sobrescrever`, que desfaz o que foi feito no ERP (backup antes) |
 | `php artisan legado:comparar` | Compara os números dos dois sistemas (inclusive em aberto por cliente e recebido mês a mês) e grava o relatório em `storage/app/private/relatorios/` |
-| `php artisan legado:espelhar` | Importa e compara de uma vez, registrando o resultado em Sistema › Conferência (é o que o agendador roda de hora em hora no paralelo) |
 | `php artisan backup:banco` | Backup compactado do banco do ERP e do sistema atual em `storage/app/private/backups` (guarda 14 dias) |
 | `php artisan erp:instalar` | Banco novo sem sistema atual: cria empresa, unidade, nível de acesso total e o primeiro administrador |
 | `php artisan migrate --seed` | Banco de exemplo para desenvolvimento (login `admin`, senha `trocar123`) |

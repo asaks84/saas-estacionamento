@@ -57,7 +57,7 @@ export default function ConvenioForm({ convenio, opcoes, modos, fechamentos, dia
                 <div className="alert alert-warning">Este convênio estava no modo "desconto para quem usa", que saiu. Marque os serviços e escolha como o convênio paga cada um.</div>
             )}
             {convenio && !convenio.regras_no_erp && !convenio.reconfigurar && (
-                <div className="alert aviso-neutro small">As regras abaixo vieram do sistema atual. Ao salvar aqui, passam a ser do ERP e a importação deixa de mudá-las.</div>
+                <div className="alert aviso-neutro small">As regras abaixo foram montadas a partir do convênio do sistema atual. Confira e salve para que passem a ser do ERP.</div>
             )}
             <form onSubmit={salvar} className="card" noValidate>
                 <div className="card-body">

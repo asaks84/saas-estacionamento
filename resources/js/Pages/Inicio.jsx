@@ -3,7 +3,7 @@ import TituloPagina from '../Components/TituloPagina'
 import BuscaCliente from '../Components/BuscaCliente'
 import Anotacoes from '../Components/Anotacoes'
 import { competencia } from '../Components/Dinheiro'
-import { data as fData, dataHora, moeda } from '../lib/formato'
+import { data as fData, moeda } from '../lib/formato'
 import { usePode } from '../lib/permissoes'
 
 function Numero({ rotulo, valor, detalhe, href, classe = '' }) {
@@ -17,24 +17,13 @@ function Numero({ rotulo, valor, detalhe, href, classe = '' }) {
     return <div className="col-6 col-lg-3">{href ? <Link href={href} className="text-reset text-decoration-none">{corpo}</Link> : corpo}</div>
 }
 
-export default function Inicio({ aberto, recebido, anotacoes, conferencia, pagar, inter_vence: interVence, convenios_fechar: conveniosFechar = [] }) {
+export default function Inicio({ aberto, recebido, anotacoes, pagar, inter_vence: interVence, convenios_fechar: conveniosFechar = [] }) {
     const { auth, empresa } = usePage().props
     const pode = usePode()
     const primeiroNome = auth.usuario.nome.split(' ')[0]
     return (
         <div className="pagina">
             <TituloPagina titulo={`Olá, ${primeiroNome}`} descricao={empresa?.nome} />
-
-            <div className="alert aviso-neutro">
-                Sistema novo em construção: o sistema atual continua sendo o oficial até a virada.
-                {conferencia
-                    ? <> Os números daqui vêm da importação de {dataHora(conferencia.quando)}{conferencia.situacao === 'ok' ? ', conferida sem diferenças.' : conferencia.situacao === 'diferente' ? ', com diferenças na conferência.' : ', que deu erro.'}{conferencia.situacao !== 'ok' && pode('configuracoes') && <> <Link href="/conferencia">Ver a conferência</Link>.</>}</>
-                    : ' Os números daqui vêm da última importação feita do sistema atual.'}
-            </div>
-
-            {conferencia?.atrasada && pode('configuracoes') && (
-                <div className="alert alert-warning">A importação do sistema atual parou (a última foi às {dataHora(conferencia.quando)}): os números do ERP estão desatualizados. <Link href="/conferencia">Ver a conferência</Link>.</div>
-            )}
 
             {interVence && (
                 <div className={`alert ${interVence.dias <= 7 ? 'alert-danger' : 'alert-warning'}`}>

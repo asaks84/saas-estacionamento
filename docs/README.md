@@ -19,7 +19,7 @@ Comece pela visão, depois o modelo de dados e as regras de negócio.
 | 11 | [Comparativo com o mercado](11-comparativo-mercado.md) | Diferenças com ERPs e plataformas de cobrança |
 | 12 | [Registro de decisões](12-decisoes.md) | Todas as decisões, com data e motivo |
 | 13 | [Desenvolvimento](13-desenvolvimento.md) | Organização do código, regras de cada tela nova, testes e comandos |
-| 14 | [Publicação e paralelo](14-publicacao.md) | Botão Publicar, servidor, primeira publicação, espelho, backup, portão da virada |
+| 14 | [Publicação e virada](14-publicacao.md) | Botão Publicar, servidor, primeira publicação, backup, virada |
 | 15 | [Plano do PDV (etapa 8)](15-plano-pdv.md) | Ponto de partida, escopo da 1ª versão, ordem de construção, decisões em aberto |
 | 17 | [Auditoria de segurança](17-auditoria-seguranca.md) | Auditorias feitas, achados e situação de cada um |
 

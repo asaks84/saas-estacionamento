@@ -246,10 +246,6 @@ class Baixa
         if ($p->situacao !== 'confirmado') {
             self::erro('motivo', 'Este pagamento já foi estornado.');
         }
-        if ($p->origem === 'importacao') {
-            // até a virada, o pagamento importado é refeito a cada importação: o estorno é feito no sistema atual
-            self::erro('motivo', 'Este pagamento veio do sistema atual. Até a virada, estorne por lá e importe de novo.');
-        }
         DB::transaction(function () use ($p, $motivo) {
             $nascidas = OrdemServico::where('pagamento_origem_id', $p->id)->where('situacao', '<>', 'cancelada')->lockForUpdate()->get();
             $itens = $p->itens()->pluck('ordem_id')->all();

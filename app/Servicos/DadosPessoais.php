@@ -26,8 +26,7 @@ use Illuminate\Validation\ValidationException;
  * - anonimizar(): apaga o que identifica a pessoa e mantém valores, datas e notas fiscais (guarda legal), com o nome
  *   trocado por "CLIENTE ANONIMIZADO <código>". Não tem volta.
  * Bloqueios (o que a lei deixa guardar ou o que ainda está em uso): cliente ativo, conta ou crédito em aberto,
- * veículo no pátio, lavagem em andamento, convênio ativo, nota sendo emitida e, durante o paralelo, cliente que veio
- * do sistema atual (a importação traria os dados de volta).
+ * veículo no pátio, lavagem em andamento, convênio ativo e nota sendo emitida.
  */
 class DadosPessoais
 {
@@ -68,9 +67,6 @@ class DadosPessoais
         }
         if (Nfse::where('cliente_id', $c->id)->where('situacao', 'enviando')->exists()) {
             $b[] = 'Tem nota fiscal sendo emitida. Confira a nota antes.';
-        }
-        if ($c->legado_id && config('erp.espelho_ativo')) {
-            $b[] = 'O cliente veio do sistema atual, que ainda é espelhado de hora em hora: a importação traria os dados de volta. Durante o paralelo, atenda o pedido no sistema atual; depois da virada, anonimize aqui.';
         }
 
         return $b;

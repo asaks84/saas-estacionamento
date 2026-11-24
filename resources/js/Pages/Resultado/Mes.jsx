@@ -52,7 +52,7 @@ export default function Mes({ resultado: r, historico, atual }) {
             {r.excluidos?.qtd > 0 && (
                 <div className="alert alert-warning py-2 small">
                     As receitas incluem <strong>{moeda(r.excluidos.valor)}</strong> em {r.excluidos.qtd} conta(s) em aberto de cliente excluído.
-                    Se não vão ser recebidas, cancele no sistema atual (depois da virada, aqui) para saírem do resultado. <Link href="/contas/abertas">Contas em aberto</Link>
+                    Se não vão ser recebidas, cancele as contas para saírem do resultado. <Link href="/contas/abertas">Contas em aberto</Link>
                 </div>
             )}
 

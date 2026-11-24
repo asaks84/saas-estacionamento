@@ -129,12 +129,6 @@ class Contratos
             ->where('situacao', '<>', 'cancelada')->orderBy('id')->first();
     }
 
-    /** a ordem veio do sistema atual e o espelho ainda manda nela: mexer aqui seria desfeito na próxima importação */
-    private static function doSistemaAtual(OrdemServico $o): bool
-    {
-        return $o->legado_id && config('erp.espelho_ativo');
-    }
-
     /** aviso de cobrança já emitida com o valor antigo (o boleto não muda sozinho) */
     private static function avisoCobranca(OrdemServico $o): ?string
     {
@@ -200,9 +194,6 @@ class Contratos
         }
         if (! in_array($acao, ['proporcional', 'cancelar'], true)) {
             self::erro('mes_acao', 'Escolha o que fazer com a mensalidade do mês.');
-        }
-        if (self::doSistemaAtual($o)) {
-            self::erro('mes_acao', 'A mensalidade de '.$inicio->format('m/Y').' veio do sistema atual: durante o paralelo, ajuste por lá.');
         }
         $cheio = (float) $o->valor;
         $valor = 0.0;
@@ -288,9 +279,6 @@ class Contratos
             // reserva de vaga do mês da volta: em aberto, sai (o proporcional entra no lugar); paga, fica
             $reserva = self::mensalidadeDoMes($c, $mes);
             if ($reserva && str_contains(mb_strtolower($reserva->descricao), 'reserva')) {
-                if (self::doSistemaAtual($reserva)) {
-                    self::erro('data', 'A reserva de '.$volta->format('m/Y').' veio do sistema atual: durante o paralelo, ajuste por lá.');
-                }
                 if ($reserva->situacao === 'aberta') {
                     Ordens::cancelar($reserva, 'Volta da pausa: trocada pelo proporcional');
                 } else {

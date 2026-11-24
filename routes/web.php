@@ -15,7 +15,6 @@ use App\Http\Controllers\CartaoController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\CobrancaController;
 use App\Http\Controllers\CobrancaPublicaController;
-use App\Http\Controllers\ConferenciaController;
 use App\Http\Controllers\ContaController;
 use App\Http\Controllers\ContratoController;
 use App\Http\Controllers\ConvenioController;
@@ -330,7 +329,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/configuracoes/whatsapp/mensagens/grupo/{grupo}/versao', [MensagemController::class, 'novaVersao'])->whereNumber('grupo');
         Route::put('/configuracoes/whatsapp/regua', [WhatsAppController::class, 'regua']);
         Route::put('/clientes/{cliente}/regras-boleto', [InterController::class, 'cliente']);
-        Route::get('/conferencia', ConferenciaController::class);
         Route::get('/configuracoes/plano-contas', [PlanoContaController::class, 'index']);
         Route::post('/configuracoes/plano-contas', [PlanoContaController::class, 'store']);
         Route::put('/configuracoes/plano-contas/{conta}', [PlanoContaController::class, 'update']);

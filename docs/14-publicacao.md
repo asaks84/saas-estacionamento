@@ -1,8 +1,8 @@
-# Publicação e paralelo (etapa 5)
+# Publicação e virada (etapa 5)
 
 > Parte da documentação do ERP Local. Índice: [docs/README.md](README.md)
 
-O ERP fica em **https://erp.localestacionamento.com.br**, na mesma conta da Hostinger do sistema atual. Durante o paralelo, ele **espelha** o sistema atual: de hora em hora (7h às 23h) importa os dados e compara os números. A equipe continua usando só o sistema atual. O resultado de cada conferência fica em **Sistema › Conferência**. A virada só acontece depois de algumas semanas sem diferença.
+O ERP fica em **https://erp.localestacionamento.com.br**, na mesma conta da Hostinger do sistema atual. Desde a **virada (24/11/2026)** o ERP é o sistema oficial e o sistema atual fica só para consulta. Durante o paralelo (12/11 a 24/11/2026) o ERP espelhava o sistema atual de hora em hora e comparava os números na tela Sistema › Conferência; o espelho e essa tela saíram na virada.
 
 ## Como uma versão vai ao ar
 
@@ -40,13 +40,12 @@ No Local, a pasta base é `/home/u612820499/domains/localestacionamento.com.br/e
    - *Variables*: `ERP_DOCROOT` = a pasta do subdomínio (passo 1, caminho completo). Opcionais: `PHP_BIN` (se o `php` do SSH não for 8.3, ex.: `/usr/bin/php8.3`), `ERP_DIR` (caminho completo da pasta base; no Local, `/home/u612820499/domains/localestacionamento.com.br/erp`).
 8. **Publicar** — Actions › Publicar › Run workflow › publicar.
 9. **Cron** — hPanel › Avançado › Cron Jobs, a cada minuto: `/usr/bin/php /home/u612820499/domains/localestacionamento.com.br/erp/atual/artisan schedule:run` (ajuste o caminho do PHP se o hPanel indicar outro).
-10. **Primeira importação** — acontece sozinha na próxima hora cheia (ou por SSH: `cd ~/erp/atual && php artisan legado:espelhar`). O login é o mesmo do sistema atual (as senhas vêm junto).
+10. **Primeira importação** — por SSH: `cd ~/erp/atual && php artisan legado:importar --empresa="Local Estacionamento"`. O login é o mesmo do sistema atual (as senhas vêm junto). Num ERP que já tem dados, a importação só roda com `--sobrescrever` (desfaz o que foi feito no ERP).
 
 ## Agendamentos (routes/console.php)
 
 | Quando | O quê |
 |---|---|
-| de hora em hora, 7h às 23h (só com `ERP_ESPELHO_ATIVO=true`) | `legado:espelhar`: importa do sistema atual e compara; grava em Sistema › Conferência |
 | todo dia às 3h10 | `backup:banco`: backup compactado do banco do ERP e do sistema atual em `storage/app/private/backups`, 14 dias |
 
 A Hostinger também faz backup semanal da conta. Para restaurar um backup do ERP: phpMyAdmin › Importar o `.sql.gz`, ou pelo SSH: `gunzip < arquivo.sql.gz | mysql -u USUARIO -p BANCO`.
@@ -55,11 +54,13 @@ A consulta dos boletos do Banco Inter (`inter:consultar`, a cada 10 minutos) usa
 
 As tarefas agendadas rodam dentro do próprio `schedule:run` (`Schedule::call`), e o backup é feito em PHP, sem `mysqldump`: a hospedagem compartilhada desliga o `proc_open`, e um comando separado não roda pelo cron (erro "The Process class relies on proc_open" no log). Para conferir se o agendador está rodando: o "Ver resultado" do cron no hPanel e o log em `storage/logs/laravel-AAAA-MM-DD.log`.
 
-## Portão da virada
+## Virada (24/11/2026)
 
-- **Sistema › Conferência** com várias semanas seguidas sem diferença ("Dias seguidos sem diferença"), passando por pelo menos um ciclo completo de mensalidades e cobranças.
-- Backup diário funcionando (arquivos novos em `storage/app/private/backups`) e uma restauração testada.
-- Plano de volta: até a virada, o sistema atual continua sendo o oficial; depois dela, ele fica só para consulta e o ERP passa a ser o oficial (`ERP_ESPELHO_ATIVO=false`).
+- O espelho de hora em hora (`legado:espelhar`), a comparação automática e a tela Sistema › Conferência saíram; a tabela `conferencias` foi apagada (migration `2026_12_11_000001_remover_conferencias`). A variável `ERP_ESPELHO_ATIVO` do `.env` do servidor deixou de ser usada e pode ser apagada.
+- O ERP é o oficial: o que veio do sistema atual (mensalidades, pagamentos importados, fichas do link antigo, dados de cliente para a LGPD) passa a ser ajustado aqui.
+- O sistema atual fica só para consulta. O link do cadastro público dele (`/sys/senna/cadastro`, o do QR code do balcão) redireciona para `https://erp.localestacionamento.com.br/cadastro` (302, no `application/controllers/cadastro.php` do sistema atual).
+- `legado:comparar` continua como comando manual (só gera o relatório em `storage/app/private/relatorios/`).
+- Backup diário continua (inclui o banco do sistema atual enquanto ele existir).
 
 ## Segurança
 

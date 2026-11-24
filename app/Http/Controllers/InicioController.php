@@ -41,7 +41,6 @@ class InicioController extends Controller
         }
 
         return Inertia::render('Inicio', ['aberto' => $aberto, 'recebido' => $recebido, 'anotacoes' => Anotacao::doUsuario((int) $request->user()->id),
-            'conferencia' => ConferenciaController::resumo(),
             'pagar' => $u->pode('contas_pagar') ? Despesas::resumo() : null,
             // certificado da integração do Inter vencendo (boleto, baixa automática e extrato param juntos)
             'inter_vence' => $u->pode('configuracoes') ? self::interVence() : null,

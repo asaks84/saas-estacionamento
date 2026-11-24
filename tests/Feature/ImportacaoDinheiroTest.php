@@ -57,7 +57,7 @@ class ImportacaoDinheiroTest extends TestCase
 
     private function importar(): void
     {
-        $this->artisan('legado:importar', ['--empresa' => 'Local', '--sem-atividades' => true])->assertSuccessful();
+        $this->artisan('legado:importar', ['--empresa' => 'Local', '--sem-atividades' => true, '--sobrescrever' => true])->assertSuccessful();
         app(EmpresaAtual::class)->definir(Empresa::first()->id);
     }
 
@@ -87,10 +87,13 @@ class ImportacaoDinheiroTest extends TestCase
 
         $this->artisan('legado:comparar')->assertSuccessful();
 
-        // pagamento importado não é estornado no ERP (seria refeito na próxima importação)
+        // depois da virada, o pagamento importado se estorna no ERP como qualquer outro: as contas voltam a ficar em aberto
         Auth::login(\App\Models\Usuario::first());
-        $this->expectException(\Illuminate\Validation\ValidationException::class);
-        Baixa::estornar($p, 'teste');
+        $ordens = $p->itens()->pluck('ordem_id');
+        Baixa::estornar($p, 'baixa errada no sistema atual');
+        $this->assertSame('estornado', $p->fresh()->situacao);
+        $this->assertSame(0, OrdemServico::whereIn('id', $ordens)->where('situacao', 'paga')->count());
+        $this->assertGreaterThan(170.0, Baixa::totalAberto(Cliente::where('legado_id', 5)->first()));
     }
 
     public function test_data_de_pagamento_zerada_conta_como_paga(): void

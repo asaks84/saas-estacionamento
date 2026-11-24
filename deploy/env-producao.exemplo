@@ -29,9 +29,6 @@ LEGADO_DB_DATABASE=u612820499_senna
 LEGADO_DB_USERNAME=
 LEGADO_DB_PASSWORD=
 
-# paralelo (etapa 5): espelho de hora em hora; desligar (false) na virada
-ERP_ESPELHO_ATIVO=true
-ERP_EMPRESA_NOME="Local Estacionamento"
 ERP_BACKUP_DIAS=14
 ERP_INATIVIDADE_MINUTOS=10
 

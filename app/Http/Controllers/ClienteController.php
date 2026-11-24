@@ -154,7 +154,7 @@ class ClienteController extends Controller
                     'situacao' => $c->inicio->gt($hoje) ? 'futuro' : ($c->fim && $c->fim->lt($hoje) ? 'encerrado' : 'vigente'),
                     'mensalidades' => ($mensalidades[$v->id] ?? collect())->map(fn ($o) => [
                         'competencia' => $o->competencia, 'numero' => $o->numero, 'valor' => (float) $o->valor, 'situacao' => $o->situacao,
-                        'descricao' => $o->descricao, 'do_sistema_atual' => (bool) ($o->legado_id && config('erp.espelho_ativo')),
+                        'descricao' => $o->descricao,
                         'cobranca' => ($cob = $cobrancasAbertas[$o->cobranca_id] ?? null) ? ['numero' => $cob->numero, 'boleto' => (bool) Boletos::ativo($cob)] : null,
                     ])->values(),
                     'pausas' => $c->pausas->map(fn ($p) => [

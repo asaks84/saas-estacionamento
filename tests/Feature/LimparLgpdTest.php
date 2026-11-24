@@ -29,7 +29,6 @@ class LimparLgpdTest extends TestCase
         $this->a = $this->criarEmpresa('a');
         app(EmpresaAtual::class)->definir($this->a->empresa->id);
         FormasPagamento::garantirPadrao();
-        config(['erp.espelho_ativo' => true]);
     }
 
     private function pendente(int $dias, ?int $legado = null): CadastroPendente
@@ -64,14 +63,14 @@ class LimparLgpdTest extends TestCase
 
         // simulação não muda nada
         Artisan::call('lgpd:limpar', ['--simular' => true]);
-        $this->assertStringContainsString('fila de espera: 1 apagado(s); ex-clientes: 1 anonimizado(s), 1 com bloqueio', Artisan::output());
+        $this->assertStringContainsString('fila de espera: 2 apagado(s); ex-clientes: 1 anonimizado(s), 1 com bloqueio', Artisan::output());
         $this->assertNotNull(CadastroPendente::find($velho->id));
         $this->assertNull($antigo->fresh()->anonimizado_em);
 
         $this->assertSame(0, Artisan::call('lgpd:limpar'));
         $this->assertNull(CadastroPendente::find($velho->id));
         $this->assertNotNull(CadastroPendente::find($novo->id));
-        $this->assertNotNull(CadastroPendente::find($doLegado->id));       // espelho ligado: volta pela importação
+        $this->assertNull(CadastroPendente::find($doLegado->id));          // veio do sistema atual: depois da virada, sai também
 
         $this->assertNotNull($antigo->fresh()->anonimizado_em);
         $this->assertNull($antigo->fresh()->documento);
@@ -80,9 +79,5 @@ class LimparLgpdTest extends TestCase
         $this->assertNull($ativo->fresh()->anonimizado_em);
         $this->assertDatabaseHas('log_atividades', ['acao' => 'lgpd_limpeza']);
 
-        // depois da virada, o do sistema atual também sai
-        config(['erp.espelho_ativo' => false]);
-        Artisan::call('lgpd:limpar');
-        $this->assertNull(CadastroPendente::find($doLegado->id));
     }
 }

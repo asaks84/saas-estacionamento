@@ -8,11 +8,6 @@ use Illuminate\Support\Facades\Schedule;
 // separado (Schedule::command): a hospedagem compartilhada desliga o proc_open, e o agendador
 // não conseguia abrir o comando ("The Process class relies on proc_open").
 
-// Paralelo (etapa 5): espelha o sistema atual de hora em hora, das 7h às 23h, e compara os números.
-// Só roda com ERP_ESPELHO_ATIVO=true (desligar na virada).
-Schedule::call(fn () => Artisan::call('legado:espelhar'))->name('legado:espelhar')
-    ->hourly()->between('7:00', '23:00')->when(fn () => config('erp.espelho_ativo'))->withoutOverlapping(30);
-
 // Contas fixas: gera as contas a pagar até o mês seguinte (também é feito ao abrir Contas a pagar).
 Schedule::call(fn () => Artisan::call('pagar:gerar-fixas'))->name('pagar:gerar-fixas')->dailyAt('06:05');
 

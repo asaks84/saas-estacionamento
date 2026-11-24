@@ -41,7 +41,7 @@ class ImportacaoLegadoTest extends TestCase
 
     private function importar(): void
     {
-        $this->artisan('legado:importar', ['--empresa' => 'Local Estacionamento'])->assertSuccessful();
+        $this->artisan('legado:importar', ['--empresa' => 'Local Estacionamento', '--sobrescrever' => true])->assertSuccessful();
     }
 
     public function test_importa_niveis_usuarios_e_atividades(): void
@@ -69,6 +69,13 @@ class ImportacaoLegadoTest extends TestCase
         $this->post('/login', ['login' => 'caue', 'password' => 'senha-boa'])->assertRedirect('/');
         auth()->logout();
         $this->post('/login', ['login' => 'gerente', 'password' => 'antiga'])->assertRedirect('/');
+    }
+
+    public function test_depois_da_virada_so_reimporta_com_sobrescrever(): void
+    {
+        $this->artisan('legado:importar', ['--empresa' => 'Local Estacionamento'])->assertSuccessful();   // primeira instalação
+        $this->artisan('legado:importar')->assertFailed();                                               // ERP já tem dados
+        $this->artisan('legado:importar', ['--sobrescrever' => true])->assertSuccessful();
     }
 
     public function test_pode_rodar_varias_vezes_sem_duplicar(): void

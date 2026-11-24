@@ -142,18 +142,17 @@ class ContratosTest extends TestCase
         Carbon::setTestNow();
     }
 
-    public function test_mensalidade_do_sistema_atual_nao_muda_no_paralelo(): void
+    public function test_mensalidade_do_sistema_atual_muda_depois_da_virada(): void
     {
         Carbon::setTestNow('2026-11-17 10:00');
-        config(['erp.espelho_ativo' => true]);
         $a = $this->criarEmpresa('a');
         $x = $this->criarCliente($a);
         $c = $this->contrato($a, $x);
         $o = $this->mensalidadeNov($a, $x, $c);
         $o->forceFill(['legado_id' => 777])->save();
         $this->actingAs($a->operador)->post("/mensalidades/{$c->id}/pausar", ['de' => '2026-11', 'ate' => '2026-11', 'taxa_tipo' => 'valor', 'taxa_valor' => 0, 'mes_acao' => 'cancelar'])
-            ->assertSessionHasErrors('mes_acao');
-        $this->assertSame('aberta', $o->fresh()->situacao);
+            ->assertSessionHasNoErrors();
+        $this->assertSame('cancelada', $o->fresh()->situacao);
         Carbon::setTestNow();
     }
 

@@ -96,15 +96,12 @@ class NumeracaoClientesTest extends TestCase
         $this->assertNotNull(Cliente::find($erp->cliente->id));
     }
 
-    public function test_ficha_do_sistema_atual_nao_se_aprova_no_erp(): void
+    public function test_ficha_do_sistema_atual_se_recusa_no_erp_depois_da_virada(): void
     {
         $a = $this->criarEmpresa('a');
         app(EmpresaAtual::class)->definir($a->empresa->id);
         $p = CadastroPendente::create(['nome' => 'X', 'placa' => 'ABC1D23', 'recebido_em' => now(), 'consentimento_em' => now(), 'legado_id' => 9]);
-        $this->actingAs($a->admin)->post("/pendentes/{$p->id}/aprovar", ['modo' => 'novo', 'placa' => 'ABC1D23', 'tipo_veiculo_id' => $a->tipo->id])
-            ->assertSessionHasErrors('modo');
-        $this->actingAs($a->admin)->post("/pendentes/{$p->id}/recusar")->assertSessionHasErrors('modo');
-        $this->assertSame(0, Cliente::where('nome', 'X')->count());
-        $this->assertNotNull(CadastroPendente::find($p->id));
+        $this->actingAs($a->admin)->post("/pendentes/{$p->id}/recusar")->assertSessionHasNoErrors();
+        $this->assertNull(CadastroPendente::find($p->id));
     }
 }

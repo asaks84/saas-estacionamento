@@ -6,12 +6,9 @@ return [
     // Minutos sem uso (somando todas as abas) até o sistema fechar sozinho.
     'inatividade_minutos' => (int) env('ERP_INATIVIDADE_MINUTOS', 10),
 
-    // Conexão com o banco do sistema atual (CodeIgniter), usada só pela importação.
+    // Conexão com o banco do sistema atual (CodeIgniter), usada só pela importação manual
+    // (legado:importar) e pelo backup. Depois da virada, o sistema atual fica só para consulta.
     'legado_conexao' => 'legado',
-
-    // Paralelo (etapa 5): nome da empresa na primeira importação automática e se o espelho roda.
-    'empresa_nome' => env('ERP_EMPRESA_NOME', 'Local Estacionamento'),
-    'espelho_ativo' => (bool) env('ERP_ESPELHO_ATIVO', false),
 
     // Backup diário dos bancos (ERP e sistema atual): quantos dias guardar.
     'backup_dias' => (int) env('ERP_BACKUP_DIAS', 14),

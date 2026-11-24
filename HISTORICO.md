@@ -4,6 +4,20 @@ Alterações do ERP Local, da mais nova para a mais antiga. Cada alteração ent
 
 ---
 
+## 24/11/2026 — Virada: sai a Conferência e o espelho do sistema atual; o ERP passa a ser o oficial
+
+- **Saiu:** a tela Sistema › Conferência (e o item do menu), os dois avisos do Início ("números vêm da importação de..." e "a importação parou"), o comando `legado:espelhar` e o agendamento dele de hora em hora, a configuração `ERP_ESPELHO_ATIVO` e a tabela `conferencias` (migration `2026_12_11_000001_remover_conferencias`).
+- **Travas "durante o paralelo" que caíram** (obrigavam a ajustar num sistema que agora é só consulta):
+  - pausa de mensalidade: a mensalidade e a reserva do mês que vieram do sistema atual agora se ajustam aqui (proporcional, cancelar);
+  - pagamento importado do sistema atual pode ser estornado no ERP, como qualquer outro (com motivo);
+  - ficha do link do cadastro antigo pode ser aprovada ou recusada no ERP;
+  - LGPD: cliente vindo do sistema atual pode ser anonimizado, e a rotina diária apaga também as fichas antigas vencidas.
+- **Proteção nova:** `legado:importar` num ERP que já tem dados só roda com `--sobrescrever`, porque importar de novo desfaria o que foi feito aqui. `legado:comparar` continua como comando manual (só gera o relatório em Markdown, não grava mais na tabela).
+- Textos ajustados: convênio com regras do sistema atual ("confira e salve") e Resultado do mês ("cancele as contas").
+- Documentação: docs/10 (etapa 5 concluída), docs/12 (decisão), docs/13, docs/14 (seção da virada), README.
+- Testes: os 75 testes das áreas mexidas passam. Na suíte completa, as falhas restantes não vêm desta mudança: PDV sem internet e Nfse falham neste ambiente pelo OpenSSL (falham igual sem a mudança), o backup no Drive é a falha conhecida do Windows, e os demais erros foram uma queda do MySQL no meio da execução (passaram ao rodar de novo).
+- Arquivos: app/Console/Commands/LegadoEspelhar.php, app/Http/Controllers/ConferenciaController.php, app/Models/Conferencia.php, resources/js/Pages/Sistema/Conferencia.jsx (removidos); app/Console/Commands/LegadoImportar.php, LegadoComparar.php, LimparLgpd.php, app/Http/Controllers/InicioController.php, ClienteController.php, PendenteController.php, app/Servicos/Baixa.php, Contratos.php, DadosPessoais.php, config/erp.php, deploy/env-producao.exemplo, routes/web.php, routes/console.php, resources/js/lib/menu.js, resources/js/Pages/Inicio.jsx, Clientes/Show.jsx, Pendentes/Index.jsx, Pendentes/Revisar.jsx, Convenios/Form.jsx, Resultado/Mes.jsx, database/migrations/2026_12_11_000001_remover_conferencias.php, testes (Paralelo, Contratos, DadosPessoais, LimparLgpd, NumeracaoClientes, Importacao*).
+
 ## 22/11/2026 — Organização: consultas e regras que estavam em controladores vão para os serviços
 
 - Revisão do projeto, item 7. Sete funções que outras telas, o PDV e até um serviço chamavam direto de um controlador foram para `app/Servicos`, **com o mesmo conteúdo** (recortadas e coladas, sem mudar a regra):

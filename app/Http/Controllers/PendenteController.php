@@ -33,7 +33,6 @@ class PendenteController extends Controller
                 'placa' => $p->placa,
                 'modelo' => trim($p->marca.' '.$p->modelo),
                 'recebido_em' => $p->recebido_em->format('Y-m-d H:i:s'),
-                'do_sistema_atual' => (bool) $p->legado_id,
                 'cliente_existente' => $p->documento ? Cliente::where('documento', $p->documento)->value('nome') : null,
             ]),
         ]);
@@ -49,7 +48,6 @@ class PendenteController extends Controller
                 'documento' => Documento::formatar($pendente->documento),
                 'recebido_em' => $pendente->recebido_em->format('Y-m-d H:i:s'),
                 'consentimento_em' => $pendente->consentimento_em->format('Y-m-d H:i:s'),
-                'do_sistema_atual' => (bool) $pendente->legado_id,
             ],
             'existente' => $existente ? ['id' => $existente->id, 'nome' => $existente->nome] : null,
             'tipos' => TipoVeiculo::where('ativo', true)->ordenados()->get(['id', 'nome']),
@@ -59,17 +57,8 @@ class PendenteController extends Controller
         ]);
     }
 
-    /** ficha que veio do link do sistema atual: aprovar ou recusar lá (aprovar aqui duplica o cliente) */
-    private static function doSistemaAtual(CadastroPendente $p): void
-    {
-        if ($p->legado_id) {
-            throw ValidationException::withMessages(['modo' => 'Esta ficha veio do link do sistema atual: aprove ou recuse lá. Aprovar aqui cria o cliente duas vezes. Ela sai desta lista na próxima importação.']);
-        }
-    }
-
     public function aprovar(Request $request, CadastroPendente $pendente): RedirectResponse
     {
-        self::doSistemaAtual($pendente);
         $empresa = app(EmpresaAtual::class)->id();
         $modo = $request->validate(['modo' => ['required', 'in:novo,vincular']])['modo'];
 
@@ -129,7 +118,6 @@ class PendenteController extends Controller
 
     public function recusar(CadastroPendente $pendente): RedirectResponse
     {
-        self::doSistemaAtual($pendente);
         Atividades::registrar('cadastro_publico_recusado', $pendente->nome);
         $pendente->delete(); // LGPD: dados de quem não virou cliente não ficam guardados
 

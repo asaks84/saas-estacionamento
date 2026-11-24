@@ -60,7 +60,7 @@ class ImportacaoCadastrosTest extends TestCase
 
     private function importar(): void
     {
-        $this->artisan('legado:importar', ['--empresa' => 'Local Estacionamento'])->assertSuccessful();
+        $this->artisan('legado:importar', ['--empresa' => 'Local Estacionamento', '--sobrescrever' => true])->assertSuccessful();
         app(EmpresaAtual::class)->definir(Empresa::firstOrFail()->id);
     }
 

@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-/** LGPD: exportar os dados do cliente e anonimizar, com os bloqueios (dívida, crédito, pátio, ativo, paralelo). */
+/** LGPD: exportar os dados do cliente e anonimizar, com os bloqueios (dívida, crédito, pátio, ativo). */
 class DadosPessoaisTest extends TestCase
 {
     use RefreshDatabase;
@@ -78,11 +78,9 @@ class DadosPessoaisTest extends TestCase
         $c->refresh();
         $this->assertSame([], DadosPessoais::bloqueios($c));
 
-        // cliente do sistema atual com o espelho ligado: espera a virada
-        config(['erp.espelho_ativo' => true]);
+        // cliente que veio do sistema atual: depois da virada, anonimiza aqui também
         $c->forceFill(['legado_id' => 77])->save();
-        $this->assertCount(1, DadosPessoais::bloqueios($c));
-        config(['erp.espelho_ativo' => false]);
+        $this->assertSame([], DadosPessoais::bloqueios($c));
 
         // nota fiscal emitida fica como está (guarda legal)
         $nota = Nfse::create(['cliente_id' => $c->id, 'ambiente' => 'restrita', 'serie' => '1', 'numero_dps' => 1, 'id_dps' => 'DPS1', 'situacao' => 'emitida',
