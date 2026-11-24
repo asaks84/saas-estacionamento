@@ -269,17 +269,17 @@ function Resumo({ resumo, params }) {
         <div className="card mb-3">
             <div className="card-header">Emitidas na competência</div>
             <div className="card-body">
-                <div className="row g-3 align-items-center">
-                    <div className="col-6 col-md-3"><CampoData mes rotulo="Competência" value={r.competencia} onChange={(v) => v && trocar(v)} /></div>
+                <div className="row g-3 align-items-center justify-content-between">
+                    <div className="col-12 col-md-3"><CampoData mes className="mb-0" rotulo="Competência" value={r.competencia} onChange={(v) => v && trocar(v)} /></div>
                     <div className="col-6 col-md-3"><div className="small text-muted">Total em notas</div><div className="fs-4 fw-semibold">{moeda(r.valor)}</div></div>
                     <div className="col-6 col-md-2"><div className="small text-muted">Notas</div><div className="fs-4 fw-semibold">{r.qtd}</div></div>
-                    <div className="col-6 col-md-4 small text-muted">
-                        {r.iss_retido > 0 && <div>ISS retido: {moeda(r.iss_retido)}</div>}
-                        {r.ret_federal > 0 && <div>Federais retidos: {moeda(r.ret_federal)}</div>}
-                        {r.canceladas > 0 && <div>{r.canceladas} cancelada{r.canceladas > 1 ? 's' : ''} (fora do total)</div>}
-                        {r.enviando > 0 && <div className="text-warning-emphasis">{r.enviando} enviando: confira na aba Notas</div>}
-                        {r.testes_qtd > 0 && <div>Em testes: {r.testes_qtd} nota{r.testes_qtd > 1 ? 's' : ''} · {moeda(r.testes_valor)} (sem valor fiscal, fora do total)</div>}
-                    </div>
+                </div>
+                <div className="small text-muted text-center mt-2">
+                    {r.iss_retido > 0 && <div>ISS retido: {moeda(r.iss_retido)}</div>}
+                    {r.ret_federal > 0 && <div>Federais retidos: {moeda(r.ret_federal)}</div>}
+                    {r.canceladas > 0 && <div>{r.canceladas} cancelada{r.canceladas > 1 ? 's' : ''} (fora do total)</div>}
+                    {r.enviando > 0 && <div className="text-warning-emphasis">{r.enviando} enviando: confira na aba Notas</div>}
+                    {r.testes_qtd > 0 && <div>Em testes: {r.testes_qtd} nota{r.testes_qtd > 1 ? 's' : ''} · {moeda(r.testes_valor)} (sem valor fiscal, fora do total)</div>}
                 </div>
             </div>
         </div>

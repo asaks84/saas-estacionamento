@@ -131,7 +131,8 @@ export default function CampoData({ rotulo, value, onChange, erro, ajuda, mes = 
 
     const msg = erro || (invalido ? 'Data inválida.' : null)
     return (
-        <div ref={caixaCampo} className={`form-floating campo-data mb-3 ${className}`}>
+        // margem de baixo padrão mb-3; com outra mb-* no className (ex.: mb-0), vale a dela
+        <div ref={caixaCampo} className={`form-floating campo-data${/(^|\s)mb-/.test(className) ? '' : ' mb-3'} ${className}`}>
             <input id={id} className={`form-control${msg ? ' is-invalid' : ''}`} placeholder=" " inputMode="numeric"
                 value={texto} onChange={mudar} autoComplete="off" {...props} />
             <label htmlFor={id}>{rotulo} <span className="text-muted small">({mes ? 'mm/aaaa' : 'dd/mm/aaaa'})</span></label>
