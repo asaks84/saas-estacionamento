@@ -47,3 +47,6 @@ localm43_senna*.sql
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# configuração pessoal do Claude Code (não versionar)
+.claude/settings.local.json

@@ -20,7 +20,7 @@ class CadastroPublicoTest extends TestCase
         return array_merge([
             'nome' => 'ana souza', 'documento' => '529.982.247-25', 'celular' => '13999990000', 'cep' => '11090-190',
             'logradouro' => 'rua x', 'numero' => '10', 'bairro' => 'centro', 'cidade' => 'santos', 'uf' => 'sp',
-            'placa' => 'abc1d23', 'modelo' => 'onix', 'aceite' => true,
+            'placa' => 'abc1d23', 'marca' => 'chevrolet', 'modelo' => 'onix', 'cor' => 'prata', 'aceite' => true,
         ], $extra);
     }
 
@@ -41,7 +41,21 @@ class CadastroPublicoTest extends TestCase
         $p = CadastroPendente::firstOrFail();
         $this->assertSame('ANA SOUZA', $p->nome);
         $this->assertSame('ABC1D23', $p->placa);
+        $this->assertSame(['CHEVROLET', 'PRATA'], [$p->marca, $p->cor]);
         $this->assertNotNull($p->consentimento_em);
+    }
+
+    public function test_ficha_igual_a_do_sistema_atual(): void
+    {
+        $a = $this->empresaComLink();
+        // a tela não oferece o tipo do veículo: a gestão escolhe na aprovação
+        $this->get('/cadastro/abc12345')->assertInertia(fn ($p) => $p->missing('tipos'));
+        // marca e cor obrigatórias, como no sistema atual
+        $this->post('/cadastro/abc12345', $this->dados(['marca' => '', 'cor' => '']))->assertSessionHasErrors(['marca', 'cor']);
+        // tipo enviado à força é ignorado
+        $this->post('/cadastro/abc12345', $this->dados(['tipo_veiculo_id' => $a->tipo->id]))->assertRedirect('/cadastro/abc12345/enviado');
+        app(EmpresaAtual::class)->definir($a->empresa->id);
+        $this->assertNull(CadastroPendente::firstOrFail()->tipo_veiculo_id);
     }
 
     public function test_sem_aceite_nao_envia_e_robo_e_ignorado(): void

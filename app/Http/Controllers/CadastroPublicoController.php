@@ -43,7 +43,6 @@ class CadastroPublicoController extends Controller
         return Inertia::render('Cadastro/Publico', [
             'codigo' => $codigo,
             'empresa_publica' => ['nome' => $empresa->nome],
-            'tipos' => TipoVeiculo::where('ativo', true)->ordenados()->get(['id', 'nome', 'detalhe']),
         ]);
     }
 
@@ -75,11 +74,11 @@ class CadastroPublicoController extends Controller
             'bairro' => ['required', 'string', 'max:60'],
             'cidade' => ['required', 'string', 'max:60'],
             'uf' => ['required', 'alpha', 'size:2'],
+            // veículo completo, como na ficha do sistema atual; o tipo (tamanho) não vem daqui: a gestão escolhe na aprovação
             'placa' => ['required', 'string', 'min:5', 'max:10'],
-            'marca' => ['nullable', 'string', 'max:30'],
+            'marca' => ['required', 'string', 'max:30'],
             'modelo' => ['required', 'string', 'max:40'],
-            'cor' => ['nullable', 'string', 'max:20'],
-            'tipo_veiculo_id' => ['nullable', 'integer', 'exists:tipos_veiculo,id,empresa_id,'.$empresa->id],
+            'cor' => ['required', 'string', 'max:20'],
             'aceite' => ['accepted'],
         ], ['aceite.accepted' => 'Confirme que leu a política de privacidade para enviar o cadastro.']);
 

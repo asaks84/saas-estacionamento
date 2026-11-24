@@ -4,6 +4,16 @@ Alterações do ERP Local, da mais nova para a mais antiga. Cada alteração ent
 
 ---
 
+## 24/11/2026 — Ficha do cadastro público igual à do sistema atual
+
+- **Obrigatórios com * vermelho** no rótulo: CPF/CNPJ, nome, celular, CEP, endereço, número, bairro, cidade, UF, placa, marca, modelo, cor e a autorização. Aviso "* Preenchimento obrigatório" no topo. Outro telefone, e-mail e complemento continuam opcionais.
+- **Marca e cor passam a ser obrigatórias** (antes eram opcionais no ERP; no sistema atual sempre foram).
+- **O cliente não escolhe mais o tipo (tamanho) do veículo:** o campo saiu da ficha e o servidor ignora o tipo se vier. A gestão escolhe na aprovação (Pendentes), como já fazia no sistema atual.
+- Componentes: `Campo` ganhou `obrigatorio` (põe o * e o `aria-required`); `CamposCliente` e `CamposVeiculo` ganharam `obrigatorios` (lista de campos com *); `CamposVeiculo` ganhou `mostrarTipo`. As outras telas que usam esses componentes ficam como estavam.
+- docs/05: regra da ficha; e a frase da pausa "não muda durante o paralelo" atualizada para depois da virada. docs/12: decisão.
+- Testes: CadastroPublicoTest com a ficha nova (marca e cor exigidas, tipo ignorado); 33 testes da área passando.
+- Arquivos: resources/js/Components/Campo.jsx, CamposCliente.jsx, CamposVeiculo.jsx, resources/js/Pages/Cadastro/Publico.jsx, app/Http/Controllers/CadastroPublicoController.php, tests/Feature/CadastroPublicoTest.php, docs/05-regras-de-negocio.md, docs/12-decisoes.md.
+
 ## 24/11/2026 — Virada: sai a Conferência e o espelho do sistema atual; o ERP passa a ser o oficial
 
 - **Saiu:** a tela Sistema › Conferência (e o item do menu), os dois avisos do Início ("números vêm da importação de..." e "a importação parou"), o comando `legado:espelhar` e o agendamento dele de hora em hora, a configuração `ERP_ESPELHO_ATIVO` e a tabela `conferencias` (migration `2026_12_11_000001_remover_conferencias`).

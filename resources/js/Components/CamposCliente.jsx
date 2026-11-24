@@ -5,7 +5,8 @@ import { cep as mCep, cpfCnpj, telefone } from '../lib/mascaras'
 
 /** Campos de cliente (usados no cadastro, na edição e na aprovação da fila). Busca o endereço pelo CEP. */
 /** largo: tela inteira (campos lado a lado em telas grandes); sem largo: caixa estreita (cadastro público) */
-export default function CamposCliente({ data, setData, errors, mostrarExtras = true, largo = false }) {
+/** obrigatorios: nomes dos campos que levam o * no rótulo (iguais às regras do servidor daquela tela) */
+export default function CamposCliente({ data, setData, errors, mostrarExtras = true, largo = false, obrigatorios = [] }) {
     const lg = (n) => (largo ? ` col-xl-${n}` : '')
     const [buscandoCep, setBuscandoCep] = useState(false)
 
@@ -29,7 +30,7 @@ export default function CamposCliente({ data, setData, errors, mostrarExtras = t
             .finally(() => setBuscandoCep(false))
     }
 
-    const campo = (nome) => ({ value: data[nome] ?? '', erro: errors[nome], onChange: (e) => setData(nome, e.target.value) })
+    const campo = (nome) => ({ value: data[nome] ?? '', erro: errors[nome], obrigatorio: obrigatorios.includes(nome), onChange: (e) => setData(nome, e.target.value) })
 
     return (
         <>

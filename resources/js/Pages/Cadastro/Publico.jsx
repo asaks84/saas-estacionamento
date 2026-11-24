@@ -2,11 +2,15 @@ import { Head, useForm } from '@inertiajs/react'
 import CamposCliente from '../../Components/CamposCliente'
 import CamposVeiculo from '../../Components/CamposVeiculo'
 
-/** Cadastro público de mensalista (aberto pelo QR Code do balcão, sem login). */
-export default function CadastroPublico({ codigo, empresa_publica, tipos }) {
+// os mesmos campos exigidos pelo servidor (CadastroPublicoController::enviar), iguais à ficha do sistema atual
+const OBRIGATORIOS_CLIENTE = ['documento', 'nome', 'celular', 'cep', 'logradouro', 'numero', 'bairro', 'cidade', 'uf']
+const OBRIGATORIOS_VEICULO = ['placa', 'marca', 'modelo', 'cor']
+
+/** Cadastro público de mensalista (aberto pelo QR Code do balcão, sem login). O tipo do veículo é a gestão que escolhe. */
+export default function CadastroPublico({ codigo, empresa_publica }) {
     const { data, setData, post, processing, errors } = useForm({
         documento: '', nome: '', celular: '', telefone: '', email: '', cep: '', logradouro: '', numero: '', complemento: '',
-        bairro: '', cidade: '', uf: '', placa: '', marca: '', modelo: '', cor: '', tipo_veiculo_id: '', aceite: false, site: '',
+        bairro: '', cidade: '', uf: '', placa: '', marca: '', modelo: '', cor: '', aceite: false, site: '',
     })
 
     function enviar(e) {
@@ -22,15 +26,16 @@ export default function CadastroPublico({ codigo, empresa_publica, tipos }) {
             <img className="logo-escuro d-block mx-auto mb-3" src="/imagens/logo-local-escuro.png" alt={empresa_publica.nome} width="150" height="67" />
             <h1 className="fs-4 fw-bold text-center">Cadastro de mensalista</h1>
             <p className="text-center text-muted">Preencha seus dados. A equipe confere e entra em contato para combinar período e valor.</p>
+            <p className="text-center small text-muted"><span className="text-danger">*</span> Preenchimento obrigatório</p>
             {temErro && <div className="alert alert-danger">Confira os campos marcados em vermelho.</div>}
             <form onSubmit={enviar} noValidate>
                 <div className="card mb-3">
                     <div className="card-header">Seus dados</div>
-                    <div className="card-body"><CamposCliente data={data} setData={setData} errors={errors} mostrarExtras={false} /></div>
+                    <div className="card-body"><CamposCliente data={data} setData={setData} errors={errors} mostrarExtras={false} obrigatorios={OBRIGATORIOS_CLIENTE} /></div>
                 </div>
                 <div className="card mb-3">
                     <div className="card-header">Seu veículo</div>
-                    <div className="card-body"><CamposVeiculo data={data} setData={setData} errors={errors} tipos={tipos} semPlacaPermitido={false} /></div>
+                    <div className="card-body"><CamposVeiculo data={data} setData={setData} errors={errors} semPlacaPermitido={false} mostrarTipo={false} obrigatorios={OBRIGATORIOS_VEICULO} /></div>
                 </div>
                 {/* campo escondido contra robôs */}
                 <input type="text" name="site" value={data.site} onChange={(e) => setData('site', e.target.value)} tabIndex="-1" autoComplete="off"
@@ -40,6 +45,7 @@ export default function CadastroPublico({ codigo, empresa_publica, tipos }) {
                         onChange={(e) => setData('aceite', e.target.checked)} />
                     <label className="form-check-label" htmlFor="aceite">
                         Li a <a href="/privacidade" target="_blank" rel="noreferrer">política de privacidade</a>. Meus dados são usados para o cadastro, o contato e a cobrança do serviço contratado.
+                        <span className="text-danger" aria-hidden="true"> *</span>
                     </label>
                     {errors.aceite && <div className="invalid-feedback">{errors.aceite}</div>}
                 </div>
