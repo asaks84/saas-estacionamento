@@ -19,7 +19,8 @@ Alterações do ERP Local, da mais nova para a mais antiga. Cada alteração ent
 
 - **Datas:** os dois últimos `<input type="date">` viraram `CampoData` (dd/mm/aaaa com o calendário em pt-BR): vencimento do boleto na cobrança e data da retirada do sócio. O limite do vencimento (hoje até 90 dias) continua conferido pelo servidor, com a mensagem de sempre. Conserto junto: a data sugerida da retirada usava a hora de Londres (UTC) e, depois das 21h, vinha com o dia seguinte, que o servidor recusava.
 - **.gitignore:** `erp-base.zip` e a pasta `sql-limpeza/` (scripts que apagam dados) ficam só na máquina. Os arquivos continuam na pasta; a `sql-limpeza` só deixou de ser acompanhada pelo Git (versões antigas seguem no histórico).
-- Arquivos: resources/js/Components/BoletoCobranca.jsx, resources/js/Pages/Resultado/Caixas.jsx, .gitignore.
+- **Atalhos .bat removidos:** `importar-legado.bat` e `recriar-banco.bat` (da etapa 3) foram apagados a pedido do Cauê; o `recriar-banco` apagava o banco local sem pedir confirmação. Os comandos continuam existindo (`php artisan legado:importar`, `legado:comparar`; `migrate:fresh` recria o banco) e os arquivos podem ser recuperados pelo histórico do Git.
+- Arquivos: resources/js/Components/BoletoCobranca.jsx, resources/js/Pages/Resultado/Caixas.jsx, .gitignore, importar-legado.bat e recriar-banco.bat (removidos).
 
 ## 22/11/2026 — Retirada do sócio: cancelar com motivo em vez de apagar; formatos só pelo sistema
 
