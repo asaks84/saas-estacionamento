@@ -26,7 +26,7 @@ Desde 2026 o Local emite NFS-e pelo **Emissor Nacional** (nfse.gov.br), e não m
 - **Certificado A1 (e-CNPJ):** o .pfx é aberto no navegador (node-forge); a senha não sai do computador. O servidor recebe certificado e chave em PEM, confere se a chave é do certificado, se não venceu e se é do CNPJ da empresa, e guarda criptografado (integracoes, tipo nfse). Ler no navegador evita o problema dos .pfx antigos (RC2), que o OpenSSL 3 do servidor não abre.
 - A tela segue os passos do Emissor Nacional, com os mesmos nomes:
   1. **Emitente** (Pessoas): CNPJ, município, Opção no Simples Nacional, Regime de Apuração dos Tributos no SN (o Local: ME/EPP, tudo pelo Simples; as outras opções incluem o "híbrido", ISS pela NFS-e).
-  2. **Serviço:** Código de Tributação Nacional 11.01.01, Código Complementar Municipal 11.01.01.004 (na DPS vão só os 3 últimos números), Item da NBS 106043000, descrição e "especificar cada serviço". Aceita colar com pontos.
+  2. **Serviço:** Código de Tributação Nacional 11.01.01, Código Complementar Municipal 11.01.01.004 (na DPS vão só os 3 últimos números; pode ficar em branco, e a DPS vai sem cTribMun: o ambiente de testes recusou o 004 de Santos com E0314, que a produção aceita), Item da NBS 106043000, descrição e "especificar cada serviço". Aceita colar com pontos.
   3. **Tributação municipal:** operação tributável, regime especial. As alíquotas ficam em Notas fiscais (mudam todo mês).
   4. **Série da DPS:** uma série que o Emissor Nacional na web não use. Número sequencial por série.
 - Ficam fixos, como o Cauê preenche no Emissor: compras governamentais "Não", destinatário/intermediário não informados, sem imunidade, exigibilidade suspensa, benefício ou dedução. IBS/CBS em branco (opcional no Emissor hoje).

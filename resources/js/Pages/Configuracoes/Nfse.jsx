@@ -180,7 +180,7 @@ export default function Nfse({ config, empresa, certificado, ambiente, faltando,
                 <Passo n="2" nome="Serviço/fornecimento prestado" onde="Serviço">
                     <div className="row g-2">
                         <div className="col-md-4">{campo('c_trib_nac', 'Código de Tributação Nacional', { inputMode: 'numeric', maxLength: 8, placeholder: '11.01.01', ajuda: nome('c_trib_nac', c.c_trib_nac) })}</div>
-                        <div className="col-md-4">{campo('c_trib_mun', 'Código Complementar Municipal', { inputMode: 'numeric', maxLength: 12, placeholder: '11.01.01.004', ajuda: nome('c_trib_mun', c.c_trib_mun) })}</div>
+                        <div className="col-md-4">{campo('c_trib_mun', 'Código Complementar Municipal', { inputMode: 'numeric', maxLength: 12, placeholder: '11.01.01.004', ajuda: c.c_trib_mun ? nome('c_trib_mun', c.c_trib_mun) : 'Em branco, a nota vai sem esse código (use só se o Sistema Nacional recusar o código, como no ambiente de testes).' })}</div>
                         <div className="col-md-4">{campo('c_nbs', 'Item da NBS', { inputMode: 'numeric', maxLength: 11, placeholder: '106043000', ajuda: nome('c_nbs', c.c_nbs) })}</div>
                         <div className="col-12">{campo('descricao', 'Primeira linha da descrição (opcional)', { maxLength: 300, ajuda: 'Em branco, a descrição tem só as linhas dos serviços.' })}</div>
                         <div className="col-12">

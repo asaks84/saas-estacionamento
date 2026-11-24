@@ -465,6 +465,19 @@ class NfseTest extends TestCase
         ])->assertSessionHas('sucesso');
         $c = ConfigNfse::ler();
         $this->assertSame(['110101', '004', '106043000'], [$c['c_trib_nac'], $c['c_trib_mun'], $c['c_nbs']]);
+
+        // código complementar em branco (o ambiente de testes recusou o 004: E0314): fica em branco e a DPS vai sem cTribMun
+        $this->actingAs($this->a->admin)->put('/configuracoes/nfse', [
+            'municipio_ibge' => '3548500', 'op_simples' => '3', 'reg_ap_trib_sn' => '1', 'reg_esp_trib' => '0',
+            'c_trib_nac' => '11.01.01', 'c_trib_mun' => '', 'c_nbs' => '106043000', 'serie' => '7',
+            'pis_cofins_cst' => '00', 'tp_ret_pis_cofins' => '0',
+        ])->assertSessionHas('sucesso');
+        $c = ConfigNfse::ler();
+        $this->assertSame('', (string) $c['c_trib_mun']);
+        $this->assertNotContains('código complementar municipal', ConfigNfse::faltando());
+        $o = Ordens::lancar(['tipo' => 'servico', 'descricao' => 'Estacionamento', 'data' => '2026-11-05', 'valor' => 50]);
+        $x = Dps::montar(null, collect([$o]), $this->a->empresa->fresh(), $c, 'restrita', 1, ['iss' => '2.01', 'tributos' => '6.00'])['xml'];
+        $this->assertStringContainsString('<cServ><cTribNac>110101</cTribNac><cNBS>106043000</cNBS><xDescServ>', $x);
     }
 
     public function test_regime_hibrido_e_consumidor_sem_cpf(): void

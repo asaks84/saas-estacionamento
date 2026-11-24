@@ -4,6 +4,14 @@ Alterações do ERP Local, da mais nova para a mais antiga. Cada alteração ent
 
 ---
 
+## 24/11/2026 — NFS-e: código complementar municipal opcional (rejeição E0314)
+
+- O ambiente de testes recusou a DPS com "E0314: O código de tributação municipal informado não existe ou não está administrado pelo município". O 004 (11.01.01.004) é o da nota real e vale na produção; nos testes, o cadastro de Santos não tem.
+- Configurações › Nota fiscal: o **Código Complementar Municipal pode ficar em branco** (antes era obrigatório). Em branco, a DPS vai sem cTribMun, e a tela explica quando usar. Em branco agora fica em branco: não volta mais sozinho para o 004.
+- **Antes de passar para produção, preencher de novo 11.01.01.004.**
+- Testes: NfseTest grava o código em branco e confere a DPS sem cTribMun.
+- Arquivos: app/Servicos/Nfse/ConfigNfse.php, app/Http/Controllers/NfseController.php, resources/js/Pages/Configuracoes/Nfse.jsx, tests/Feature/NfseTest.php, docs/16-nfse.md, docs/12-decisoes.md.
+
 ## 24/11/2026 — NFS-e: leiaute da NT 009 (rejeição E1235)
 
 - O ambiente de testes passou a recusar a DPS com "E1235: ... invalid child element 'cLocEmi' ... expected 'cMotivoEmisTI, finNFSe'". É o leiaute novo da NT SE/CGNFS-e 009: **finNFSe = 0** (NFS-e regular) entra depois do tpEmit, e a **descrição (xDescServ) passa para o fim do cServ**, depois do cNBS.

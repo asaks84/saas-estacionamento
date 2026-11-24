@@ -60,7 +60,7 @@ class NfseController extends Controller
             'reg_ap_trib_sn' => ['required', Rule::in(array_keys(ConfigNfse::REG_AP))],
             'reg_esp_trib' => ['required', Rule::in(array_keys(ConfigNfse::REG_ESP))],
             'c_trib_nac' => ['required', 'digits:6'],
-            'c_trib_mun' => ['required', 'digits:3'],
+            'c_trib_mun' => ['nullable', 'digits:3'],   // opcional: em branco, a DPS vai sem cTribMun
             'c_nbs' => ['required', 'regex:/^\d{9}$/'],
             'serie' => ['required', 'integer', 'min:1', 'max:99999'],
             'descricao' => ['nullable', 'string', 'max:300'],

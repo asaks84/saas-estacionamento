@@ -150,8 +150,9 @@ class ConfigNfse
         $e ??= Empresa::atual();
 
         $salvo = (array) (($e->configuracoes ?? [])['nfse'] ?? []);
-        // códigos em branco (gravados antes de existir o padrão) ficam com o do estacionamento
-        foreach (['c_trib_nac', 'c_trib_mun', 'c_nbs'] as $k) {
+        // códigos em branco (gravados antes de existir o padrão) ficam com o do estacionamento. O complementar
+        // municipal não: em branco é escolha (é opcional na DPS; o ambiente de testes pode não ter o código do município)
+        foreach (['c_trib_nac', 'c_nbs'] as $k) {
             if (($salvo[$k] ?? null) === '') {
                 unset($salvo[$k]);
             }
@@ -187,7 +188,7 @@ class ConfigNfse
         if (! preg_match('/^\d{6}$/', (string) $c['c_trib_nac'])) {
             $f[] = 'código de tributação nacional';
         }
-        if (! preg_match('/^\d{3}$/', (string) $c['c_trib_mun'])) {
+        if (! preg_match('/^(\d{3})?$/', (string) $c['c_trib_mun'])) {
             $f[] = 'código complementar municipal';
         }
         if (! preg_match('/^\d{9}$/', (string) $c['c_nbs'])) {
