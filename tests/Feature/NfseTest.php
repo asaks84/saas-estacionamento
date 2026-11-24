@@ -131,6 +131,9 @@ class NfseTest extends TestCase
         $this->assertSame('restrita', $n->ambiente);
         $this->assertSame('DPS'.'3548500'.'2'.self::CNPJ.'00007'.str_pad('1', 15, '0', STR_PAD_LEFT), $n->id_dps);
         $this->assertTrue(AssinaturaXml::confere($enviado, $this->cert));
+        // o Sistema Nacional recusa sem a declaração UTF-8 (E1229)
+        $this->assertStringStartsWith('<?xml version="1.0" encoding="UTF-8"?>', $enviado);
+        $this->assertStringStartsWith('<?xml version="1.0" encoding="UTF-8"?>', $n->xml_dps);
 
         $x = new \SimpleXMLElement($enviado);
         $x->registerXPathNamespace('n', 'http://www.sped.fazenda.gov.br/nfse');
@@ -526,6 +529,9 @@ class NfseTest extends TestCase
         $this->actingAs($this->a->admin)->post("/notas-fiscais/{$n->id}/cancelar", ['motivo' => 'Cliente pagou em duplicidade', 'codigo' => 1])->assertSessionHas('sucesso');
         $this->assertSame('cancelada', $n->fresh()->situacao);
         $this->assertTrue(AssinaturaXml::confere($evento, $this->cert, 'infPedReg'));
+        $this->assertStringStartsWith('<?xml version="1.0" encoding="UTF-8"?>', $evento);
+        // DPS antiga guardada sem a declaração ganha a declaração no reenvio
+        $this->assertStringStartsWith('<?xml version="1.0" encoding="UTF-8"?>'."\n<DPS", AssinaturaXml::comDeclaracao('<DPS/>'));
         $this->assertStringContainsString('<CNPJAutor>11222333000181</CNPJAutor>', $evento);
         $this->assertStringContainsString('Id="PRE35485002211222333000181000000000000126110000000001101101"', $evento);
         // cancelada: o serviço volta a ficar sem nota

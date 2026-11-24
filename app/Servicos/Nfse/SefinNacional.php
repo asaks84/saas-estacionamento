@@ -51,7 +51,7 @@ class SefinNacional
     /** envia a DPS assinada; devolve a resposta crua (ok ou erro) */
     public function enviar(string $xmlAssinado): array
     {
-        $r = $this->post(self::BASES[$this->ambiente()].'/nfse', ['dpsXmlGZipB64' => base64_encode(gzencode($xmlAssinado))]);
+        $r = $this->post(self::BASES[$this->ambiente()].'/nfse', ['dpsXmlGZipB64' => base64_encode(gzencode(AssinaturaXml::comDeclaracao($xmlAssinado)))]);
 
         return self::ler($r);
     }
@@ -70,7 +70,7 @@ class SefinNacional
     /** cancelamento: evento e101101, assinado */
     public function evento(string $chave, string $xmlAssinado): array
     {
-        return self::ler($this->post(self::BASES[$this->ambiente()].'/nfse/'.$chave.'/eventos', ['pedidoRegistroEventoXmlGZipB64' => base64_encode(gzencode($xmlAssinado))]));
+        return self::ler($this->post(self::BASES[$this->ambiente()].'/nfse/'.$chave.'/eventos', ['pedidoRegistroEventoXmlGZipB64' => base64_encode(gzencode(AssinaturaXml::comDeclaracao($xmlAssinado)))]));
     }
 
     /** PDF da nota (DANFSe), do Ambiente de Dados Nacional */

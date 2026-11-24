@@ -4,6 +4,13 @@ Alterações do ERP Local, da mais nova para a mais antiga. Cada alteração ent
 
 ---
 
+## 24/11/2026 — NFS-e: XML com a declaração UTF-8 (rejeição E1229)
+
+- O Sistema Nacional recusava a DPS com "E1229: Xml não está utilizando codificação UTF-8": o XML assinado saía sem a primeira linha `<?xml version="1.0" encoding="UTF-8"?>`. Agora a DPS e o evento de cancelamento saem com ela. A assinatura não muda, porque é calculada só sobre o infDPS/infPedReg.
+- DPS já guardada sem a declaração (nota "enviando" reenviada pelo "Conferir") ganha a declaração na hora do envio.
+- Testes: NfseTest confere a declaração na DPS enviada e guardada e no evento de cancelamento.
+- Arquivos: app/Servicos/Nfse/AssinaturaXml.php, app/Servicos/Nfse/SefinNacional.php, tests/Feature/NfseTest.php.
+
 ## 24/11/2026 — Ficha do cadastro público igual à do sistema atual
 
 - **Obrigatórios com * vermelho** no rótulo: CPF/CNPJ, nome, celular, CEP, endereço, número, bairro, cidade, UF, placa, marca, modelo, cor e a autorização. Aviso "* Preenchimento obrigatório" no topo. Outro telefone, e-mail e complemento continuam opcionais.

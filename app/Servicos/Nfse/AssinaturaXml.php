@@ -61,7 +61,19 @@ class AssinaturaXml
         $ki->appendChild($x509);
         $x509->appendChild($doc->createElementNS(self::DS, 'X509Certificate', self::semCabecalho($certificadoPem)));
 
-        return $doc->saveXML($doc->documentElement);
+        // com a declaração XML (versão 1.0, encoding UTF-8): sem ela o Sistema Nacional recusa (E1229).
+        // A assinatura não muda: ela é calculada só sobre o infDPS/infPedReg.
+        $doc->encoding = 'UTF-8';
+
+        return $doc->saveXML();
+    }
+
+    /** garante a declaração UTF-8 no início (DPS antigas foram guardadas sem ela) */
+    public static function comDeclaracao(string $xml): string
+    {
+        $xml = ltrim($xml, "\xEF\xBB\xBF \t\r\n");
+
+        return str_starts_with($xml, '<?xml') ? $xml : '<?xml version="1.0" encoding="UTF-8"?>'."\n".$xml;
     }
 
     /** confere a assinatura (usado nos testes e para validar antes de enviar) */
