@@ -358,6 +358,44 @@ class NfseTest extends TestCase
         $this->assertStringContainsString('<toma><CPF>52998224725</CPF><xNome>João Balcão</xNome></toma>', $enviado);
     }
 
+    public function test_aba_ordens_de_servico_por_periodo_e_total_da_competencia(): void
+    {
+        $this->configurar();
+        $adm = $this->actingAs($this->a->admin);
+        $maria = $this->servico();                                   // 05/11, R$ 180, paga, sem cobrança
+        $c = Cliente::create(['nome' => 'Ana Empresa', 'documento' => '11444777000161']);
+        $o1 = Ordens::lancar(['tipo' => 'estadia', 'cliente_id' => $c->id, 'descricao' => 'Estadia', 'data' => '2026-11-03', 'vencimento' => '2026-11-03', 'valor' => 30]);
+        $o2 = Ordens::lancar(['tipo' => 'servico', 'cliente_id' => $c->id, 'descricao' => 'Lavagem', 'data' => '2026-11-12', 'vencimento' => '2026-11-12', 'valor' => 50]);
+        $outubro = Ordens::lancar(['tipo' => 'estadia', 'cliente_id' => $c->id, 'descricao' => 'Estadia', 'data' => '2026-10-28', 'vencimento' => '2026-10-28', 'valor' => 20]);
+        Ordens::lancar(['tipo' => 'credito', 'cliente_id' => $c->id, 'descricao' => 'Crédito', 'data' => '2026-11-04', 'valor' => 10]);   // ajuste: fora
+        Ordens::lancar(['tipo' => 'estadia', 'descricao' => 'Estadia avulsa', 'data' => '2026-11-10', 'vencimento' => '2026-11-10', 'valor' => 15]);   // sem cadastro: fora
+
+        // padrão: o mês atual, um cliente por linha
+        $adm->get('/notas-fiscais?aba=ordens')->assertInertia(fn ($pg) => $pg->where('filtros.de', '2026-11-01')->where('filtros.ate', '2026-11-30')->has('clientes', 2)
+            ->where('clientes.0.nome', 'Ana Empresa')->where('clientes.0.qtd', 2)->where('clientes.0.valor', 80)->where('clientes.0.primeira', '2026-11-03')->where('clientes.0.ultima', '2026-11-12')
+            ->where('clientes.1.id', $maria->cliente_id)->where('clientes.1.valor', 180));
+        // período escolhido (e invertido, troca)
+        $adm->get('/notas-fiscais?aba=ordens&de=2026-11-10&ate=2026-10-01')->assertInertia(fn ($pg) => $pg->where('filtros.de', '2026-10-01')->where('filtros.ate', '2026-11-10')
+            ->has('clientes', 2)->where('clientes.0.qtd', 2)->where('clientes.0.valor', 50));
+
+        // conferir pelos clientes marcados: só os serviços do período
+        $adm->get('/notas-fiscais/conferir?clientes='.$c->id.'&de=2026-10-01&ate=2026-11-05')->assertInertia(fn ($pg) => $pg->component('NotasFiscais/Conferir')
+            ->where('origem', 'ordens')->where('filtros.de', '2026-10-01')->has('clientes', 1)->has('clientes.0.servicos', 2)
+            ->where('clientes.0.servicos.0.id', $outubro->id)->where('clientes.0.servicos.1.id', $o1->id));
+        $adm->get('/notas-fiscais/conferir?clientes=&de=2026-11-01&ate=2026-11-30')->assertRedirect('/notas-fiscais?aba=ordens&de=2026-11-01&ate=2026-11-30');
+        $adm->get('/notas-fiscais/conferir?clientes='.$c->id.'&de=2026-12-01&ate=2026-12-31')->assertRedirect('/notas-fiscais?aba=ordens&de=2026-12-01&ate=2026-12-31');
+
+        // total da competência: só emitidas de produção; as de teste à parte, canceladas fora
+        Http::fake(['*' => Http::sequence()->push($this->nfseFalsa(), 201)->push($this->nfseFalsa('35485002211222333000181000000000000126110000000010'), 201)]);
+        $this->emitir([$o1, $o2])->assertJson(['situacao' => 'emitida']);   // em testes (restrita)
+        $adm->get('/notas-fiscais')->assertInertia(fn ($pg) => $pg->where('resumo.competencia', '2026-11')->where('resumo.qtd', 0)->where('resumo.testes_qtd', 1)->where('resumo.testes_valor', 80));
+        ConfigNfse::integracao()->update(['ambiente' => 'producao']);
+        $this->emitir($maria)->assertJson(['situacao' => 'emitida']);
+        $adm->get('/notas-fiscais')->assertInertia(fn ($pg) => $pg->where('resumo.qtd', 1)->where('resumo.valor', 180));
+        $adm->get('/notas-fiscais?competencia=2026-10')->assertInertia(fn ($pg) => $pg->where('resumo.competencia', '2026-10')->where('resumo.qtd', 0)->where('resumo.testes_qtd', 0));
+        $adm->get('/notas-fiscais?aba=ordens')->assertInertia(fn ($pg) => $pg->has('clientes', 0));   // o que entrou em nota sai da lista
+    }
+
     public function test_cadastro_do_cliente_guarda_as_opcoes_de_nota(): void
     {
         $c = Cliente::create(['nome' => 'Cliente Novo', 'documento' => '11444777000161', 'dia_vencimento' => 10]);

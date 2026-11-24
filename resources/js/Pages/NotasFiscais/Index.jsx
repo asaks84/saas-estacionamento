@@ -204,18 +204,103 @@ function Cobrancas({ cobrancas, comNota, filtros }) {
     )
 }
 
-/** Gestão › Notas fiscais: Clientes (marcar e emitir), Avulsos (busca) e Notas (emitidas). */
-export default function NotasFiscais({ aba, cobrancas, comNota, avulsos, notas, filtros, faltando, ambiente, aliquotas, competenciaAtual, retFederal }) {
+/**
+ * aba Ordens de serviço: clientes com serviços sem nota pela data da ordem (De/Até), sem depender de cobrança.
+ * Marque e vá para conferir e emitir (uma nota por cliente, com os serviços sem nota dele no período).
+ */
+function OrdensPorCliente({ clientes, filtros }) {
+    const [marcados, setMarcados] = useState(() => new Set(clientes.filter((c) => c.sugerido).map((c) => c.id)))
+    const [busca, setBusca] = useState('')
+    const filtrar = (f) => router.get('/notas-fiscais', { aba: 'ordens', de: filtros.de, ate: filtros.ate, ...f }, { preserveState: false, replace: true })
+    const visiveis = useMemo(() => {
+        const b = busca.trim().toLowerCase()
+        return b ? clientes.filter((c) => `${c.nome} ${c.documento || ''}`.toLowerCase().includes(b)) : clientes
+    }, [clientes, busca])
+    const alternar = (id) => setMarcados((m) => { const n = new Set(m); n.has(id) ? n.delete(id) : n.add(id); return n })
+    const todosVisiveis = visiveis.length > 0 && visiveis.every((c) => marcados.has(c.id))
+    const marcarVisiveis = () => setMarcados((m) => { const n = new Set(m); visiveis.forEach((c) => (todosVisiveis ? n.delete(c.id) : n.add(c.id))); return n })
+    const sel = clientes.filter((c) => marcados.has(c.id))
+    const total = sel.reduce((t, c) => t + c.valor, 0)
+    const continuar = () => router.get('/notas-fiscais/conferir', { clientes: sel.map((c) => c.id).join(','), de: filtros.de, ate: filtros.ate })
+    return (
+        <>
+            <div className="row g-2 mb-1">
+                <div className="col-6 col-md-3"><CampoData rotulo="De" value={filtros.de} onChange={(v) => v && filtrar({ de: v })} /></div>
+                <div className="col-6 col-md-3"><CampoData rotulo="Até" value={filtros.ate} onChange={(v) => v && filtrar({ ate: v })} /></div>
+                <div className="col-md-6"><Campo rotulo="Buscar cliente ou CPF/CNPJ" value={busca} onChange={(e) => setBusca(e.target.value)} /></div>
+            </div>
+            <p className="small text-muted mb-2">Serviços sem nota (mensalidade, estadia e serviço; pagos ou não) com data da ordem entre {dataBr(filtros.de)} e {dataBr(filtros.ate)}, de clientes com cadastro. Sem cadastro: aba Avulsos.</p>
+            <div className="card">
+                <div className="table-responsive">
+                    <table className="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th style={{ width: 40 }}><input className="form-check-input" type="checkbox" aria-label="Marcar todos" checked={todosVisiveis} onChange={marcarVisiveis} /></th>
+                                <th>Cliente</th><th>Período das ordens</th><th className="text-end">Sem nota</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {visiveis.length === 0 && <tr><td colSpan="4" className="text-center text-muted py-4">Nenhum cliente com serviço sem nota entre {dataBr(filtros.de)} e {dataBr(filtros.ate)}.</td></tr>}
+                            {visiveis.map((c) => (
+                                <tr key={c.id} onClick={() => alternar(c.id)} style={{ cursor: 'pointer' }} className={marcados.has(c.id) ? 'table-active' : undefined}>
+                                    <td><input className="form-check-input" type="checkbox" checked={marcados.has(c.id)} onChange={() => alternar(c.id)} onClick={(e) => e.stopPropagation()} aria-label={`Marcar ${c.nome}`} /></td>
+                                    <td><Link href={`/clientes/${c.id}`} onClick={(e) => e.stopPropagation()}>{c.nome}</Link><div className="small text-muted">{c.documento || 'sem CPF/CNPJ'}{c.sugerido && ' · teve nota no mês passado'}</div></td>
+                                    <td className="text-nowrap small">{c.primeira === c.ultima ? dataBr(c.primeira) : `${dataBr(c.primeira)} a ${dataBr(c.ultima)}`}</td>
+                                    <td className="text-end text-nowrap">{moeda(c.valor)}<div className="small text-muted">{c.qtd} serviço{c.qtd > 1 ? 's' : ''}</div></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div className="barra-acoes d-flex flex-wrap align-items-center gap-2 mt-3 p-3 border rounded bg-body sticky-bottom">
+                <span><strong>{sel.length}</strong> cliente{sel.length === 1 ? '' : 's'} · <strong>{sel.length}</strong> nota{sel.length === 1 ? '' : 's'} · <strong>{moeda(total)}</strong></span>
+                <button type="button" className="btn btn-primary ms-auto" disabled={!sel.length} onClick={continuar}>Conferir e emitir</button>
+            </div>
+        </>
+    )
+}
+
+/** total das notas emitidas na competência escolhida (produção; as de teste à parte) */
+function Resumo({ resumo, params }) {
+    const trocar = (competencia) => router.get('/notas-fiscais', { ...params, competencia }, { preserveState: true, preserveScroll: true, replace: true, only: ['resumo'] })
+    const r = resumo
+    return (
+        <div className="card mb-3">
+            <div className="card-header">Emitidas na competência</div>
+            <div className="card-body">
+                <div className="row g-3 align-items-center">
+                    <div className="col-6 col-md-3"><CampoData mes rotulo="Competência" value={r.competencia} onChange={(v) => v && trocar(v)} /></div>
+                    <div className="col-6 col-md-3"><div className="small text-muted">Total em notas</div><div className="fs-4 fw-semibold">{moeda(r.valor)}</div></div>
+                    <div className="col-6 col-md-2"><div className="small text-muted">Notas</div><div className="fs-4 fw-semibold">{r.qtd}</div></div>
+                    <div className="col-6 col-md-4 small text-muted">
+                        {r.iss_retido > 0 && <div>ISS retido: {moeda(r.iss_retido)}</div>}
+                        {r.ret_federal > 0 && <div>Federais retidos: {moeda(r.ret_federal)}</div>}
+                        {r.canceladas > 0 && <div>{r.canceladas} cancelada{r.canceladas > 1 ? 's' : ''} (fora do total)</div>}
+                        {r.enviando > 0 && <div className="text-warning-emphasis">{r.enviando} enviando: confira na aba Notas</div>}
+                        {r.testes_qtd > 0 && <div>Em testes: {r.testes_qtd} nota{r.testes_qtd > 1 ? 's' : ''} · {moeda(r.testes_valor)} (sem valor fiscal, fora do total)</div>}
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+/** Gestão › Notas fiscais: Cobranças e Ordens de serviço (marcar e emitir), Avulsos (busca) e Notas (emitidas). */
+export default function NotasFiscais({ aba, cobrancas, comNota, clientes, avulsos, notas, filtros, resumo, faltando, ambiente, aliquotas, competenciaAtual, retFederal }) {
     const [cancelar, setCancelar] = useState(null)
     const aliquotaAtual = aliquotas.find((a) => a.competencia === competenciaAtual)
-    const irPara = (a) => router.get('/notas-fiscais', a === 'cobrancas' ? { aba: a, mes: filtros.mes } : { aba: a })
-    const abas = [['cobrancas', 'Cobranças'], ['avulsos', 'Avulsos'], ['notas', 'Notas']]
+    const paramsDa = (a) => ({ aba: a, ...(a === 'cobrancas' && { mes: filtros.mes }), ...(a === 'ordens' && { de: filtros.de, ate: filtros.ate }), ...(a === 'avulsos' && filtros.q && { q: filtros.q }) })
+    const irPara = (a) => router.get('/notas-fiscais', { ...paramsDa(a), competencia: resumo.competencia })
+    const abas = [['cobrancas', 'Cobranças'], ['ordens', 'Ordens de serviço'], ['avulsos', 'Avulsos'], ['notas', 'Notas']]
 
     return (
         <div className="pagina">
-            <TituloPagina titulo="Notas fiscais" descricao="NFS-e pelo Sistema Nacional, a partir das cobranças do mês (pagas ou não) e dos serviços avulsos." />
+            <TituloPagina titulo="Notas fiscais" descricao="NFS-e pelo Sistema Nacional, a partir das cobranças do mês, das ordens de serviço de um período (pagas ou não) e dos serviços avulsos." />
             {faltando.length > 0 && <div className="alert alert-warning">Para emitir, falta: {faltando.join(', ')}. <Link href="/configuracoes/nfse">Configurar</Link></div>}
             {!faltando.length && ambiente !== 'producao' && <div className="alert alert-info py-2">Em <strong>testes</strong>: as notas saem sem valor fiscal. Passe para produção em <Link href="/configuracoes/nfse">Configurações › Nota fiscal</Link>.</div>}
+
+            <Resumo resumo={resumo} params={paramsDa(aba)} />
 
             <Aliquotas aliquotas={aliquotas} competenciaAtual={competenciaAtual} faltam={aliquotaAtual ? [] : [competenciaAtual]} />
 
@@ -224,12 +309,14 @@ export default function NotasFiscais({ aba, cobrancas, comNota, avulsos, notas, 
                     <li className="nav-item" key={k}>
                         <button type="button" className={`nav-link${aba === k ? ' active' : ''}`} onClick={() => irPara(k)}>
                             {r}{k === 'cobrancas' && aba === 'cobrancas' && <span className="badge text-bg-secondary ms-1">{cobrancas.length}</span>}
+                            {k === 'ordens' && aba === 'ordens' && <span className="badge text-bg-secondary ms-1">{clientes.length}</span>}
                         </button>
                     </li>
                 ))}
             </ul>
 
             {aba === 'cobrancas' && <Cobrancas cobrancas={cobrancas} comNota={comNota} filtros={filtros} />}
+            {aba === 'ordens' && <OrdensPorCliente clientes={clientes} filtros={filtros} />}
             {aba === 'avulsos' && <Avulsos avulsos={avulsos} filtros={filtros} faltando={faltando} retFederal={retFederal} aliquota={aliquotaAtual} />}
 
             {aba === 'notas' && notas && (

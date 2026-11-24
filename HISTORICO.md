@@ -4,6 +4,18 @@ Alterações do ERP Local, da mais nova para a mais antiga. Cada alteração ent
 
 ---
 
+## 24/11/2026 — Notas fiscais: aba Ordens de serviço e total da competência
+
+- Nova aba **Ordens de serviço** em Gestão › Notas fiscais: filtro De/Até pela data da ordem; um cliente por linha com os serviços sem nota do período; marca e vai para o mesmo Conferir e emitir (uma nota por cliente).
+- Quadro **Emitidas na competência** no alto da página: total e quantidade de notas emitidas na produção na competência escolhida, com ISS e federais retidos; testes, canceladas e "enviando" à parte.
+- Arquivos: `app/Servicos/Nfse/Notas.php` (`semNotaDoPeriodo`), `app/Http/Controllers/NfseController.php`, `resources/js/Pages/NotasFiscais/Index.jsx` e `Conferir.jsx`, teste `test_aba_ordens_de_servico_por_periodo_e_total_da_competencia`. docs/16 e docs/12 atualizados.
+
+## 24/11/2026 — NFS-e: aceita no ambiente de testes e na produção
+
+- Com o certificado A1 da empresa, na produção restrita: nota emitida (leiaute da NT 009, sem o código complementar municipal) e cancelada pelo ERP.
+- **Produção:** primeira nota real emitida pelo ERP e aceita (leiaute antigo, de antes da virada da NT 009).
+- Pendente: conferir a primeira nota de produção a partir de 01/12/2026, quando a DPS passa para o leiaute da NT 009 (`Dps::NT009_PRODUCAO`). docs/16 atualizado.
+
 ## 24/11/2026 — NFS-e: código complementar municipal opcional (rejeição E0314)
 
 - O ambiente de testes recusou a DPS com "E0314: O código de tributação municipal informado não existe ou não está administrado pelo município". O 004 (11.01.01.004) é o da nota real e vale na produção; nos testes, o cadastro de Santos não tem.

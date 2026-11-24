@@ -15,7 +15,9 @@ const nomeServico = (s) => (s.descricao?.toLowerCase().startsWith(s.tipo.split('
  * um serviço) e as escolhas dele. Emite um cliente (botão na linha) ou em lote: a tela manda uma nota de cada vez,
  * com progresso; recusada fica marcada com o motivo e as outras seguem.
  */
-export default function Conferir({ clientes, filtros, cobrancas = [], faltando, ambiente, competenciaAtual, aliquota, retFederal }) {
+const dataBr = (v) => (v ? v.split('-').reverse().join('/') : '')
+
+export default function Conferir({ clientes, filtros, origem = 'cobrancas', cobrancas = [], faltando, ambiente, competenciaAtual, aliquota, retFederal }) {
     const [linhas, setLinhas] = useState(() => clientes.map((c) => ({
         ...c, incluir: true, marcados: new Set(c.servicos.map((s) => s.id)), estado: null,
         esc: { identificar: c.identificar, retido: c.retido && c.pode_reter, retem_federal: retFederal > 0 && c.federal && c.identificar },
@@ -53,8 +55,10 @@ export default function Conferir({ clientes, filtros, cobrancas = [], faltando, 
 
     return (
         <div className="pagina">
-            <Link href={`/notas-fiscais?aba=cobrancas&mes=${filtros.mes}`} className="small d-inline-block mb-2">‹ Voltar para as cobranças</Link>
-            <TituloPagina titulo="Conferir e emitir" descricao={`Serviços sem nota ${cobrancas.length === 1 ? `da cobrança ${cobrancas[0]}` : `de ${cobrancas.length} cobranças`}. Competência ${competenciaAtual.slice(5)}/${competenciaAtual.slice(0, 4)} (data da emissão).`} />
+            {origem === 'ordens'
+                ? <Link href={`/notas-fiscais?aba=ordens&de=${filtros.de}&ate=${filtros.ate}`} className="small d-inline-block mb-2">‹ Voltar para as ordens de serviço</Link>
+                : <Link href={`/notas-fiscais?aba=cobrancas&mes=${filtros.mes}`} className="small d-inline-block mb-2">‹ Voltar para as cobranças</Link>}
+            <TituloPagina titulo="Conferir e emitir" descricao={`Serviços sem nota ${origem === 'ordens' ? `de ${dataBr(filtros.de)} a ${dataBr(filtros.ate)}` : cobrancas.length === 1 ? `da cobrança ${cobrancas[0]}` : `de ${cobrancas.length} cobranças`}. Competência ${competenciaAtual.slice(5)}/${competenciaAtual.slice(0, 4)} (data da emissão).`} />
             {faltando.length > 0 && <div className="alert alert-warning">Para emitir, falta: {faltando.join(', ')}. <Link href="/configuracoes/nfse">Configurar</Link></div>}
             {!aliquota && <div className="alert alert-warning">Falta informar as alíquotas do mês, no alto de <Link href="/notas-fiscais">Notas fiscais</Link>.</div>}
             {!faltando.length && ambiente !== 'producao' && <div className="alert alert-info py-2">Em <strong>testes</strong>: as notas saem sem valor fiscal.</div>}

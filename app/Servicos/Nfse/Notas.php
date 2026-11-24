@@ -67,6 +67,15 @@ class Notas
     }
 
     /**
+     * Serviços sem nota de clientes com cadastro, pela data da ordem (de/até, "aaaa-mm-dd", inclusive). Aba "Ordens de
+     * serviço": para quem não fecha cobrança ou quer nota de um período que não bate com o vencimento.
+     */
+    public static function semNotaDoPeriodo(string $de, string $ate): Builder
+    {
+        return self::semNota()->whereNotNull('cliente_id')->whereBetween('data', [$de, $ate]);
+    }
+
+    /**
      * @param  Collection<int, OrdemServico>|array<int>  $ordens  serviços da nota (do mesmo cliente, ou avulsos sem cliente)
      * @param  array  $op  identificar (dados do cliente na nota, padrão sim), retido (ISS retido pelo tomador),
      *                     retem_federal (o cliente retém os tributos federais: tipo e alíquotas da configuração),
