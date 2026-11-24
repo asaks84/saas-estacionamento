@@ -33,6 +33,19 @@ class Dps
 
     public const VERSAO = '1.01';
 
+    /**
+     * Leiaute da NT SE/CGNFS-e 009 (finNFSe no infDPS; xDescServ no fim do cServ): na produção restrita desde 20/10/2026;
+     * na produção a partir deste dia (antes disso a produção recusa o leiaute novo). Se a Receita adiar, mudar aqui.
+     */
+    public const NT009_PRODUCAO = '2026-12-01';
+
+    /** a DPS sai no leiaute da NT 009? (testes: sempre; produção: a partir da data da virada) */
+    public static function leiauteNt009(string $ambiente, Carbon $agora): bool
+    {
+        return $ambiente !== 'producao'
+            || $agora->copy()->setTimezone('America/Sao_Paulo')->format('Y-m-d') >= self::NT009_PRODUCAO;
+    }
+
     /** municípios da Baixada para o endereço do tomador (o cadastro guarda o nome da cidade, não o código IBGE) */
     private const MUNICIPIOS = [
         'santos' => '3548500', 'sao vicente' => '3551009', 'guaruja' => '3518701', 'praia grande' => '3541000',
@@ -123,6 +136,10 @@ class Dps
         self::filho($d, $inf, 'nDPS', (string) $numero);
         self::filho($d, $inf, 'dCompet', $agora->copy()->setTimezone('America/Sao_Paulo')->format('Y-m-d'));   // competência = dia da emissão
         self::filho($d, $inf, 'tpEmit', '1');
+        $nt009 = self::leiauteNt009($ambiente, $agora);
+        if ($nt009) {
+            self::filho($d, $inf, 'finNFSe', '0');   // 0 = NFS-e regular
+        }
         self::filho($d, $inf, 'cLocEmi', $mun);
 
         // prestador
@@ -159,9 +176,15 @@ class Dps
         if (trim((string) $cfg['c_trib_mun']) !== '') {
             self::filho($d, $cs, 'cTribMun', trim((string) $cfg['c_trib_mun']));
         }
-        self::filho($d, $cs, 'xDescServ', $descricao);
+        // NT 009: a descrição passa para o fim do cServ (depois do cNBS)
+        if (! $nt009) {
+            self::filho($d, $cs, 'xDescServ', $descricao);
+        }
         if (trim((string) $cfg['c_nbs']) !== '') {
             self::filho($d, $cs, 'cNBS', preg_replace('/\D/', '', (string) $cfg['c_nbs']));
+        }
+        if ($nt009) {
+            self::filho($d, $cs, 'xDescServ', $descricao);
         }
 
         // valores

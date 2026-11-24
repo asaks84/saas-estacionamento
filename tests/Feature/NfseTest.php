@@ -385,7 +385,8 @@ class NfseTest extends TestCase
         $this->configurar();
         $c = Cliente::create(['nome' => 'TOMADOR TESTE', 'documento' => '11444777000161', 'cidade' => 'Santos', 'cep' => '11013203', 'logradouro' => 'SAO FRANCISCO', 'numero' => '276', 'bairro' => 'CENTRO']);
         $o = Ordens::lancar(['tipo' => 'mensalidade', 'cliente_id' => $c->id, 'descricao' => 'Mensalidade', 'data' => '2026-11-05', 'vencimento' => '2026-11-05', 'competencia' => '2026-11', 'valor' => 640]);
-        $dps = Dps::montar($c, collect([$o]), $this->a->empresa->fresh(), ConfigNfse::ler(), 'producao', 2, ['iss' => '2.01', 'tributos' => '17.62'], ['retido' => true]);
+        $montar = fn (string $amb, string $dia) => Dps::montar($c, collect([$o]), $this->a->empresa->fresh(), ConfigNfse::ler(), $amb, 2, ['iss' => '2.01', 'tributos' => '17.62'], ['retido' => true], \Illuminate\Support\Carbon::parse($dia.' 12:00', 'America/Sao_Paulo'));
+        $dps = $montar('producao', '2026-11-30');   // produção antes da virada da NT 009: leiaute antigo
         $caminhos = function (string $xml): array {
             $d = new \DOMDocument;
             $d->loadXML($xml);
@@ -415,6 +416,17 @@ class NfseTest extends TestCase
             'DPS/infDPS/valores/trib/tribFed/piscofins/tpRetPisCofins', 'DPS/infDPS/valores/trib/totTrib', 'DPS/infDPS/valores/trib/totTrib/pTotTribSN'];
         $this->assertSame($real, $caminhos($dps['xml']));
         $this->assertStringContainsString('<tribMun><tribISSQN>1</tribISSQN><tpRetISSQN>2</tpRetISSQN><pAliq>2.01</pAliq></tribMun>', $dps['xml']);
+
+        // NT 009 (testes sempre; produção a partir de 01/12/2026): finNFSe depois do tpEmit e xDescServ no fim do cServ
+        $nt009 = $real;
+        array_splice($nt009, array_search('DPS/infDPS/cLocEmi', $nt009), 0, ['DPS/infDPS/finNFSe']);
+        $nt009 = array_values(array_diff($nt009, ['DPS/infDPS/serv/cServ/xDescServ']));
+        array_splice($nt009, array_search('DPS/infDPS/serv/cServ/cNBS', $nt009) + 1, 0, ['DPS/infDPS/serv/cServ/xDescServ']);
+        foreach ([['restrita', '2026-11-24'], ['producao', '2026-12-01']] as [$amb, $dia]) {
+            $x = $montar($amb, $dia)['xml'];
+            $this->assertSame($nt009, $caminhos($x), "$amb $dia");
+            $this->assertStringContainsString('<tpEmit>1</tpEmit><finNFSe>0</finNFSe><cLocEmi>', $x);
+        }
     }
 
     public function test_cidade_de_fora_da_lista_pelo_cep(): void

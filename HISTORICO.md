@@ -4,6 +4,14 @@ Alterações do ERP Local, da mais nova para a mais antiga. Cada alteração ent
 
 ---
 
+## 24/11/2026 — NFS-e: leiaute da NT 009 (rejeição E1235)
+
+- O ambiente de testes passou a recusar a DPS com "E1235: ... invalid child element 'cLocEmi' ... expected 'cMotivoEmisTI, finNFSe'". É o leiaute novo da NT SE/CGNFS-e 009: **finNFSe = 0** (NFS-e regular) entra depois do tpEmit, e a **descrição (xDescServ) passa para o fim do cServ**, depois do cNBS.
+- Testes: sempre no leiaute novo. Produção: leiaute antigo até 30/11/2026 e o novo a partir de 01/12/2026 (constante `Dps::NT009_PRODUCAO`), sem precisar publicar no dia da virada.
+- Testes: NfseTest confere as duas estruturas (produção antes da virada igual à nota real; testes e produção depois da virada no leiaute novo).
+- docs/16 e docs/12 atualizados.
+- Arquivos: app/Servicos/Nfse/Dps.php, tests/Feature/NfseTest.php, docs/16-nfse.md, docs/12-decisoes.md.
+
 ## 24/11/2026 — NFS-e: XML com a declaração UTF-8 (rejeição E1229)
 
 - O Sistema Nacional recusava a DPS com "E1229: Xml não está utilizando codificação UTF-8": o XML assinado saía sem a primeira linha `<?xml version="1.0" encoding="UTF-8"?>`. Agora a DPS e o evento de cancelamento saem com ela. A assinatura não muda, porque é calculada só sobre o infDPS/infPedReg.
