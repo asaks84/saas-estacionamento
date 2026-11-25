@@ -1,3 +1,9 @@
+# SaaS Estacionamento
+
+> **Cópia do ERP Local que vai virar o SaaS** (25/11/2026). Planejamento em [`docs/saas/`](docs/saas/01-plano-comercializacao.md). Correções do Local chegam pelo remoto `upstream` (`erp-local`). **Não publicar** daqui: a publicação configurada é a do Local (ver `CLAUDE.md`).
+
+O texto abaixo é o README original do ERP Local.
+
 # ERP Local
 
 Novo sistema de gestão do **Local Estacionamento** (Santos/SP): mensalistas, estadias, lavagens e serviços, cobranças, recebimentos, convênios, contas a pagar, gestão de gastos e PDV no celular. Preparado para várias unidades e, no futuro, para ser vendido como SaaS.

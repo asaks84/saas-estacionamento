@@ -1,3 +1,14 @@
+# SaaS Estacionamento — regras do projeto
+
+> **Este repositório é a cópia do ERP Local que vai virar o SaaS** (criada em 25/11/2026 a partir do `erp-local`, com o histórico).
+> As regras do ERP abaixo continuam valendo. Diferenças desta cópia:
+>
+> - Planejamento e decisões da venda em `docs/saas/` (comece por `docs/saas/01-plano-comercializacao.md`); decisão do SaaS entra em `docs/saas/02-decisoes.md`.
+> - **Não publicar.** O workflow `publicar.yml` e a pasta `deploy/` são do servidor do Local; não configurar os *secrets* de publicação neste repositório até existir o servidor do SaaS (senão uma publicação daqui iria para a produção do Local).
+> - Pasta local: `C:\wamp64\www\saas`, com banco e `.env` próprios (nunca o banco nem o `.env` do Local).
+> - Correções do Local chegam pelo remoto `upstream` (`erp-local`): `git fetch upstream` e `git merge upstream/main`. O remoto `origin` é o `saas-estacionamento`.
+> - O ERP Local (`C:\wamp64\www\erplocal`) continua sendo o sistema em produção; mudanças do SaaS não voltam para lá sem decisão.
+
 # ERP Local — regras do projeto
 
 Novo sistema do Local Estacionamento, em Laravel + Inertia + React + Bootstrap 5.3.

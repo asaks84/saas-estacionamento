@@ -22,6 +22,14 @@ Comece pela visão, depois o modelo de dados e as regras de negócio.
 | 14 | [Publicação e virada](14-publicacao.md) | Botão Publicar, servidor, primeira publicação, backup, virada |
 | 15 | [Plano do PDV (etapa 8)](15-plano-pdv.md) | Ponto de partida, escopo da 1ª versão, ordem de construção, decisões em aberto |
 | 17 | [Auditoria de segurança](17-auditoria-seguranca.md) | Auditorias feitas, achados e situação de cada um |
-| 18 | [Plano de comercialização](18-plano-comercializacao.md) | Rascunho: lacunas para vender, fases, riscos e perguntas em aberto |
+| 18 | [Plano de comercialização](18-plano-comercializacao.md) | Mudou para `docs/saas/` |
+
+**Projeto SaaS** (só neste repositório, `saas-estacionamento`):
+
+| # | Documento | Conteúdo |
+|---|---|---|
+| S01 | [Plano de comercialização](saas/01-plano-comercializacao.md) | Onde estamos, lacunas no código, fases, riscos e perguntas em aberto |
+| S02 | [Decisões do SaaS](saas/02-decisoes.md) | Decisões da venda, com data e motivo |
+| S03 | [Suporte com IA](saas/03-suporte-com-ia.md) | Até onde dá para dar suporte usando IA e o que precisa existir antes |
 
 Origem: documento "Local — Arquitetura do produto (Laravel)" (https://claude.ai/artifact/3SxbV1v1KN3sKg6X4uX7te), exportado em 09/11/2026. **A partir daqui, a fonte oficial é esta pasta `docs/`.**
