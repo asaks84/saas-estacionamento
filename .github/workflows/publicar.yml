@@ -15,6 +15,10 @@ on:
         options: [publicar, voltar para a versão anterior]
         default: publicar
 
+# o token do Actions só lê o repositório (a publicação usa a chave SSH dos secrets, não o token)
+permissions:
+  contents: read
+
 concurrency:
   group: publicar
   cancel-in-progress: false

@@ -6,6 +6,12 @@ Alterações do ERP Local, da mais nova para a mais antiga. Um bloco por dia (`#
 
 ## 24/11/2026
 
+### Segurança do repositório: conferência e dois ajustes
+
+- Conferido: nada sensível versionado nem no histórico (só chaves de mentira nos testes), `npm audit` e `composer audit` sem falhas, repositório privado com um único acesso, segredos da publicação nos *secrets* do GitHub. No GitHub, o Cauê ligou o grafo de dependências e os alertas do Dependabot e de malware (0 alertas abertos).
+- `.gitignore`: `*.pfx` (certificado A1 da NFS-e) não entra no Git.
+- `.github/workflows/publicar.yml`: `permissions: contents: read`, para o token do Actions só ler o repositório (a conta já estava em leitura por padrão; agora não depende dessa configuração).
+
 ### Pátio: botão Nova entrada (Estadia avulsa, para a adaptação sem o PDV)
 
 - Operação › Pátio ganha o botão **Nova entrada**, que abre a janela **Estadia avulsa** do sistema atual: cliente (nome, código ou placa) e valor. Vira uma estadia em aberto na conta do cliente, com a data de hoje, e entra na próxima cobrança. Não põe o carro no pátio. A janela fica aberta para lançar a próxima.

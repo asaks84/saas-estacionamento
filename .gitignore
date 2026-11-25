@@ -30,6 +30,8 @@ localm43_senna*.sql
 /sql-limpeza/
 *.pem
 *.p12
+# certificado A1 (e-CNPJ) da NFS-e: nunca no Git
+*.pfx
 *.key
 *.crt
 
