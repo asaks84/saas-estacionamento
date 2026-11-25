@@ -16,3 +16,5 @@ O produto sai pronto para receber outras empresas sem reescrever nada; o que só
 | Contrato | Termos do Local | Termos de uso e de tratamento de dados (LGPD) |
 
 **Textos fixos que precisam virar configuração:** "Local Estacionamento" e o logo em telas e impressos, mês comercial de 30 dias, dia de vencimento padrão 5, mensagens de cobrança.
+
+**Plano para a venda:** lacunas encontradas no código, fases e riscos em [18-plano-comercializacao.md](18-plano-comercializacao.md) (rascunho de 25/11/2026).
