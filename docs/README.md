@@ -22,7 +22,6 @@ Comece pela visão, depois o modelo de dados e as regras de negócio.
 | 14 | [Publicação e virada](14-publicacao.md) | Botão Publicar, servidor, primeira publicação, backup, virada |
 | 15 | [Plano do PDV (etapa 8)](15-plano-pdv.md) | Ponto de partida, escopo da 1ª versão, ordem de construção, decisões em aberto |
 | 17 | [Auditoria de segurança](17-auditoria-seguranca.md) | Auditorias feitas, achados e situação de cada um |
-| 18 | [Plano de comercialização](18-plano-comercializacao.md) | Mudou para `docs/saas/` |
 
 **Projeto SaaS** (só neste repositório, `saas-estacionamento`):
 
