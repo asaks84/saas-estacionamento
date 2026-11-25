@@ -6,8 +6,9 @@
 > - Planejamento e decisões da venda em `docs/saas/` (comece por `docs/saas/01-plano-comercializacao.md`); decisão do SaaS entra em `docs/saas/02-decisoes.md`.
 > - **Não publicar.** O workflow `publicar.yml` e a pasta `deploy/` são do servidor do Local; não configurar os *secrets* de publicação neste repositório até existir o servidor do SaaS (senão uma publicação daqui iria para a produção do Local).
 > - Pasta local: `C:\wamp64\www\saas`, com banco e `.env` próprios (nunca o banco nem o `.env` do Local).
-> - Correções do Local chegam pelo remoto `upstream` (`erp-local`): `git fetch upstream` e `git merge upstream/main`. O remoto `origin` é o `saas-estacionamento`.
-> - O ERP Local (`C:\wamp64\www\erplocal`) continua sendo o sistema em produção; mudanças do SaaS não voltam para lá sem decisão.
+> - **Sem ligação com o ERP Local** (decisão de 25/11/2026): este repositório não recebe mais as correções do `erp-local` (o remoto `upstream` foi retirado). Correção urgente que valha para os dois é feita nos dois. O remoto `origin` é o `saas-estacionamento`.
+> - O ERP Local (`C:\wamp64\www\erplocal`) continua sendo o sistema em produção; mudanças do SaaS não voltam para lá sem decisão. A migração do Local para o SaaS fica sem prazo.
+> - **Vários produtos SaaS, um repositório:** núcleo comum + módulos por ramo em `app/Modulos/<Nome>` e `resources/js/Modulos/<Nome>` (hoje só o Estacionamento). O núcleo nunca chama classe de módulo direto (só por `App\Modulos\Modulos`); o que for só de um ramo vai para o módulo. Guia completo, incluindo como criar um módulo: `docs/saas/04-multiplos-produtos.md`.
 
 # ERP Local — regras do projeto
 
@@ -45,14 +46,14 @@ Organização, versões e o passo a passo de cada tela nova: `docs/13-desenvolvi
 - Rota sempre dentro de `permissao:<chave>` (ou `permissao:livre`); chave nova em `config/permissoes.php`.
 - Modelo de negócio com `use PertenceAEmpresa;`; `Rule::exists`/`Rule::unique` filtrando `empresa_id`.
 - `Atividades::registrar()` em ação sensível; datas `criado_em`/`atualizado_em`.
-- Telas em `resources/js/Pages`, formatos só por `resources/js/lib/formato.js`, campos com `Components/Campo`.
+- Telas em `resources/js/Pages` (telas de módulo em `resources/js/Modulos/<Nome>/Pages`), formatos só por `resources/js/lib/formato.js`, campos com `Components/Campo`.
 - **Dinheiro:** toda ordem nasce por `App\Servicos\Ordens` (número da empresa via `Numeracao`); toda baixa passa por `App\Servicos\Baixa::receber()` (telas, extrato e, depois, PDV e Inter); cobrança só por `Cobrancas::emitir()`. Nunca apagar ordem ou pagamento: cancelar/estornar com motivo. Valor com sinal (crédito negativo) por `OrdemServico::SQL_VALOR`/`valorComSinal()`.
 - **Contas a pagar:** só por `App\Servicos\Despesas` (lançar, alterar, pagar, desfazer, cancelar, gerar fixas); conta do plano só se for lançável (`PlanoContas::lancavel`). Nunca apagar despesa.
 - **Folha e leitura de documentos:** recibos e diárias só por `App\Servicos\Folha`; leitura de boleto/guia/recibo só por `App\Servicos\LeitorDocumento` (o OCR roda no navegador, em `resources/js/lib/leitor.js`; o servidor só interpreta o texto). Leitura nunca grava: devolve sugestões para a pessoa conferir.
 - **Fatura de cartão:** só por `App\Servicos\Cartoes`. A conta a pagar da fatura (`despesas.fatura_id`) não entra no resultado; entram as compras (`fatura_itens`). Não alterar o valor dessa conta à mão.
 - **Datas na tela:** sempre pelo componente `CampoData` (digitação dd/mm/aaaa + calendário próprio em pt-BR); nunca `<input type="date">`.
-- **Operação:** estadia por `App\Servicos\Estadias` (entrar, calcular, sair, cancelar); venda de lavagem/serviço por `Vendas::vender()`; divisão com convênio só por `Convenios::dividir()`; pagamento na hora por `Baixa::receberNaHora()`.
-- Rodar `php artisan test` antes de entregar; banco de teste `erp_teste`.
+- **Operação (módulo Estacionamento, `App\Modulos\Estacionamento\Servicos`):** estadia por `Estadias` (entrar, calcular, sair, cancelar); tabela de estadia vigente por `Tarifas::vigente()`; venda de lavagem/serviço por `Vendas::vender()`; divisão com convênio só por `Convenios::dividir()`; pagamento na hora por `Baixa::receberNaHora()` (núcleo).
+- Rodar `php artisan test` antes de entregar (suítes Unit, Feature e Modulos); banco de teste `erp_teste`.
 - O Cauê roda os comandos (composer, npm, artisan) no PC dele; as bibliotecas do PHP chegam a este ambiente por um zip da pasta `vendor` quando mudam (o site de pacotes do PHP é bloqueado aqui).
 
 ## Infraestrutura

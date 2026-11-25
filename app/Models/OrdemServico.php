@@ -7,6 +7,8 @@ use App\Models\Concerns\PertenceAEmpresa;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Modulos\Estacionamento\Models\Convenio;
+use App\Modulos\Estacionamento\Models\Estadia;
 
 /**
  * Ordem de serviço: todo item que o cliente deve (mensalidade, lavagem/serviço, estadia,

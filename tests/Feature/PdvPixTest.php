@@ -4,13 +4,13 @@ namespace Tests\Feature;
 
 use App\Models\Aparelho;
 use App\Models\Empresa;
-use App\Models\Estadia;
+use App\Modulos\Estacionamento\Models\Estadia;
 use App\Models\FormaPagamento;
 use App\Models\Integracao;
 use App\Models\Pagamento;
 use App\Models\PixCobranca;
-use App\Models\Tarifa;
-use App\Models\TarifaFaixa;
+use App\Modulos\Estacionamento\Models\Tarifa;
+use App\Modulos\Estacionamento\Models\TarifaFaixa;
 use App\Servicos\FormasPagamento;
 use App\Servicos\Inter\ExtratoInter;
 use App\Servicos\Pdv\Aparelhos;

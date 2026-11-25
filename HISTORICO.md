@@ -4,6 +4,25 @@ Alterações do ERP Local, da mais nova para a mais antiga. Um bloco por dia (`#
 
 ---
 
+## 25/11/2026
+
+### SaaS: um repositório para vários produtos (núcleo + módulos por ramo)
+
+- O estacionamento virou o primeiro **módulo por ramo**, separado do núcleo (clientes, dinheiro, cobrança, financeiro, NFS-e, WhatsApp, PDV base). Comportamento das telas e da API igual ao de antes: mesmas 317 rotas com as mesmas permissões, mesmos endereços.
+- **Servidor:** `app/Modulos/Modulo.php` (base: carrega rotas, permissões e migrations do módulo; pontos de extensão), `app/Modulos/Modulos.php` (lista dos módulos e o que o núcleo pergunta a eles), `config/modulos.php`. Módulo `app/Modulos/Estacionamento`: modelos (Estadia, Tarifa e faixas/pacotes, Convenio e regras, EtapaLavagem, OrdemEtapa, PdvAcao), serviços (Estadias, Tarifador, Patio, Convenios, EtapasLavagem, Vendas, Pdv/Lavagens, Pdv/SemInternet), controladores da gestão e do PDV, `rotas.php`, `rotas-api.php`, `permissoes.php` (patio_corrigir, convenios).
+- `Precos::tarifa()` virou `App\Modulos\Estacionamento\Servicos\Tarifas::vigente()`; `Precos` ficou só com o preço de serviço.
+- O núcleo não chama mais o estacionamento direto em LGPD (bloqueios, exportação e anonimização das estadias), no Início (convênios a fechar) e no contador de pendências do PDV: passa por `Modulos`. Ainda chamam (lista em docs/saas/04, item 5): vínculos da ordem de serviço e do cliente com estadia/convênio, `lgpd:limpar`, importação do sistema antigo e partes do PDV.
+- **Telas:** `resources/js/Modulos/Estacionamento` com Pages (Pátio, Convênios, Tabelas de estadia, Etapas da lavagem; nome `Estacionamento/Pages/...`), Components (AbasPatio, PatioLinha), `menu.js` (itens do menu e abas de Configurações, juntados em `lib/menu.js` só para módulos ligados) e as telas do PDV de estadia e lavagem com o tarifador do celular. Atalho `@/` = `resources/js` no Vite; `config/inertia.php` procura telas também em `resources/js/Modulos`.
+- **Testes:** os do estacionamento foram para `tests/Modulos/Estacionamento` (suíte nova "Modulos" no `phpunit.xml`). Teste novo `ModuloTest` (módulo ligado, permissões, telas e dados do Início). Resultado: 309 de 310 passando; o que falha (`BackupDriveTest`, permissão de arquivo no Windows deste ambiente) já falhava antes. Testes de JavaScript: 7 de 7.
+- **Ligação com o ERP Local cortada:** remoto `upstream` retirado; correções do Local não chegam mais por merge. Migração do Local para o SaaS sem prazo.
+- Docs: `docs/saas/04-multiplos-produtos.md` reescrito (estrutura, como criar um módulo, o que ainda liga o núcleo ao estacionamento), `docs/saas/02-decisoes.md`, `docs/13-desenvolvimento.md`, `docs/17-auditoria-seguranca.md` (caminho novo), `docs/README.md`, `CLAUDE.md`.
+
+### Docs: organização para vários produtos SaaS
+
+- Decidido que novos SaaS (agendamento de serviços, locação de espaços e outros) saem deste sistema: núcleo comum e módulos por ramo, ligados por empresa, cada produto com marca e domínio próprios. Repositório separado só nascendo desta base, com o núcleo vindo pelo `upstream`.
+- Novo `docs/saas/04-multiplos-produtos.md`: o que é núcleo e o que é de cada ramo, ajustes no núcleo antes do primeiro produto novo (veículo opcional no preço de serviço e na mensalidade, campo de ramo na empresa, termos por ramo), como um módulo novo entra e a ordem.
+- `docs/saas/02-decisoes.md` (decisão registrada) e `docs/README.md` (índice).
+
 ## 24/11/2026
 
 ### Segurança do repositório: conferência e dois ajustes

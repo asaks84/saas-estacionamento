@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import Icone from '../Components/Icone'
 import Avisos from '../Components/Avisos'
 import BuscaCliente from '../Components/BuscaCliente'
-import { MENU, itemAceso } from '../lib/menu'
+import { MENU, itemAceso, noMenu } from '../lib/menu'
 import { usePode } from '../lib/permissoes'
 import { dataExtensa, iniciais } from '../lib/formato'
 import { avisarSaida, useInatividade } from '../lib/inatividade'
@@ -13,16 +13,16 @@ function guardar(chave, valor) {
 }
 
 export default function AppLayout({ children }) {
-    const { auth, empresa, fila, atualizacoes } = usePage().props
+    const { auth, empresa, fila, atualizacoes, modulos } = usePage().props
     const [buscaAberta, setBuscaAberta] = useState(false)
     const pagina = usePage()
     const pode = usePode()
     const [menuAberto, setMenuAberto] = useState(false)
     const aviso = useInatividade(auth?.inatividade_minutos || 10)
 
-    // menu filtrado pelo nível de acesso
+    // menu filtrado pelo nível de acesso e pelos módulos ligados
     const grupos = MENU
-        .map((g) => ({ ...g, itens: g.itens.filter((it) => pode(it.permissao)) }))
+        .map((g) => ({ ...g, itens: g.itens.filter((it) => pode(it.permissao) && noMenu(it, modulos)) }))
         .filter((g) => g.itens.length)
     const todos = grupos.flatMap((g) => g.itens)
     const aceso = itemAceso(pagina.url, todos)

@@ -1,12 +1,12 @@
 import { Link, usePage } from '@inertiajs/react'
-import { CONFIGURACOES, itemAceso } from '../lib/menu'
+import { CONFIGURACOES, itemAceso, noMenu } from '../lib/menu'
 import { usePode } from '../lib/permissoes'
 
 /** Abas de Sistema › Configurações da empresa (cada tela de configuração é uma aba). */
 export default function AbasConfiguracoes() {
-    const { url } = usePage()
+    const { url, props } = usePage()
     const pode = usePode()
-    const abas = CONFIGURACOES.filter((a) => pode(a.permissao))
+    const abas = CONFIGURACOES.filter((a) => pode(a.permissao) && noMenu(a, props.modulos))
     const acesa = itemAceso(url, abas)
     // as abas quebram linha: todas ficam à vista, sem rolar para o lado
     return (

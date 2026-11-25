@@ -3,7 +3,7 @@
 // Catálogo de permissões. O dia a dia (clientes, estadias, lavagens, receber contas,
 // gerar e imprimir mensalidades) vale para todos os níveis; estas são as ações restritas.
 // O nível fixo (Administrador) tem todas. Rotas que qualquer pessoa logada pode abrir usam "livre".
-// Ver docs/08-seguranca-permissoes-lgpd.md.
+// Ver docs/08-seguranca-permissoes-lgpd.md. Cada módulo de ramo soma as suas em app/Modulos/<Nome>/permissoes.php.
 return [
     'Operação' => [
         'contas_editar' => ['Alterar e excluir contas', 'Valor e vencimento de contas lançadas'],
@@ -12,14 +12,12 @@ return [
         'excluir_cadastro' => ['Remover clientes e veículos', null],
         'aprovar' => ['Aprovar cadastros da fila de espera', null],
         'pdv_gerente' => ['Gerente no PDV', 'Cancelar no PDV; depois, fechar caixa, sangria e suprimento'],
-        'patio_corrigir' => ['Corrigir no pátio', 'Corrigir placa, modelo e tamanho, cancelar e encerrar entradas esquecidas'],
     ],
     'Gestão' => [
         'contas_aberto' => ['Contas em aberto e inadimplência', 'Também os valores no Início'],
         'rel_mensalistas' => ['Relatórios de mensalistas', 'Sem valores de receita'],
         'faturamento' => ['Faturamento', 'Recebimentos, contas recebidas e receita'],
         'extrato' => ['Importar extrato bancário', null],
-        'convenios' => ['Configurar convênios', null],
         'contas_pagar' => ['Contas a pagar', 'Lançar e pagar despesas, folha e holerites'],
         'resultado' => ['Resultado do mês e fluxo de caixa', 'Receitas e despesas da empresa, lado a lado'],
         'nfse' => ['Notas fiscais (NFS-e)', 'Emitir e cancelar notas e configurar a emissão'],

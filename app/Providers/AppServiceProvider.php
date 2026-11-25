@@ -22,6 +22,11 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(EmpresaAtual::class);
+
+        // módulos de ramo (Estacionamento, Agenda…): ver config/modulos.php e App\Modulos\Modulo
+        foreach (config('modulos', []) as $modulo) {
+            $this->app->register($modulo);
+        }
     }
 
     public function boot(): void

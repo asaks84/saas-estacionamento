@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\PertenceAEmpresa;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use App\Modulos\Estacionamento\Models\Convenio;
 
 class Cliente extends Modelo
 {

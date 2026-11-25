@@ -17,11 +17,8 @@ use App\Http\Controllers\CobrancaController;
 use App\Http\Controllers\CobrancaPublicaController;
 use App\Http\Controllers\ContaController;
 use App\Http\Controllers\ContratoController;
-use App\Http\Controllers\ConvenioController;
 use App\Http\Controllers\DespesaController;
 use App\Http\Controllers\EmpresaController;
-use App\Http\Controllers\EstadiaController;
-use App\Http\Controllers\EtapaLavagemController;
 use App\Http\Controllers\ExtratoController;
 use App\Http\Controllers\FormaPagamentoController;
 use App\Http\Controllers\FornecedorController;
@@ -30,7 +27,6 @@ use App\Http\Controllers\ImpressaoController;
 use App\Http\Controllers\IncidenteController;
 use App\Http\Controllers\InicioController;
 use App\Http\Controllers\InterController;
-use App\Http\Controllers\LavagemController;
 use App\Http\Controllers\MensagemController;
 use App\Http\Controllers\MensalidadeController;
 use App\Http\Controllers\MensalistasController;
@@ -38,7 +34,6 @@ use App\Http\Controllers\NfseController;
 use App\Http\Controllers\NivelController;
 use App\Http\Controllers\OrdemController;
 use App\Http\Controllers\PagadorController;
-use App\Http\Controllers\PatioController;
 use App\Http\Controllers\PendenteController;
 use App\Http\Controllers\PlanoContaController;
 use App\Http\Controllers\PrivacidadeController;
@@ -46,7 +41,6 @@ use App\Http\Controllers\RecorrenteController;
 use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\ResultadoController;
 use App\Http\Controllers\ServicoController;
-use App\Http\Controllers\TarifaController;
 use App\Http\Controllers\TipoVeiculoController;
 use App\Http\Controllers\UnidadeController;
 use App\Http\Controllers\UsuarioController;
@@ -57,6 +51,8 @@ use Illuminate\Support\Facades\Route;
 
 // Toda rota declara a permissão que exige ("permissao:<chave>", ou "permissao:livre" para
 // qualquer usuário logado) ou que é pública ("publica"). Rota sem isso é bloqueada.
+// Rotas de cada módulo de ramo ficam em app/Modulos/<Nome>/rotas.php (ex.: pátio, convênios e tarifas
+// no Estacionamento), com a mesma regra.
 
 Route::middleware(['publica', 'guest'])->group(function () {
     Route::get('/login', [LoginController::class, 'formulario'])->name('login');
@@ -145,38 +141,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/boletos/{boleto}/atualizar', [BoletoController::class, 'atualizar']);
         Route::get('/boletos/{boleto}/pdf', [BoletoController::class, 'pdf']);
 
-        // operação: pátio unificado (estadias + lavagens). Entrada e saída são do PDV; as rotas de gravação
-        // de estadia e lavagem abaixo ficam como contingência (sem tela na gestão) até o modo sem internet (8.7)
-        Route::get('/patio', [PatioController::class, 'index']);
-        Route::get('/patio/historico', [PatioController::class, 'historico']);
-        Route::get('/patio/pendencias', [PatioController::class, 'pendencias']);
-        // adaptação sem o PDV: estadia avulsa (cliente e valor) na conta do cliente, como o "Lançar" do cliente
-        Route::post('/patio/estadia-avulsa', [PatioController::class, 'estadiaAvulsa']);
-        Route::redirect('/estadias', '/patio');
-        Route::redirect('/estadias/historico', '/patio/historico');
-        Route::get('/estadias/placa', [EstadiaController::class, 'placa']);
-        Route::post('/estadias', [EstadiaController::class, 'store']);
-        Route::get('/estadias/{estadia}/calcular', [EstadiaController::class, 'calcular']);
-        Route::post('/estadias/{estadia}/saida', [EstadiaController::class, 'saida']);
-        Route::post('/estadias/{estadia}/cancelar', [EstadiaController::class, 'cancelar']);
-        Route::redirect('/lavagens', '/patio');
-        Route::redirect('/lavagens/nova', '/patio');
-        Route::get('/lavagens/placa', [LavagemController::class, 'placa']);
-        Route::post('/lavagens', [LavagemController::class, 'store']);
-        Route::post('/lavagens/{ordem}/etapa', [LavagemController::class, 'etapa']);
-        Route::post('/lavagens/{ordem}/receber', [LavagemController::class, 'receber']);
     });
 
-    Route::middleware('permissao:patio_corrigir')->group(function () {
-        Route::post('/patio/estadias/{estadia}/corrigir', [PatioController::class, 'corrigirEstadia']);
-        Route::post('/patio/estadias/{estadia}/cancelar', [PatioController::class, 'cancelarEstadia']);
-        Route::post('/patio/estadias/{estadia}/encerrar', [PatioController::class, 'encerrarEstadia']);
-        Route::post('/patio/lavagens/{ordem}/corrigir', [PatioController::class, 'corrigirLavagem']);
-        Route::post('/patio/lavagens/{ordem}/cancelar', [PatioController::class, 'cancelarLavagem']);
-        Route::post('/patio/lavagens/{ordem}/entregar', [PatioController::class, 'entregarLavagem']);
-        // pendências do modo sem internet do PDV (8.7)
-        Route::post('/patio/pendencias/{acao}/resolver', [PatioController::class, 'resolverPendencia']);
-    });
     Route::middleware('permissao:contas_editar')->group(function () {
         Route::put('/ordens/{ordem}', [OrdemController::class, 'update']);
         Route::post('/ordens/{ordem}/cancelar', [OrdemController::class, 'cancelar']);
@@ -278,15 +244,6 @@ Route::middleware('auth')->group(function () {
         Route::put('/funcionarios/{funcionario}', [FuncionarioController::class, 'update']);
     });
 
-    Route::middleware('permissao:convenios')->group(function () {
-        Route::get('/convenios', [ConvenioController::class, 'index']);
-        Route::get('/convenios/novo', [ConvenioController::class, 'create']);
-        Route::post('/convenios', [ConvenioController::class, 'store']);
-        Route::get('/convenios/{convenio}', [ConvenioController::class, 'edit']);
-        Route::put('/convenios/{convenio}', [ConvenioController::class, 'update']);
-        Route::post('/convenios/{convenio}/fechar', [ConvenioController::class, 'fechar']);
-    });
-
     Route::middleware('permissao:configuracoes')->group(function () {
         Route::get('/empresa', [EmpresaController::class, 'edit']);
         Route::put('/empresa', [EmpresaController::class, 'update']);
@@ -336,12 +293,6 @@ Route::middleware('auth')->group(function () {
         Route::put('/configuracoes/plano-contas/{conta}', [PlanoContaController::class, 'update']);
         Route::post('/configuracoes/plano-contas/{conta}/mover', [PlanoContaController::class, 'mover']);
         Route::delete('/configuracoes/plano-contas/{conta}', [PlanoContaController::class, 'destroy']);
-        Route::get('/configuracoes/etapas', [EtapaLavagemController::class, 'index']);
-        Route::post('/configuracoes/etapas', [EtapaLavagemController::class, 'store']);
-        Route::post('/configuracoes/etapas/estadia', [EtapaLavagemController::class, 'estadia']);
-        Route::put('/configuracoes/etapas/{etapa}', [EtapaLavagemController::class, 'update']);
-        Route::post('/configuracoes/etapas/{etapa}/mover', [EtapaLavagemController::class, 'mover']);
-        Route::delete('/configuracoes/etapas/{etapa}', [EtapaLavagemController::class, 'destroy']);
         Route::post('/configuracoes/formas', [FormaPagamentoController::class, 'storeForma']);
         Route::put('/configuracoes/formas/{forma}', [FormaPagamentoController::class, 'updateForma']);
         Route::post('/configuracoes/contas', [FormaPagamentoController::class, 'storeConta']);
@@ -364,14 +315,6 @@ Route::middleware('auth')->group(function () {
         Route::put('/configuracoes/tipos-ordem', [TipoVeiculoController::class, 'ordenar']);
         Route::put('/configuracoes/tipos/{tipo}', [TipoVeiculoController::class, 'update']);
         Route::delete('/configuracoes/tipos/{tipo}', [TipoVeiculoController::class, 'destroy']);
-
-        Route::get('/configuracoes/tarifas', [TarifaController::class, 'index']);
-        Route::get('/configuracoes/tarifas/nova', [TarifaController::class, 'create']);
-        Route::post('/configuracoes/tarifas', [TarifaController::class, 'store']);
-        Route::post('/configuracoes/tarifas/simular', [TarifaController::class, 'simular']);
-        Route::get('/configuracoes/tarifas/{tarifa}', [TarifaController::class, 'edit']);
-        Route::put('/configuracoes/tarifas/{tarifa}', [TarifaController::class, 'update']);
-        Route::delete('/configuracoes/tarifas/{tarifa}', [TarifaController::class, 'destroy']);
 
         Route::get('/configuracoes/servicos', [ServicoController::class, 'index']);
         Route::get('/configuracoes/servicos/novo', [ServicoController::class, 'create']);

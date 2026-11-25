@@ -3,7 +3,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { calcularEstadia, agoraBrasilia, duracao } from '../../resources/js/pdv/offline/tarifador.js'
+import { calcularEstadia, agoraBrasilia, duracao } from '../../resources/js/Modulos/Estacionamento/pdv/offline/tarifador.js'
 
 const casos = JSON.parse(readFileSync(new URL('./fixtures/tarifador.json', import.meta.url), 'utf8'))
 

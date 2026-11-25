@@ -2,12 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Models\Convenio;
 use App\Models\Servico;
 use App\Models\ServicoPreco;
-use App\Models\Tarifa;
 use App\Models\TipoVeiculo;
 use App\Models\Unidade;
+use App\Modulos\Estacionamento\Models\Convenio;
+use App\Modulos\Estacionamento\Models\Tarifa;
+use App\Modulos\Estacionamento\Servicos\Tarifas;
 use App\Servicos\Precos;
 use App\Support\EmpresaAtual;
 use Carbon\Carbon;
@@ -38,9 +39,9 @@ class ConfiguracoesTest extends TestCase
         $this->actingAs($a->admin)->post('/configuracoes/tarifas', $this->tarifa($a, ['nome' => 'Só da unidade', 'unidade_id' => $a->unidade->id]))->assertSessionHasNoErrors();
 
         app(EmpresaAtual::class)->definir($a->empresa->id);
-        $this->assertSame('Só da unidade', Precos::tarifa($a->tipo->id, $a->unidade->id)->nome);
-        $this->assertSame('Carros', Precos::tarifa($a->tipo->id)->nome);
-        $this->assertNull(Precos::tarifa($a->moto->id));
+        $this->assertSame('Só da unidade', Tarifas::vigente($a->tipo->id, $a->unidade->id)->nome);
+        $this->assertSame('Carros', Tarifas::vigente($a->tipo->id)->nome);
+        $this->assertNull(Tarifas::vigente($a->moto->id));
     }
 
     public function test_nova_versao_encerra_a_anterior(): void
@@ -51,8 +52,8 @@ class ConfiguracoesTest extends TestCase
         $velha = Tarifa::firstOrFail();
         $this->actingAs($a->admin)->post('/configuracoes/tarifas', $this->tarifa($a, ['anterior_id' => $velha->id, 'vigencia_inicio' => '2027-01-01', 'nome' => 'Carros 2027']))->assertSessionHasNoErrors();
         $this->assertSame('2026-12-31', $velha->fresh()->vigencia_fim->toDateString());
-        $this->assertSame('Carros', Precos::tarifa($a->tipo->id, null, Carbon::parse('2026-12-31'))->nome);
-        $this->assertSame('Carros 2027', Precos::tarifa($a->tipo->id, null, Carbon::parse('2027-01-01'))->nome);
+        $this->assertSame('Carros', Tarifas::vigente($a->tipo->id, null, Carbon::parse('2026-12-31'))->nome);
+        $this->assertSame('Carros 2027', Tarifas::vigente($a->tipo->id, null, Carbon::parse('2027-01-01'))->nome);
     }
 
     public function test_simulador(): void

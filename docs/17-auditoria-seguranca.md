@@ -31,7 +31,7 @@ Os achados 1 e 2 têm a mesma causa: no modo sem internet, o servidor confia no 
 
 ### 1. Média — o celular recebe os PINs de todos, e eles se descobrem em minutos
 
-**Onde:** `app/Servicos/Pdv/SemInternet.php` (montagem do pacote, campos `usuarios[].h` e `pin_sal`); rota `GET /api/pdv/pacote`.
+**Onde:** `app/Modulos/Estacionamento/Servicos/Pdv/SemInternet.php` (montagem do pacote, campos `usuarios[].h` e `pin_sal`); rota `GET /api/pdv/pacote`.
 
 **O que acontece:** para funcionar sem internet, o pacote manda para o celular a versão protegida (PBKDF2, 100 mil rodadas) do PIN de cada usuário da unidade, gerentes incluídos, junto com o sal. O PIN tem 4 números, cerca de 10 mil combinações. Como o sal é o mesmo para a empresa inteira, uma única passada pelas 10 mil combinações revela os PINs de todos ao mesmo tempo. Estimativa (sem medição): alguns minutos num PC comum.
 
@@ -45,7 +45,7 @@ Os achados 1 e 2 têm a mesma causa: no modo sem internet, o servidor confia no 
 
 ### 2. Média — a fila sem internet aceita qualquer autor, sem PIN, e saída com data de até 7 dias atrás
 
-**Onde:** `app/Servicos/Pdv/SemInternet.php` (`executar`, `quando`, `DIAS_MAX`); rota `POST /api/pdv/sincronizar`.
+**Onde:** `app/Modulos/Estacionamento/Servicos/Pdv/SemInternet.php` (`executar`, `quando`, `DIAS_MAX`); rota `POST /api/pdv/sincronizar`.
 
 **O que acontece:** o servidor aceita o `usuario_id` que o celular informar, sem conferir PIN nenhum. A hora da ação (`feita_em`) também vem do celular e pode ser de até 7 dias atrás. Na tela online, a saída só pode voltar 20 minutos (`PdvController::momento`).
 

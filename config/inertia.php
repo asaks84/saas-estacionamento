@@ -76,6 +76,8 @@ return [
         'paths' => [
 
             resource_path('js/Pages'),
+            // telas dos módulos de ramo: "<Nome>/Pages/..." = resources/js/Modulos/<Nome>/Pages/...
+            resource_path('js/Modulos'),
 
         ],
 

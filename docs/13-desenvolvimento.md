@@ -20,24 +20,27 @@ Como o código da etapa 1 em diante está montado e as regras que cada tela nova
 ```
 app/
   Models/                 Empresa, Unidade, Nivel, Usuario, LogAtividade, Cliente, Veiculo, MensalidadeContrato, MensalidadePausa,
-                          TipoVeiculo, Tarifa (+ faixas, pacotes), Servico, ServicoPreco, Convenio, CadastroPendente, PagadorVinculado,
+                          TipoVeiculo, Servico, ServicoPreco, CadastroPendente, PagadorVinculado,
                           OrdemServico, Cobranca (+ itens), Pagamento (+ itens), Ajuste, FormaPagamento, ContaFinanceira, ExtratoLancamento
   Models/Concerns/        PertenceAEmpresa (filtro por empresa) e EmpresaScope
   Http/Controllers/       uma classe por tela (Usuario, Nivel, Empresa, Unidade, Atividade, Auth/Login)
                           só recebe o pedido, valida e monta o que a tela mostra; consulta ou regra usada por outra tela, pelo PDV ou
                           por um serviço vai para Servicos/ (controlador não chama função de outro controlador para isso)
   Http/Middleware/        Permissao, PermissaoDeclarada, Publica, HandleInertiaRequests, CabecalhosSeguranca
-  Servicos/               regras de negócio num lugar só: Tarifador (estadia), Precos (preço vigente), Contratos (mensalidade),
+  Servicos/               regras de negócio num lugar só: Precos (preço de serviço vigente), Contratos (mensalidade),
                           Ordens (lançar/alterar/cancelar), Numeracao, Mensalidades (geração e primeira cobrança), Baixa (receber
                           e estornar), Cobrancas (emitir, cancelar, situação), Extrato (CSV do banco), FormasPagamento,
-                          Estadias (entrada, cálculo, saída), Vendas (lavagens e serviços, etapas), EtapasLavagem (etapas configuráveis), Convenios (divisão do valor),
                           PlanoContas (modelo, árvore, códigos), Despesas (contas a pagar: lançar, pagar, desfazer, cancelar, fixas), Folha (recibos de salário, diárias), LeitorDocumento (boleto, guias e recibos pelo texto, OCR ou código de barras), Resultado (resultado do mês e fluxo de caixa, só leitura), Relatorios (contas em aberto por cliente, recebido por categoria, total baixado: Início, Contas em aberto e Relatórios usam daqui), Cartoes (fatura de cartão: leitura do OFX/CSV, classificação, regras, cartão pessoal),
                           Inter/ (InterCliente: API do Banco Inter com certificado e token; Boletos: emitir, consultar, baixa, cancelar, regras, Inter ligado)
+  Modulos/                módulos por ramo (docs/saas/04-multiplos-produtos.md): Modulo (base), Modulos (lista e pontos de extensão),
+                          Estacionamento/ (Estadias, Tarifador, Tarifas, Patio, Convenios, EtapasLavagem, Vendas; modelos, controladores,
+                          rotas.php, rotas-api.php, permissoes.php)
   Support/                EmpresaAtual, Atividades (registro), Senha, Legado (banco atual), Placa, Documento (CPF/CNPJ), Formato, Csv
   Auth/UsuarioProvider    busca o usuário do login sem o filtro de empresa
   Console/Commands/       erp:instalar, legado:importar, legado:comparar, backup:banco, pagar:gerar-fixas
 config/erp.php            inatividade, faixas de IP do Cloudflare
-config/permissoes.php     catálogo de permissões (grupo, chave, rótulo, descrição)
+config/permissoes.php     catálogo de permissões (grupo, chave, rótulo, descrição); cada módulo soma as suas (app/Modulos/<Nome>/permissoes.php)
+config/modulos.php        módulos por ramo instalados
 database/migrations/      estrutura do banco
 lang/pt_BR/               mensagens de validação em português
 resources/js/
@@ -48,9 +51,11 @@ resources/js/
                           CamposCliente, CamposVeiculo, CamposMensalidade, Paginacao, Icone, Avisos, TituloPagina,
                           Dinheiro (rótulos e selos de ordem/cobrança), ContasCliente (bloco Contas da ficha), BuscaClienteCampo,
                           Anotacoes (tarefas do Início), AbasConfiguracoes (abas de Sistema › Configurações; lista em menu.js CONFIGURACOES)
+  Modulos/<Nome>/         telas (Pages/, nome "<Nome>/Pages/..."), componentes, menu.js e telas do PDV de cada módulo por ramo
   lib/                    formato.js (datas e R$ em pt-BR), mascaras.js (CPF, telefone, CEP, placa), menu.js, permissoes.js, inatividade.js
 resources/scss/           app.scss (cores, fonte, cantos, tema escuro), _layout.scss e _impressao.scss (cobrança e telas impressas)
-tests/Feature/            testes automáticos
+tests/Feature/, Unit/     testes automáticos do núcleo
+tests/Modulos/<Nome>/     testes de cada módulo por ramo
 routes/console.php        agendamentos (backup diário, contas fixas, Inter, WhatsApp, LGPD)
 deploy/                   scripts que rodam no servidor na publicação (servidor.sh, voltar.sh), o que não vai ao servidor e o modelo do .env
 .github/workflows/        publicar.yml: o botão Publicar (testes, build, envio por SSH)
@@ -58,13 +63,14 @@ deploy/                   scripts que rodam no servidor na publicação (servido
 
 ## Regras para cada tela nova
 
-1. **Rota com permissão.** Toda rota em `routes/web.php` fica dentro de um grupo `permissao:<chave>` (ou `permissao:livre` para qualquer usuário logado). Rota sem isso devolve 403, e o teste `RotasTest` falha. Chave nova entra em `config/permissoes.php` e aparece sozinha na tela de níveis.
+0. **Núcleo ou módulo?** O que só faz sentido num ramo (ex.: pátio, tarifa, convênio) vai para `app/Modulos/<Nome>` e `resources/js/Modulos/<Nome>`; o núcleo nunca chama classe de módulo direto (só por `App\Modulos\Modulos`). Ver [saas/04](saas/04-multiplos-produtos.md).
+1. **Rota com permissão.** Toda rota em `routes/web.php` (ou no `rotas.php` do módulo) fica dentro de um grupo `permissao:<chave>` (ou `permissao:livre` para qualquer usuário logado). Rota sem isso devolve 403, e o teste `RotasTest` falha. Chave nova entra em `config/permissoes.php` e aparece sozinha na tela de níveis.
 2. **Tabela de negócio com `empresa_id`** e o modelo com `use PertenceAEmpresa;`. O filtro é automático em toda consulta e o `empresa_id` é preenchido ao gravar. Sem empresa definida, a consulta volta vazia e a gravação dá erro (falha fechada).
 3. **Validação com `Rule::exists`/`Rule::unique` filtrando `empresa_id`** quando o campo aponta para outra tabela de negócio (o filtro global não vale dentro da regra de validação).
 4. **Registrar** ações sensíveis com `Atividades::registrar('acao', 'detalhe')`.
-5. **Item de menu** em `resources/js/lib/menu.js`, com a mesma permissão da rota (o menu só esconde; quem bloqueia é o servidor).
+5. **Item de menu** em `resources/js/lib/menu.js` (ou no `menu.js` do módulo), com a mesma permissão da rota (o menu só esconde; quem bloqueia é o servidor).
 6. **Textos em português**, datas e valores sempre por `lib/formato.js` (`data()`, `dataHora()`, `mesAno()`, `moeda()`), nunca por `toLocaleString`. Campos de data com `CampoData` e de valor com `CampoValor` (nunca o campo de data do navegador).
-9. **Preço e tarifa** sempre pelos serviços `Precos` e `Tarifador` (nunca recalcular na tela ou no controlador).
+9. **Preço e tarifa** sempre pelos serviços `Precos`, `Tarifas` e `Tarifador` (nunca recalcular na tela ou no controlador).
 7. **Colunas de data** do ERP se chamam `criado_em` e `atualizado_em` (base `App\Models\Modelo`).
 8. **Teste** para cada regra nova; para dinheiro, obrigatório.
 

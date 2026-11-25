@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\AtualizacaoCadastral;
 use App\Models\CadastroPendente;
 use App\Models\Empresa;
-use App\Models\PdvAcao;
+use App\Modulos\Modulos;
 use App\Servicos\Inter\Boletos;
 use App\Support\EmpresaAtual;
 use Illuminate\Http\Request;
@@ -37,9 +37,10 @@ class HandleInertiaRequests extends Middleware
             ] : null,
             // cadastros esperando aprovação (número no menu)
             'fila' => fn () => $usuario?->pode('aprovar') ? CadastroPendente::count() : 0,
-            // pendências do PDV sem internet (8.7), na aba do Pátio
-            'pdv_pendencias' => fn () => $usuario ? PdvAcao::where('situacao', 'pendente')->count() : 0,
             'atualizacoes' => fn () => $usuario?->pode('aprovar') ? AtualizacaoCadastral::where('situacao', 'respondida')->count() : 0,
+            // módulos de ramo ligados (o menu mostra só os itens deles) e o que cada um compartilha
+            'modulos' => fn () => Modulos::chaves(),
+            ...Modulos::compartilhado($usuario),
             'flash' => fn () => [
                 'sucesso' => $request->session()->get('sucesso'),
                 'erro' => $request->session()->get('erro'),

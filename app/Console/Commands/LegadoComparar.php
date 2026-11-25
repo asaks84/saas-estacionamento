@@ -4,13 +4,13 @@ namespace App\Console\Commands;
 
 use App\Models\CadastroPendente;
 use App\Models\Cliente;
-use App\Models\Convenio;
+use App\Modulos\Estacionamento\Models\Convenio;
 use App\Models\Empresa;
 use App\Models\MensalidadeContrato;
 use App\Models\OrdemServico;
 use App\Models\PagadorVinculado;
 use App\Models\Servico;
-use App\Models\Tarifa;
+use App\Modulos\Estacionamento\Models\Tarifa;
 use App\Models\TipoVeiculo;
 use App\Models\Veiculo;
 use App\Models\LogAtividade;

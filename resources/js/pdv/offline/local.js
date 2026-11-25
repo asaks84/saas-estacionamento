@@ -2,7 +2,7 @@ import { ErroApi } from './servidor'
 import { novoCodigo, novoUuid } from './estado'
 import { enfileirar, fila, pacote } from './fila'
 import { conferirPinLocal, trancarPin } from './pins'
-import { agoraBrasilia, calcularEstadia, duracao, minutosDe } from './tarifador'
+import { agoraBrasilia, calcularEstadia, duracao, minutosDe } from '../../Modulos/Estacionamento/pdv/offline/tarifador'
 
 /*
  * As rotas da API que o celular responde sozinho quando está sem internet (8.7), com a cópia do servidor (pacote) e a

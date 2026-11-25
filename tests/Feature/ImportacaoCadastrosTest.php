@@ -4,13 +4,14 @@ namespace Tests\Feature;
 
 use App\Models\CadastroPendente;
 use App\Models\Cliente;
-use App\Models\Convenio;
 use App\Models\Empresa;
 use App\Models\MensalidadeContrato;
 use App\Models\Servico;
-use App\Models\Tarifa;
 use App\Models\TipoVeiculo;
 use App\Models\Veiculo;
+use App\Modulos\Estacionamento\Models\Convenio;
+use App\Modulos\Estacionamento\Models\Tarifa;
+use App\Modulos\Estacionamento\Servicos\Tarifas;
 use App\Servicos\Precos;
 use App\Support\EmpresaAtual;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -71,9 +72,9 @@ class ImportacaoCadastrosTest extends TestCase
         $pequeno = TipoVeiculo::where('legado_id', 1)->firstOrFail();
 
         // tabela de estadia com as mesmas regras (o tarifador dá o mesmo valor)
-        $t = Precos::tarifa($pequeno->id);
+        $t = Tarifas::vigente($pequeno->id);
         $this->assertSame('Estadia de carro', $t->nome);
-        $this->assertSame(25.0, (new \App\Servicos\Tarifador($t->regras()))->calcular('2026-11-05 08:10', '2026-11-05 10:45')['valor']);
+        $this->assertSame(25.0, (new \App\Modulos\Estacionamento\Servicos\Tarifador($t->regras()))->calcular('2026-11-05 08:10', '2026-11-05 10:45')['valor']);
 
         // serviços (sem os do sistema), adicional e preço
         $this->assertSame(['ACR', 'LEX'], Servico::orderBy('codigo')->pluck('codigo')->all());

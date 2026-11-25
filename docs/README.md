@@ -30,5 +30,6 @@ Comece pela visão, depois o modelo de dados e as regras de negócio.
 | S01 | [Plano de comercialização](saas/01-plano-comercializacao.md) | Onde estamos, lacunas no código, fases, riscos e perguntas em aberto |
 | S02 | [Decisões do SaaS](saas/02-decisoes.md) | Decisões da venda, com data e motivo |
 | S03 | [Suporte com IA](saas/03-suporte-com-ia.md) | Até onde dá para dar suporte usando IA e o que precisa existir antes |
+| S04 | [Vários produtos SaaS](saas/04-multiplos-produtos.md) | Núcleo comum e módulos por ramo: estrutura de pastas, como criar um módulo, o que ainda liga o núcleo ao estacionamento |
 
 Origem: documento "Local — Arquitetura do produto (Laravel)" (https://claude.ai/artifact/3SxbV1v1KN3sKg6X4uX7te), exportado em 09/11/2026. **A partir daqui, a fonte oficial é esta pasta `docs/`.**

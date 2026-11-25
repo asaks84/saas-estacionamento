@@ -4,13 +4,12 @@ namespace App\Servicos;
 
 use App\Models\Cliente;
 use App\Models\Cobranca;
-use App\Models\Convenio;
 use App\Models\Empresa;
-use App\Models\Estadia;
 use App\Models\MensalidadeContrato;
 use App\Models\Nfse;
 use App\Models\OrdemServico;
 use App\Models\Pagamento;
+use App\Modulos\Modulos;
 use App\Support\Atividades;
 use App\Support\Documento;
 use App\Support\EmpresaAtual;
@@ -26,7 +25,8 @@ use Illuminate\Validation\ValidationException;
  * - anonimizar(): apaga o que identifica a pessoa e mantém valores, datas e notas fiscais (guarda legal), com o nome
  *   trocado por "CLIENTE ANONIMIZADO <código>". Não tem volta.
  * Bloqueios (o que a lei deixa guardar ou o que ainda está em uso): cliente ativo, conta ou crédito em aberto,
- * veículo no pátio, lavagem em andamento, convênio ativo e nota sendo emitida.
+ * nota sendo emitida e os bloqueios de cada módulo de ramo (Estacionamento: veículo no pátio, lavagem em andamento,
+ * convênio ativo).
  */
 class DadosPessoais
 {
@@ -55,27 +55,18 @@ class DadosPessoais
         if (MensalidadeContrato::where('cliente_id', $c->id)->ativos()->exists()) {
             $b[] = 'Tem mensalidade que ainda não terminou.';
         }
-        if (Estadia::where('cliente_id', $c->id)->where('situacao', 'patio')->exists()) {
-            $b[] = 'Está com veículo no pátio.';
-        }
-        if (OrdemServico::where('cliente_id', $c->id)->where('tipo', 'servico')->where('situacao', '<>', 'cancelada')
-            ->whereNotNull('etapa')->where('etapa', '<>', 'entregue')->exists()) {
-            $b[] = 'Tem lavagem em andamento.';
-        }
-        if (Convenio::where('cliente_id', $c->id)->where('ativo', true)->exists()) {
-            $b[] = 'É um convênio ativo. Desative o convênio antes.';
-        }
         if (Nfse::where('cliente_id', $c->id)->where('situacao', 'enviando')->exists()) {
             $b[] = 'Tem nota fiscal sendo emitida. Confira a nota antes.';
         }
 
-        return $b;
+        // bloqueios dos módulos de ramo (ex.: Estacionamento: veículo no pátio, lavagem, convênio)
+        return array_merge($b, Modulos::bloqueiosAnonimizar($c));
     }
 
     /** tudo o que o sistema guarda sobre o cliente, para mostrar, imprimir ou baixar */
     public static function exportar(Cliente $c): array
     {
-        $c->loadMissing(['veiculos.tipo:id,nome', 'pagadores', 'convenio']);
+        $c->loadMissing(['veiculos.tipo:id,nome', 'pagadores']);
         $veiculoIds = $c->veiculos->pluck('id');
         $empresa = Empresa::find(app(EmpresaAtual::class)->id());
         $data = fn ($v) => $v ? Carbon::parse($v)->format('d/m/Y') : null;
@@ -105,9 +96,8 @@ class DadosPessoais
             'servicos' => OrdemServico::where('cliente_id', $c->id)->orderBy('data')->orderBy('numero')->get()
                 ->map(fn ($o) => ['numero' => $o->numero, 'data' => $data($o->data), 'tipo' => OrdemServico::TIPOS[$o->tipo] ?? $o->tipo, 'descricao' => $o->descricao,
                     'placa' => $o->placa ? Placa::formatar($o->placa) : null, 'valor' => (float) $o->valor, 'situacao' => $o->situacao])->values(),
-            'estadias' => Estadia::where('cliente_id', $c->id)->orderBy('entrada')->get()
-                ->map(fn ($e) => ['numero' => $e->numero_impresso ?: $e->numero, 'entrada' => $dataHora($e->entrada), 'saida' => $dataHora($e->saida),
-                    'placa' => $e->placa ? Placa::formatar($e->placa) : $e->identificacao, 'valor' => (float) $e->valor_cliente])->values(),
+            // seções dos módulos de ramo (ex.: Estacionamento: estadias)
+        ] + Modulos::dadosPessoais($c) + [
             'cobrancas' => Cobranca::where('cliente_id', $c->id)->orderBy('numero')->get()
                 ->map(fn ($b) => ['numero' => $b->numero, 'competencia' => $b->competencia, 'vencimento' => $data($b->vencimento), 'total' => (float) $b->total,
                     'situacao' => Cobranca::SITUACOES[$b->situacao] ?? $b->situacao])->values(),
@@ -143,7 +133,6 @@ class DadosPessoais
 
         DB::transaction(function () use ($c, $rotulo, $nomeAntigo) {
             $veiculos = DB::table('veiculos')->where('cliente_id', $c->id)->pluck('id');
-            $estadias = DB::table('estadias')->where('cliente_id', $c->id)->orWhereIn('veiculo_id', $veiculos->all() ?: [0])->pluck('id');
             $cobrancas = DB::table('cobrancas')->where('cliente_id', $c->id)->pluck('id');
             $pagamentos = DB::table('pagamentos')->where('cliente_id', $c->id)->pluck('id');
             $nulos = fn (array $cols) => array_fill_keys($cols, null);
@@ -156,8 +145,7 @@ class DadosPessoais
             DB::table('veiculo_placas')->whereIn('veiculo_id', $veiculos)->delete();
             DB::table('ordens_servico')->where('cliente_id', $c->id)->update($nulos(['placa', 'veiculo_descricao', 'celular']));
             DB::table('cobranca_itens')->whereIn('cobranca_id', $cobrancas)->update(['placa' => null]);
-            DB::table('estadias')->whereIn('id', $estadias)->update($nulos(['placa', 'identificacao', 'modelo', 'celular', 'retirada_nome', 'retirada_documento', 'observacao']));
-            DB::table('pdv_acoes')->whereIn('estadia_id', $estadias)->update(['dados' => null]);
+            Modulos::anonimizar($c, $veiculos); // tabelas dos módulos de ramo (ex.: estadias)
             DB::table('avisos')->where('cliente_id', $c->id)->update($nulos(['celular', 'texto']));
             DB::table('atualizacoes_cadastrais')->where('cliente_id', $c->id)->update($nulos(['dados', 'antes', 'ip']));
             DB::table('pagadores_vinculados')->where('cliente_id', $c->id)->delete();

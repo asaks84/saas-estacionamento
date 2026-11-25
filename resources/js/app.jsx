@@ -10,9 +10,11 @@ createInertiaApp({
     title: (titulo) => (titulo ? `${titulo} · ${nomeSistema}` : nomeSistema),
     // cada tela é baixada só quando abre (o sistema fica leve mesmo com muitos módulos)
     resolve: async (nome) => {
-        const paginas = import.meta.glob('./Pages/**/*.jsx')
-        if (!paginas[`./Pages/${nome}.jsx`]) throw new Error(`Tela não encontrada: ${nome}`)
-        const pagina = await paginas[`./Pages/${nome}.jsx`]()
+        // telas do núcleo em ./Pages; as dos módulos de ramo em ./Modulos/<Nome>/Pages (nome "<Nome>/Pages/...")
+        const paginas = import.meta.glob(['./Pages/**/*.jsx', './Modulos/*/Pages/**/*.jsx'])
+        const arquivo = paginas[`./Pages/${nome}.jsx`] ?? paginas[`./Modulos/${nome}.jsx`]
+        if (!arquivo) throw new Error(`Tela não encontrada: ${nome}`)
+        const pagina = await arquivo()
         // toda tela usa o layout do sistema, menos as que dizem layout = null (login)
         if (pagina.default.layout === undefined) {
             pagina.default.layout = (conteudo) => <AppLayout>{conteudo}</AppLayout>
