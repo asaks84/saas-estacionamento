@@ -57,8 +57,6 @@ resources/scss/           app.scss (cores, fonte, cantos, tema escuro), _layout.
 tests/Feature/, Unit/     testes automáticos do núcleo
 tests/Modulos/<Nome>/     testes de cada módulo por ramo
 routes/console.php        agendamentos (backup diário, contas fixas, Inter, WhatsApp, LGPD)
-deploy/                   scripts que rodam no servidor na publicação (servidor.sh, voltar.sh), o que não vai ao servidor e o modelo do .env
-.github/workflows/        publicar.yml: o botão Publicar (testes, build, envio por SSH)
 ```
 
 ## Regras para cada tela nova

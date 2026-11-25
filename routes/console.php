@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 
-// Agendador: no servidor, o cron roda "php artisan schedule:run" a cada minuto (docs/14-publicacao.md).
+// Agendador: no servidor (ainda não existe; docs/14-publicacao.md), o cron roda "php artisan schedule:run" a cada minuto.
 // As tarefas rodam DENTRO do mesmo processo (Schedule::call + Artisan::call), e não como comando
 // separado (Schedule::command): a hospedagem compartilhada desliga o proc_open, e o agendador
 // não conseguia abrir o comando ("The Process class relies on proc_open").

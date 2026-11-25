@@ -4,7 +4,7 @@
 > As regras do sistema abaixo continuam valendo. Particularidades do SaaS:
 >
 > - Planejamento e decisões da venda em `docs/saas/` (comece por `docs/saas/01-plano-comercializacao.md`); decisão do SaaS entra em `docs/saas/02-decisoes.md`.
-> - **Não publicar.** O workflow `publicar.yml` e a pasta `deploy/` são do servidor do Local; não configurar os *secrets* de publicação neste repositório até existir o servidor do SaaS (senão uma publicação daqui iria para a produção do Local).
+> - **Sem publicação** (decisão de 25/11/2026): nada fica no ar por enquanto. Não há workflow de publicação nem scripts de servidor no repositório; a publicação será configurada de novo no servidor futuro do SaaS (`docs/14-publicacao.md`).
 > - Pasta local: `C:\wamp64\www\saas`, com banco e `.env` próprios (nunca o banco nem o `.env` do Local).
 > - **Repositório independente** (decisão de 25/11/2026): não recebe correções de outro repositório (o remoto `upstream` foi retirado). O remoto `origin` é o `saas-estacionamento`. A migração do Local para o SaaS fica sem prazo.
 > - **Vários produtos SaaS, um repositório:** núcleo comum + módulos por ramo em `app/Modulos/<Nome>` e `resources/js/Modulos/<Nome>` (hoje só o Estacionamento). O núcleo nunca chama classe de módulo direto (só por `App\Modulos\Modulos`); o que for só de um ramo vai para o módulo. Guia completo, incluindo como criar um módulo: `docs/saas/04-multiplos-produtos.md`.
@@ -57,8 +57,7 @@ Organização, versões e o passo a passo de cada tela nova: `docs/13-desenvolvi
 
 ## Infraestrutura
 
-- Produção: Hostinger Premium (compartilhada, sem processos contínuos, sem WebSocket, sem webhook mTLS), em erp.localestacionamento.com.br. Filas e agendas pelo cron (`schedule:run` a cada minuto). Inter por consulta periódica.
-- Publicação só pelo botão **Publicar** do GitHub (`.github/workflows/publicar.yml` + `deploy/`); nunca enviar arquivos à mão. O `.env` do servidor só existe lá (`~/erp/compartilhado/.env`). Passo a passo: `docs/14-publicacao.md`.
+- **Sem servidor e sem publicação por enquanto.** O que o servidor futuro precisa ter (publicação automática, homologação, cron, backup): `docs/14-publicacao.md`. Até lá, o código continua funcionando sem processo contínuo: filas e agendas pelo cron (`schedule:run` a cada minuto), Inter por consulta periódica.
 - Ambiente no computador: WAMP em `C:\wamp64\www\saas` (Apache 2.4, PHP 8.3, MySQL 8.4).
 - Nunca versionar `.env`, dumps de banco com dados de clientes (LGPD) ou chaves.
 

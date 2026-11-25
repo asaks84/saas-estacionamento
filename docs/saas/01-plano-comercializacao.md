@@ -65,7 +65,7 @@ A ordem importa: primeiro isolar e proteger, depois vender para poucos com acomp
 A Hostinger compartilhada serve ao Local, mas não a vários pagantes:
 
 - Rotinas rodam uma empresa após a outra no cron; com 20 empresas, a consulta do Inter e a régua podem passar do tempo. Precisa de fila de verdade (processo contínuo), o que a hospedagem atual não permite.
-- Sem ambiente de testes (homologação): hoje o botão Publicar vai direto para a produção. Com clientes pagantes, toda publicação passa antes por um ambiente igual ao de produção.
+- Sem ambiente de testes (homologação): a publicação antiga ia direto para a produção (retirada em 25/11/2026; ver [docs/14](../14-publicacao.md)). Com clientes pagantes, toda publicação passa antes por um ambiente igual ao de produção.
 - Proposta: VPS em São Paulo (dados no Brasil simplifica a LGPD) com painel de gestão (Forge, Ploi ou similar), banco de dados com backup automático e teste de restauração, monitoramento de erros e de site fora do ar, fila e agendador.
 - Manter **um banco só** com `empresa_id` (já feito). Banco por cliente só se algum cliente grande exigir.
 

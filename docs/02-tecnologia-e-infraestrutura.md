@@ -14,7 +14,7 @@ Um servidor Laravel concentra gestão, regras e API; o PDV é um app leve no cel
 | Arquivos | Disco configurável (local agora, nuvem depois) | Holerites e comprovantes mudam de lugar sem mexer no código |
 | Hospedagem | Hostinger compartilhada para o Local; VPS ou nuvem no primeiro cliente pagante | Nada guardado no servidor além do banco e do disco configurado |
 
-O código fica em repositório Git com testes automáticos das regras de dinheiro; a publicação é pelo repositório, não por envio manual de arquivos: botão **Publicar** no GitHub, que testa, gera o build e envia por SSH (detalhes em [14-publicacao.md](14-publicacao.md)).
+O código fica em repositório Git com testes automáticos das regras de dinheiro; a publicação será pelo repositório, não por envio manual de arquivos. Por enquanto não há publicação: ver [14-publicacao.md](14-publicacao.md).
 
 **Hospedagem em uso (nov/2026):** Hostinger Premium Web Hosting, PHP 8.3, a mesma conta do sistema atual (migrado da GoDaddy em 11/11/2026). DNS na Cloudflare.
 

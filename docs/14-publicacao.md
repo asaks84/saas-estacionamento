@@ -1,70 +1,27 @@
-# Publicação e virada (etapa 5)
+# Publicação
 
 > Parte da documentação do sistema. Índice: [docs/README.md](README.md)
 
-O ERP fica em **https://erp.localestacionamento.com.br**, na mesma conta da Hostinger do sistema atual. Desde a **virada (24/11/2026)** o ERP é o sistema oficial e o sistema atual fica só para consulta. Durante o paralelo (12/11 a 24/11/2026) o ERP espelhava o sistema atual de hora em hora e comparava os números na tela Sistema › Conferência; o espelho e essa tela saíram na virada.
+**Situação (25/11/2026): sem publicação.** Nada deste repositório fica no ar por enquanto. O workflow de publicação (`.github/workflows/publicar.yml`) e os scripts do servidor (`deploy/`) foram retirados; a publicação será configurada de novo quando existir o servidor do SaaS (decisão em [saas/02-decisoes.md](saas/02-decisoes.md)).
 
-## Como uma versão vai ao ar
+O roteiro antigo (botão Publicar, estrutura de pastas no servidor, primeira publicação, voltar versão) continua no histórico do Git, no commit `dd74fe6`, e serve de ponto de partida.
 
-Nada é enviado à mão. No GitHub: **Actions › Publicar › Run workflow**, ação **publicar**:
+## O que o servidor futuro precisa ter
 
-1. roda todos os testes (se um falhar, nada vai ao ar);
-2. gera o build das telas e as dependências de produção;
-3. envia a versão para `~/erp/releases/<data-hora>-<commit>` por SSH;
-4. no servidor (`deploy/servidor.sh`): liga o `.env` e o `storage` compartilhados, roda as migrações, otimiza e troca a versão no ar de uma vez (`~/erp/atual`).
-
-**Voltar atrás:** a mesma tela, ação **voltar para a versão anterior** (`deploy/voltar.sh`). O código volta na hora; o banco não volta (para isso, o backup abaixo). O servidor guarda as 5 últimas versões.
-
-## Estrutura no servidor
-
-No Local, a pasta base é `/home/u612820499/domains/localestacionamento.com.br/erp` (o Gerenciador de Arquivos da Hostinger abre na pasta do site, não na pasta inicial da conta), informada ao GitHub pela variável `ERP_DIR`. Abaixo, `~/erp` quer dizer essa pasta base.
-
-```
-~/erp/releases/<versão>/     uma pasta por publicação (sem .env e sem storage próprios)
-~/erp/compartilhado/.env     configuração (senhas) — só existe no servidor
-~/erp/compartilhado/storage/ logs, sessões, relatórios e backups
-~/erp/atual -> releases/...  versão no ar
-<pasta do subdomínio>  ->  ~/erp/atual/public   (só a pasta public fica acessível pela web)
-```
-
-## Primeira publicação (uma vez só)
-
-1. **Subdomínio** — hPanel › Domínios › Subdomínios: criar `erp` em localestacionamento.com.br. Anote a pasta que o hPanel mostrar (algo como `/home/u612820499/domains/localestacionamento.com.br/public_html/erp`). Deixe a pasta vazia (só o arquivo padrão da Hostinger, se houver).
-2. **DNS** — Cloudflare: `A · erp · 185.245.180.71`, **DNS only** até a Hostinger emitir o SSL do subdomínio; depois pode ser Proxied com SSL/TLS em Full (strict).
-3. **Banco do ERP** — hPanel › Bancos de dados: criar `u612820499_erp` com um usuário próprio. Guarde a senha no gerenciador de senhas.
-4. **SSH** — hPanel › Avançado › Acesso SSH: ativar; anote IP, porta (geralmente 65002) e usuário.
-5. **Chave de publicação** — no PC (PowerShell): `ssh-keygen -t ed25519 -C "erp-publicar" -f $HOME\.ssh\erp-publicar` (Enter duas vezes, sem senha). O conteúdo de `erp-publicar.pub` vai em hPanel › Acesso SSH › Chaves SSH. O conteúdo de `erp-publicar` (a chave privada) vai só no GitHub (passo 7).
-6. **`.env` do servidor** — Gerenciador de Arquivos (abre na pasta do site, fora do `public_html`): criar a pasta `erp/compartilhado` e, dentro dela, o arquivo `.env` com o conteúdo de `deploy/env-producao.exemplo`, preenchendo os bancos. O `APP_KEY` fica vazio: a primeira publicação gera.
-7. **GitHub** — repositório › Settings › Secrets and variables › Actions:
-   - *Secrets*: `SSH_HOST` (IP), `SSH_PORT`, `SSH_USER`, `SSH_CHAVE` (chave privada inteira, com as linhas BEGIN/END);
-   - *Variables*: `ERP_DOCROOT` = a pasta do subdomínio (passo 1, caminho completo). Opcionais: `PHP_BIN` (se o `php` do SSH não for 8.3, ex.: `/usr/bin/php8.3`), `ERP_DIR` (caminho completo da pasta base; no Local, `/home/u612820499/domains/localestacionamento.com.br/erp`).
-8. **Publicar** — Actions › Publicar › Run workflow › publicar.
-9. **Cron** — hPanel › Avançado › Cron Jobs, a cada minuto: `/usr/bin/php /home/u612820499/domains/localestacionamento.com.br/erp/atual/artisan schedule:run` (ajuste o caminho do PHP se o hPanel indicar outro).
-10. **Primeira importação** — por SSH: `cd ~/erp/atual && php artisan legado:importar --empresa="Local Estacionamento"`. O login é o mesmo do sistema atual (as senhas vêm junto). Num ERP que já tem dados, a importação só roda com `--sobrescrever` (desfaz o que foi feito no ERP).
+- PHP 8.3 e MySQL 8, com banco e `.env` só do servidor (nunca no Git).
+- **Publicação automática pelo repositório** (testes, build, envio), nunca envio de arquivos à mão; e uma forma rápida de voltar à versão anterior.
+- **Ambiente de testes (homologação)** antes da produção, para uma publicação não atingir todos os clientes de uma vez ([plano, Fase 3](saas/01-plano-comercializacao.md#fase-3--infraestrutura-para-vários-clientes)).
+- **Cron chamando `php artisan schedule:run` a cada minuto** (agendamentos abaixo). O código ainda funciona sem processo contínuo; com fila de verdade no servidor novo, as rotinas por empresa podem sair do cron.
+- Backup do banco com restauração testada e monitoramento de erros.
 
 ## Agendamentos (routes/console.php)
 
 | Quando | O quê |
 |---|---|
-| todo dia às 3h10 | `backup:banco`: backup compactado do banco do ERP e do sistema atual em `storage/app/private/backups`, 14 dias |
+| todo dia às 6h05 | `pagar:gerar-fixas`: contas fixas a pagar até o mês seguinte |
+| a cada 10 minutos | `inter:consultar`: boletos do Banco Inter em aberto (baixa dos pagos); sem o Inter ligado, não faz nada |
+| a cada 10 minutos, das 7h às 20h | `whatsapp:regua`: avisos de cobrança do dia |
+| todo dia às 3h10 | `backup:banco`: backup compactado e criptografado do banco em `storage/app/private/backups` |
+| todo dia às 3h40 | `lgpd:limpar`: prazos de guarda da LGPD |
 
-A Hostinger também faz backup semanal da conta. Para restaurar um backup do ERP: phpMyAdmin › Importar o `.sql.gz`, ou pelo SSH: `gunzip < arquivo.sql.gz | mysql -u USUARIO -p BANCO`.
-
-A consulta dos boletos do Banco Inter (`inter:consultar`, a cada 10 minutos) usa o mesmo cron; sem o Inter ligado em Configurações › Banco Inter, não faz nada.
-
-As tarefas agendadas rodam dentro do próprio `schedule:run` (`Schedule::call`), e o backup é feito em PHP, sem `mysqldump`: a hospedagem compartilhada desliga o `proc_open`, e um comando separado não roda pelo cron (erro "The Process class relies on proc_open" no log). Para conferir se o agendador está rodando: o "Ver resultado" do cron no hPanel e o log em `storage/logs/laravel-AAAA-MM-DD.log`.
-
-## Virada (24/11/2026)
-
-- O espelho de hora em hora (`legado:espelhar`), a comparação automática e a tela Sistema › Conferência saíram; a tabela `conferencias` foi apagada (migration `2026_12_11_000001_remover_conferencias`). A variável `ERP_ESPELHO_ATIVO` do `.env` do servidor deixou de ser usada e pode ser apagada.
-- O ERP é o oficial: o que veio do sistema atual (mensalidades, pagamentos importados, fichas do link antigo, dados de cliente para a LGPD) passa a ser ajustado aqui.
-- O sistema atual fica só para consulta. O link do cadastro público dele (o do QR code do balcão) redireciona para `https://erp.localestacionamento.com.br/cadastro` (302, no `application/controllers/cadastro.php` do sistema atual).
-- `legado:comparar` continua como comando manual (só gera o relatório em `storage/app/private/relatorios/`).
-- Backup diário continua (inclui o banco do sistema atual enquanto ele existir).
-
-## Segurança
-
-- Só a pasta `public` fica acessível pela web; `.env`, código e backups ficam fora dela.
-- `APP_DEBUG=false` e `SESSION_SECURE_COOKIE=true` no servidor.
-- A chave de publicação só serve para essa conta SSH; se vazar, apague-a no hPanel e gere outra.
-- A senha do banco do sistema atual apareceu numa conversa durante a migração de hospedagem: troque-a no hPanel e atualize o `database.php` do sistema atual e o `LEGADO_DB_PASSWORD` do ERP.
+As tarefas rodam dentro do próprio `schedule:run` (`Schedule::call`), e o backup é feito em PHP, sem `mysqldump`, porque hospedagens compartilhadas costumam desligar o `proc_open`. Num servidor próprio isso pode mudar.

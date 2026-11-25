@@ -1,6 +1,6 @@
 # SaaS Estacionamento
 
-> Planejamento do SaaS em [`docs/saas/`](docs/saas/01-plano-comercializacao.md). **Não publicar** daqui: a publicação configurada ainda não é a do SaaS (ver `CLAUDE.md`).
+> Planejamento do SaaS em [`docs/saas/`](docs/saas/01-plano-comercializacao.md). **Sem publicação:** nada fica no ar por enquanto; o servidor será configurado no futuro ([`docs/14-publicacao.md`](docs/14-publicacao.md)).
 
 Novo sistema de gestão do **Local Estacionamento** (Santos/SP): mensalistas, estadias, lavagens e serviços, cobranças, recebimentos, convênios, contas a pagar, gestão de gastos e PDV no celular. Preparado para várias unidades e, no futuro, para ser vendido como SaaS.
 

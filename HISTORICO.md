@@ -6,6 +6,11 @@ Alterações do sistema, da mais nova para a mais antiga. Um bloco por dia (`## 
 
 ## 25/11/2026
 
+### Publicação retirada
+
+- Saíram `.github/workflows/publicar.yml` e a pasta `deploy/` (scripts do servidor, modelo do `.env` de produção, lista do que não ia ao servidor). Nada deste repositório fica no ar; a publicação será configurada no servidor futuro do SaaS. O roteiro antigo continua no histórico do Git (commit `dd74fe6`).
+- `docs/14-publicacao.md` reescrito: situação, o que o servidor futuro precisa ter e os agendamentos. Ajustes em `CLAUDE.md`, `README.md`, `docs/README.md`, `docs/02`, `docs/13`, `docs/saas/01` e `02` e no comentário de `routes/console.php`.
+
 ### PDV por módulo (base comum + telas de cada ramo)
 
 - O app do celular continua um só. **Base no núcleo:** pareamento, PIN, caixa, Pix, impressão, tema, voltar e o modo sem internet. **Módulo Estacionamento** encaixa as telas de entrada, saída, estadias e lavagens, os atalhos e cartões do Início, as rotas de estadia que o celular responde sem internet e os dados do ticket e dos recibos.
