@@ -1,6 +1,6 @@
 # Desenvolvimento: como o código está organizado
 
-> Parte da documentação do ERP Local. Índice: [docs/README.md](README.md)
+> Parte da documentação do sistema. Índice: [docs/README.md](README.md)
 
 Como o código da etapa 1 em diante está montado e as regras que cada tela nova precisa seguir. Instalação no computador: [README](../README.md).
 

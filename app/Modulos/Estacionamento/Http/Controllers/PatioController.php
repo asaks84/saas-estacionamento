@@ -6,13 +6,13 @@ use App\Models\Cliente;
 use App\Modulos\Estacionamento\Models\Estadia;
 use App\Models\FormaPagamento;
 use App\Models\OrdemServico;
-use App\Modulos\Estacionamento\Models\PdvAcao;
+use App\Models\PdvAcao;
 use App\Models\TipoVeiculo;
 use App\Modulos\Estacionamento\Servicos\Estadias;
 use App\Servicos\FormasPagamento;
 use App\Servicos\Ordens;
 use App\Modulos\Estacionamento\Servicos\Patio;
-use App\Modulos\Estacionamento\Servicos\Pdv\SemInternet;
+use App\Servicos\Pdv\SemInternet;
 use App\Support\EmpresaAtual;
 use App\Support\Formato;
 use Illuminate\Http\RedirectResponse;
@@ -69,7 +69,7 @@ class PatioController extends Controller
     public function pendencias(): Response
     {
         $linha = fn (PdvAcao $a) => [
-            'id' => $a->id, 'tipo' => PdvAcao::TIPOS[$a->tipo] ?? $a->tipo, 'situacao' => $a->situacao, 'mensagem' => $a->mensagem,
+            'id' => $a->id, 'tipo' => SemInternet::rotulo($a->tipo), 'situacao' => $a->situacao, 'mensagem' => $a->mensagem,
             'feita_em' => $a->feita_em?->format('d/m/Y H:i'), 'recebida_em' => $a->criado_em?->format('d/m/Y H:i'),
             'aparelho' => $a->aparelho?->nome, 'pessoa' => $a->usuario?->nome,
             'placa' => $a->estadia?->rotulo() ?? ($a->dados['rotulo'] ?? $a->dados['placa'] ?? null),

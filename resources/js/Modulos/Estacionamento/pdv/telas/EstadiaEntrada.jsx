@@ -3,7 +3,7 @@ import { api } from '@/pdv/api'
 import { usePin } from '@/pdv/Pin'
 import { cursorNoFim } from '@/Components/CampoValor'
 import { CampoDinheiro, Folha, Formas, PerguntaImprimir, moeda, papel, PixQr, usaPixQr } from '@/pdv/comum'
-import { dadosTicket } from '@/pdv/impressao/modelo'
+import { dadosTicket } from '../impressao'
 import { preferencia } from '@/pdv/impressao/preferencia'
 import { Icone, PlacaMercosul, TopoEtapa, passoDe, useErro } from '@/pdv/visual'
 

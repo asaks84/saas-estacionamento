@@ -1,6 +1,6 @@
 # Comparativo com o mercado
 
-> Parte da documentação do ERP Local. Índice: [docs/README.md](README.md)
+> Parte da documentação do sistema. Índice: [docs/README.md](README.md)
 
 O modelo está alinhado ao mercado em empresa e unidade, alocação de pagamento parcial e convênio como pagador separado. As maiores diferenças estão em cinco pontos: fatura que muda depois de emitida, falta de plano de contas e centro de custo, falta de contas bancárias com conciliação, preços sem vigência e ordem de serviço misturada com item de cobrança.
 

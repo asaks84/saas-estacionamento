@@ -1,6 +1,6 @@
 # Modelo de dados
 
-> Parte da documentação do ERP Local. Índice: [docs/README.md](README.md)
+> Parte da documentação do sistema. Índice: [docs/README.md](README.md)
 
 O banco passa de 24 tabelas para cerca de 35, organizadas em seis grupos; o centro do dinheiro vira **ordem de serviço → cobrança → pagamento**, em vez de só ordens com data de pagamento.
 

@@ -1,6 +1,6 @@
 # Segurança, permissões e LGPD
 
-> Parte da documentação do ERP Local. Índice: [docs/README.md](README.md)
+> Parte da documentação do sistema. Índice: [docs/README.md](README.md)
 
 Tudo o que o sistema atual já protege continua protegido, agora como parte do framework e não como código espalhado por tela.
 

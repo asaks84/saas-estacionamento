@@ -1,6 +1,6 @@
 # Migração dos dados do sistema atual
 
-> Parte da documentação do ERP Local. Índice: [docs/README.md](README.md)
+> Parte da documentação do sistema. Índice: [docs/README.md](README.md)
 
 Todos os dados atuais passam para o banco novo por um script de migração que roda quantas vezes for preciso; nada é digitado de novo. Cada registro migrado recebe a empresa Local e a unidade principal.
 

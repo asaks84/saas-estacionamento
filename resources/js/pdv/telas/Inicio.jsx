@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../api'
 import { Icone, TopoInicio } from '../visual'
+import { modulosLigados } from '../modulos'
 
-/** Início (8.8): atalhos de Entrada e Saída, Estadia, Lavagem e Caixa com os números do momento, impressão e aparelho */
+// cartão da base: o caixa é de todos os ramos
+const CAIXA = { tela: 'caixa', icone: 'carteira', titulo: 'Caixa', legenda: 'Receber conta, retirada, fechar' }
+
+/** Início (8.8): atalhos e cartões de cada módulo de ramo ligado (no Estacionamento: Entrada, Saída, Estadia, Lavagem), Caixa, impressão e aparelho */
 export default function Inicio({ eu, irPara }) {
     const [resumo, setResumo] = useState(null)
     const carregar = useCallback(() => api('GET', '/inicio').then(setResumo).catch(() => { /* sem números: os botões funcionam igual */ }), [])
@@ -12,38 +16,35 @@ export default function Inicio({ eu, irPara }) {
         return () => clearInterval(t)
     }, [carregar])
 
-    const numero = (n, um, varios) => (n > 0 ? <span className="pdv-numero">{n} {n === 1 ? um : varios}</span> : null)
+    const modulos = modulosLigados(eu)
+    const atalhos = modulos.flatMap((m) => m.INICIO?.atalhos || [])
+    const cartoes = modulos.flatMap((m) => m.INICIO?.cartoes || [])
     return (
         <div className="pdv-inicio">
             <TopoInicio eu={eu} caixa={resumo ? resumo.caixa : undefined} />
             <div className="pdv-inicio-corpo">
-                <div className="pdv-atalhos">
-                    <button type="button" className="pdv-atalho" onClick={() => irPara('entrada')}>
-                        <Icone nome="mais" tamanho={30} espessura={2.2} />
-                        <span><span className="pdv-atalho-titulo">Entrada</span><span className="pdv-atalho-legenda">estadia ou lavagem</span></span>
-                    </button>
-                    <button type="button" className="pdv-atalho pdv-atalho-contorno" onClick={() => irPara('saida')}>
-                        <Icone nome="qr" tamanho={30} />
-                        <span><span className="pdv-atalho-titulo">Saída</span><span className="pdv-atalho-legenda">ler qualquer ticket</span></span>
-                    </button>
-                </div>
+                {atalhos.length > 0 && (
+                    <div className="pdv-atalhos">
+                        {atalhos.map((a) => (
+                            <button key={a.tela} type="button" className={`pdv-atalho${a.contorno ? ' pdv-atalho-contorno' : ''}`} onClick={() => irPara(a.tela)}>
+                                <Icone nome={a.icone} tamanho={30} espessura={a.espessura} />
+                                <span><span className="pdv-atalho-titulo">{a.titulo}</span><span className="pdv-atalho-legenda">{a.legenda}</span></span>
+                            </button>
+                        ))}
+                    </div>
+                )}
 
                 <div className="pdv-cartoes">
-                    <button type="button" className="pdv-cartao" onClick={() => irPara('estadias')}>
-                        <span className="pdv-cartao-icone"><Icone nome="carro" tamanho={30} /></span>
-                        <span className="pdv-cartao-texto"><strong>Estadia</strong><span>Pátio e histórico</span></span>
-                        {numero(resumo?.patio, 'no pátio', 'no pátio') || <Icone nome="seta" tamanho={20} espessura={2.4} className="pdv-seta" />}
-                    </button>
-                    <button type="button" className="pdv-cartao" onClick={() => irPara('lavagens')}>
-                        <span className="pdv-cartao-icone"><Icone nome="gota" tamanho={28} /></span>
-                        <span className="pdv-cartao-texto"><strong>Lavagem</strong><span>Etapas e entrega</span></span>
-                        {numero(resumo?.lavagens, 'em andamento', 'em andamento') || <Icone nome="seta" tamanho={20} espessura={2.4} className="pdv-seta" />}
-                    </button>
-                    <button type="button" className="pdv-cartao" onClick={() => irPara('caixa')}>
-                        <span className="pdv-cartao-icone"><Icone nome="carteira" tamanho={28} /></span>
-                        <span className="pdv-cartao-texto"><strong>Caixa</strong><span>Receber conta, retirada, fechar</span></span>
-                        <Icone nome="seta" tamanho={20} espessura={2.4} className="pdv-seta" />
-                    </button>
+                    {[...cartoes, CAIXA].map((c) => {
+                        const n = c.numero?.(resumo)
+                        return (
+                            <button key={c.tela} type="button" className="pdv-cartao" onClick={() => irPara(c.tela)}>
+                                <span className="pdv-cartao-icone"><Icone nome={c.icone} tamanho={c.tamanho ?? 28} /></span>
+                                <span className="pdv-cartao-texto"><strong>{c.titulo}</strong><span>{c.legenda}</span></span>
+                                {n ? <span className="pdv-numero">{n}</span> : <Icone nome="seta" tamanho={20} espessura={2.4} className="pdv-seta" />}
+                            </button>
+                        )
+                    })}
                 </div>
 
                 <div className="pdv-lista">

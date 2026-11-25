@@ -1,6 +1,6 @@
 # Regras de negócio
 
-> Parte da documentação do ERP Local. Índice: [docs/README.md](README.md)
+> Parte da documentação do sistema. Índice: [docs/README.md](README.md)
 
 Seis serviços concentram todas as contas de dinheiro; telas, PDV, API e relatórios só chamam esses serviços e nunca recalculam por conta própria. Cada um tem testes automáticos com casos reais do Local antes da virada.
 

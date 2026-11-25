@@ -12,7 +12,7 @@ use App\Models\Pagamento;
 use App\Modulos\Estacionamento\Servicos\Convenios;
 use App\Modulos\Estacionamento\Servicos\Estadias;
 use App\Servicos\FormasPagamento;
-use App\Modulos\Estacionamento\Servicos\Pdv\SemInternet;
+use App\Servicos\Pdv\SemInternet;
 use App\Modulos\Estacionamento\Servicos\Vendas;
 use App\Support\Formato;
 use App\Support\Placa;
@@ -95,7 +95,7 @@ class EstadiaPdvController extends Controller
         PdvController::pessoa($r);
         // código da ação (8.7): se a resposta não chegar e o celular mandar de novo pela fila, não duplica
         $e = Estadias::entrar($d + ['uuid' => $d['acao_uuid'] ?? null]);
-        SemInternet::registrarNaHora($d['acao_uuid'] ?? null, 'estadia_entrada', $e);
+        SemInternet::registrarNaHora($d['acao_uuid'] ?? null, 'estadia_entrada', ['estadia_id' => $e->id]);
 
         return response()->json(['estadia' => EstadiaController::linha(self::achar($e->id)), 'recibo' => self::recibo($e->fresh(), $e->ordem_entrada_id)]);
     }
@@ -151,7 +151,7 @@ class EstadiaPdvController extends Controller
             $d['saida'] = $m->format('Y-m-d H:i');
         }
         $e = Estadias::sair(self::achar($id), $d);
-        SemInternet::registrarNaHora($d['acao_uuid'] ?? null, 'estadia_saida', $e);
+        SemInternet::registrarNaHora($d['acao_uuid'] ?? null, 'estadia_saida', ['estadia_id' => $e->id]);
 
         return response()->json(['estadia' => EstadiaController::linha(self::achar($e->id)), 'recibo' => self::recibo($e, $e->ordem_id),
             'mensagem' => 'Saída de '.$e->rotulo().': '.Formato::duracao((int) $e->minutos).' · '.Estadia::DESTINOS[$e->destino].'.']);

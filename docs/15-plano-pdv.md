@@ -1,6 +1,8 @@
 # Etapa 8: plano do PDV
 
-> Parte da documentação do ERP Local. Índice: [docs/README.md](README.md)
+> Parte da documentação do sistema. Índice: [docs/README.md](README.md)
+>
+> **Organização por módulo (25/11/2026):** o PDV é um app só, com a base no núcleo (`resources/js/pdv`, `App\Servicos\Pdv\SemInternet`) e as telas de estadia e lavagem no módulo Estacionamento (`resources/js/Modulos/Estacionamento/pdv`, `App\Modulos\Estacionamento\Servicos\Pdv\EstadiasSemInternet`). Ver [saas/04, item 3.1](saas/04-multiplos-produtos.md#31-pdv-um-app-só-cada-módulo-com-as-suas-telas).
 
 Documento de trabalho da etapa 8 (API e PDV), aberto em 17/11/2026. O desenho geral (API, PIN, caixa, modo de emergência, ticket, app separado) está em [07-pdv.md](07-pdv.md) e continua valendo. Aqui ficam o ponto de partida, o escopo da primeira versão, a ordem de construção e as decisões que ainda faltam. **Nada é construído antes de as perguntas da seção 8 estarem respondidas.**
 
@@ -135,7 +137,7 @@ Cada parte fica utilizável antes da próxima. Testes automáticos em todas, com
 10. **Sangria, suprimento, fechar caixa, cancelar estadia ou venda e dar desconto:** só com PIN de **gerente ou administrador**.
 11. **Atendentes:** cada um vira usuário com o nível **operador**, configurado por usuário na gestão (PIN para o PDV; entrar na gestão é opção do usuário).
 12. **Cartão:** **crédito e débito separados** (taxas diferentes no Resultado).
-13. **Pix:** a integração do Inter (ERP Local Estacionamento) já tem a permissão **"Receber e enviar pagamentos por Pix"**. Apesar do nome, os itens dela são todos do lado de receber: cobranças imediatas (a do PDV) e com vencimento, consulta de Pix recebidos, webhooks e payloads, e devolução de Pix recebido (só para quem pagou). Nenhum envia Pix para outra conta. A chave Pix da conta PJ é escolhida em Configurações › Banco Inter (seção 8g). Atenção: no cadastro da integração, conferir se os itens de cobrança imediata estão marcados (o "Testar Pix" acusa se faltar).
+13. **Pix:** a integração do Inter já tem a permissão **"Receber e enviar pagamentos por Pix"**. Apesar do nome, os itens dela são todos do lado de receber: cobranças imediatas (a do PDV) e com vencimento, consulta de Pix recebidos, webhooks e payloads, e devolução de Pix recebido (só para quem pagou). Nenhum envia Pix para outra conta. A chave Pix da conta PJ é escolhida em Configurações › Banco Inter (seção 8g). Atenção: no cadastro da integração, conferir se os itens de cobrança imediata estão marcados (o "Testar Pix" acusa se faltar).
 
 **Consequência para o escopo:** o vigia recebe mensalidade no balcão. A primeira versão do PDV ganha **receber conta de cliente**: buscar o cliente pela placa ou nome, ver as ordens e cobranças em aberto e receber (mesma baixa da gestão, com o turno e o PIN).
 

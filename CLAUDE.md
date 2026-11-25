@@ -1,16 +1,15 @@
 # SaaS Estacionamento — regras do projeto
 
-> **Este repositório é a cópia do ERP Local que vai virar o SaaS** (criada em 25/11/2026 a partir do `erp-local`, com o histórico).
-> As regras do ERP abaixo continuam valendo. Diferenças desta cópia:
+> **Este repositório é o SaaS** (criado em 25/11/2026, com o histórico do sistema que lhe deu origem).
+> As regras do sistema abaixo continuam valendo. Particularidades do SaaS:
 >
 > - Planejamento e decisões da venda em `docs/saas/` (comece por `docs/saas/01-plano-comercializacao.md`); decisão do SaaS entra em `docs/saas/02-decisoes.md`.
 > - **Não publicar.** O workflow `publicar.yml` e a pasta `deploy/` são do servidor do Local; não configurar os *secrets* de publicação neste repositório até existir o servidor do SaaS (senão uma publicação daqui iria para a produção do Local).
 > - Pasta local: `C:\wamp64\www\saas`, com banco e `.env` próprios (nunca o banco nem o `.env` do Local).
-> - **Sem ligação com o ERP Local** (decisão de 25/11/2026): este repositório não recebe mais as correções do `erp-local` (o remoto `upstream` foi retirado). Correção urgente que valha para os dois é feita nos dois. O remoto `origin` é o `saas-estacionamento`.
-> - O ERP Local (`C:\wamp64\www\erplocal`) continua sendo o sistema em produção; mudanças do SaaS não voltam para lá sem decisão. A migração do Local para o SaaS fica sem prazo.
+> - **Repositório independente** (decisão de 25/11/2026): não recebe correções de outro repositório (o remoto `upstream` foi retirado). O remoto `origin` é o `saas-estacionamento`. A migração do Local para o SaaS fica sem prazo.
 > - **Vários produtos SaaS, um repositório:** núcleo comum + módulos por ramo em `app/Modulos/<Nome>` e `resources/js/Modulos/<Nome>` (hoje só o Estacionamento). O núcleo nunca chama classe de módulo direto (só por `App\Modulos\Modulos`); o que for só de um ramo vai para o módulo. Guia completo, incluindo como criar um módulo: `docs/saas/04-multiplos-produtos.md`.
 
-# ERP Local — regras do projeto
+# Regras do projeto
 
 Novo sistema do Local Estacionamento, em Laravel + Inertia + React + Bootstrap 5.3.
 A documentação completa está em `docs/` (comece por `docs/README.md`), **sempre em arquivos Markdown (.md) dentro do projeto** — não usar documentos externos. **Ler a documentação relevante antes de qualquer mudança.**
@@ -60,7 +59,7 @@ Organização, versões e o passo a passo de cada tela nova: `docs/13-desenvolvi
 
 - Produção: Hostinger Premium (compartilhada, sem processos contínuos, sem WebSocket, sem webhook mTLS), em erp.localestacionamento.com.br. Filas e agendas pelo cron (`schedule:run` a cada minuto). Inter por consulta periódica.
 - Publicação só pelo botão **Publicar** do GitHub (`.github/workflows/publicar.yml` + `deploy/`); nunca enviar arquivos à mão. O `.env` do servidor só existe lá (`~/erp/compartilhado/.env`). Passo a passo: `docs/14-publicacao.md`.
-- Local: WAMP em `C:\wamp64\www\erplocal` (Apache 2.4, PHP 8.3, MySQL 8.4).
+- Ambiente no computador: WAMP em `C:\wamp64\www\saas` (Apache 2.4, PHP 8.3, MySQL 8.4).
 - Nunca versionar `.env`, dumps de banco com dados de clientes (LGPD) ou chaves.
 
 ## Testes
@@ -68,6 +67,6 @@ Organização, versões e o passo a passo de cada tela nova: `docs/13-desenvolvi
 - Testes automáticos obrigatórios para as regras de dinheiro (tarifador, mensalidade, baixa, cobrança, convênio), com casos reais do Local.
 - Testar telas no navegador, no tamanho de celular e no tema escuro, com mais de um nível de acesso.
 
-## Sistema atual (referência)
+## Regras herdadas
 
-- Pasta `C:\wamp64\www\senna` (CodeIgniter 2), produção em `/sys/senna/`. Regras atuais que o ERP precisa preservar estão em `docs/05-regras-de-negocio.md`.
+- As regras de negócio que o sistema precisa preservar estão em `docs/05-regras-de-negocio.md`.

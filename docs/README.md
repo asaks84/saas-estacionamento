@@ -1,4 +1,4 @@
-# Documentação do ERP Local
+# Documentação do sistema
 
 Documentação detalhada do desenvolvimento do novo sistema do Local Estacionamento.
 Comece pela visão, depois o modelo de dados e as regras de negócio.

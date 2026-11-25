@@ -185,33 +185,10 @@ export function paraEscPos(lista, opcoes = {}) {
 export const montarPapel = (config, papel, dados, opcoes) => paraEscPos(blocos(modeloDe(config, papel), dados, { logo: config?.logo }), opcoes)
 
 // ---------- dados de cada papel, a partir do que a API devolve ----------
-const n6 = (n) => String(n ?? '').padStart(6, '0')
+export const n6 = (n) => String(n ?? '').padStart(6, '0')
 export const linkTicket = (codigo) => `${window.location.origin}/t/${codigo}`
 
-export const dadosTicket = (r, eu) => ({
-    empresa: eu.empresa, numero: n6(r.numero), servico: r.servico, placa: r.placa, modelo: r.modelo, tamanho: r.tipo, entrada: r.entrada,
-    link: r.codigo ? linkTicket(r.codigo) : null,
-    pago: r.pago ? { valor: r.pago.valor, forma: r.pago.forma } : (r.pago_entrada > 0 ? { valor: r.pago_entrada } : null),
-})
-
-// o ticket serve para estadia e lavagem; o serviço vem no próprio ticket
-export const dadosTicketLavagem = (r, eu) => dadosTicket({ ...r, servico: r.servico || 'Lavagem' }, eu)
-
-/** recibo de pagamento: um só papel para todo pagamento; cada origem preenche o que tem */
-export const dadosReciboEstadia = (r, eu) => ({
-    empresa: eu.empresa, titulo: `RECIBO · Nº ${n6(r.numero)}`, placa: r.placa, modelo: r.modelo, tamanho: r.tipo, entrada: r.entrada, saida: r.saida, tempo: r.tempo,
-    itens: [
-        ...(r.valor !== null && r.valor !== undefined ? [{ descricao: r.servico, valor: r.valor }] : []),
-        ...(r.convenio ? [{ descricao: `Convênio ${r.convenio.nome || ''}`.trim(), texto: `-${moeda(r.convenio.valor)}` }] : []),
-        ...(r.pago_entrada > 0 && r.saida ? [{ descricao: 'Pago na entrada', texto: `-${moeda(r.pago_entrada)}` }] : []),
-    ],
-    pago: r.pago, situacao: r.destino,
-})
-
-export const dadosReciboLavagem = (r, eu) => ({
-    empresa: eu.empresa, titulo: `RECIBO · Nº ${n6(r.numero)}`, placa: r.placa, modelo: r.modelo, tamanho: r.tipo, entrada: r.entrada, saida: r.saida, rotuloSaida: 'Entrega',
-    itens: r.itens, pago: r.pago, na_conta: (r.itens || []).filter((i) => i.conta).map((i) => i.conta),
-})
+// ticket e recibos de cada ramo: no módulo (ex.: resources/js/Modulos/Estacionamento/pdv/impressao.js)
 
 export const dadosReciboConta = (r, eu) => ({
     empresa: eu.empresa, titulo: 'RECIBO', cliente: r.cliente, data: r.data, itens: r.itens,

@@ -1,6 +1,6 @@
 # Módulos
 
-> Parte da documentação do ERP Local. Índice: [docs/README.md](README.md)
+> Parte da documentação do sistema. Índice: [docs/README.md](README.md)
 
 Os quatro módulos previstos entram já no sistema novo, sobre o modelo de dados acima; nenhum deles será feito no CodeIgniter.
 

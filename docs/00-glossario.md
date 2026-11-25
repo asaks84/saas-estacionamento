@@ -1,6 +1,6 @@
 # Glossário
 
-> Parte da documentação do ERP Local. Índice: [docs/README.md](README.md)
+> Parte da documentação do sistema. Índice: [docs/README.md](README.md)
 
 Os termos abaixo são os que o Local já usa no dia a dia. Telas, código, banco e documentação seguem estes nomes.
 

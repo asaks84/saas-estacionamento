@@ -1,6 +1,6 @@
 # Preparação para SaaS
 
-> Parte da documentação do ERP Local. Índice: [docs/README.md](README.md)
+> Parte da documentação do sistema. Índice: [docs/README.md](README.md)
 
 O produto sai pronto para receber outras empresas sem reescrever nada; o que só faz sentido com cliente pagante fica para depois.
 

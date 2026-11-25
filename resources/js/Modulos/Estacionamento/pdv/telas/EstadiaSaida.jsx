@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { api } from '@/pdv/api'
 import { usePin } from '@/pdv/Pin'
 import { CampoDinheiro, Folha, Formas, PerguntaImprimir, moeda, papel, PixQr, usaPixQr } from '@/pdv/comum'
-import { dadosReciboEstadia } from '@/pdv/impressao/modelo'
+import { dadosReciboEstadia } from '../impressao'
 import { preferencia } from '@/pdv/impressao/preferencia'
 import { TopoEtapa, passoDe, useErro } from '@/pdv/visual'
 

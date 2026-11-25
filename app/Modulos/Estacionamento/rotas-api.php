@@ -1,9 +1,8 @@
 <?php
 
 use App\Modulos\Estacionamento\Http\Controllers\Pdv\EstadiaPdvController;
-use App\Modulos\Estacionamento\Http\Controllers\Pdv\InicioPdvController;
 use App\Modulos\Estacionamento\Http\Controllers\Pdv\LavagemPdvController;
-use App\Modulos\Estacionamento\Http\Controllers\Pdv\SemInternetController;
+use App\Modulos\Estacionamento\Http\Controllers\Pdv\TicketPdvController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -12,11 +11,8 @@ use Illuminate\Support\Facades\Route;
  * e cada ação pede o PIN de quem está atendendo.
  */
 Route::prefix('pdv')->middleware(['publica', 'aparelho', 'throttle:120,1,pdv'])->group(function () {
-    Route::get('/inicio', [InicioPdvController::class, 'resumo']);
-    Route::get('/ticket', [InicioPdvController::class, 'ticket']);
-    // modo sem internet (8.7): a cópia guardada no celular e a fila que sobe quando a internet volta
-    Route::get('/pacote', [SemInternetController::class, 'pacote']);
-    Route::post('/sincronizar', [SemInternetController::class, 'sincronizar'])->middleware('throttle:30,1,pdv-fila');
+    // saída do Início: qualquer ticket (estadia ou lavagem)
+    Route::get('/ticket', [TicketPdvController::class, 'ticket']);
 
     // estadias (8.2)
     Route::get('/estadias/opcoes', [EstadiaPdvController::class, 'opcoes']);

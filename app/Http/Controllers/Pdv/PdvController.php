@@ -7,6 +7,7 @@ use App\Models\Aparelho;
 use App\Models\Empresa;
 use App\Models\Unidade;
 use App\Models\Usuario;
+use App\Modulos\Modulos;
 use App\Servicos\Pdv\Aparelhos;
 use App\Servicos\Pdv\ImpressaoModelos;
 use App\Servicos\Pdv\Pins;
@@ -70,6 +71,8 @@ class PdvController extends Controller
             'pix_qr' => PixPdv::ligado(),
             // modelos de impressão editados no ERP (8.8); papel sem modelo sai no padrão do app
             'impressao' => ImpressaoModelos::config(),
+            // módulos de ramo ligados: o app mostra as telas de cada um (resources/js/Modulos/<Nome>/pdv)
+            'modulos' => Modulos::chaves(),
         ]);
     }
 

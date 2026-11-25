@@ -2,6 +2,7 @@
 
 namespace App\Modulos;
 
+use App\Models\Aparelho;
 use App\Models\Cliente;
 use App\Models\Usuario;
 use Illuminate\Support\Collection;
@@ -48,5 +49,20 @@ class Modulos
     public static function compartilhado(?Usuario $usuario): array
     {
         return array_merge([], ...array_map(fn (Modulo $m) => $m->compartilhado($usuario), self::todos()));
+    }
+
+    public static function pdvInicio(): array
+    {
+        return array_merge([], ...array_map(fn (Modulo $m) => $m->pdvInicio(), self::todos()));
+    }
+
+    public static function pdvPacote(Aparelho $aparelho): array
+    {
+        return array_merge([], ...array_map(fn (Modulo $m) => $m->pdvPacote($aparelho), self::todos()));
+    }
+
+    public static function pdvAcoes(): array
+    {
+        return array_merge([], ...array_map(fn (Modulo $m) => $m->pdvAcoes(), self::todos()));
     }
 }

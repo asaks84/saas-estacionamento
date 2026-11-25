@@ -6,7 +6,7 @@ use App\Models\Aparelho;
 use App\Modulos\Estacionamento\Models\Estadia;
 use App\Models\FormaPagamento;
 use App\Models\Pagamento;
-use App\Modulos\Estacionamento\Models\PdvAcao;
+use App\Models\PdvAcao;
 use App\Modulos\Estacionamento\Models\Tarifa;
 use App\Modulos\Estacionamento\Models\TarifaFaixa;
 use App\Modulos\Estacionamento\Models\TarifaPacote;

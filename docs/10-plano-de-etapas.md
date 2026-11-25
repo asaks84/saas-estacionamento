@@ -1,6 +1,6 @@
 # Plano de etapas e virada
 
-> Parte da documentação do ERP Local. Índice: [docs/README.md](README.md)
+> Parte da documentação do sistema. Índice: [docs/README.md](README.md)
 
 A migração vai em oito etapas, cada uma utilizável antes da próxima; o sistema atual só é desligado depois que os números dos dois baterem por algumas semanas.
 

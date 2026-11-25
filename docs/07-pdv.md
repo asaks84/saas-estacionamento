@@ -1,6 +1,6 @@
 # PDV
 
-> Parte da documentação do ERP Local. Índice: [docs/README.md](README.md)
+> Parte da documentação do sistema. Índice: [docs/README.md](README.md)
 
 O plano de construção (escopo da primeira versão, ordem e decisões em aberto) está em [15-plano-pdv.md](15-plano-pdv.md). O Local começa com **um aparelho** no balcão; o desenho já aceita mais.
 

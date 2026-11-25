@@ -3,6 +3,7 @@ import { prepararAgora, prontidao } from '../offline/prontidao'
 import { atualizarPacote } from '../offline/fila'
 import { usePin } from '../Pin'
 import { VERSAO } from '../api'
+import { OFFLINE } from '../offline/modulos'
 import { dataHora } from '../../lib/formato'
 import { Icone, TopoEtapa, useAvisos } from '../visual'
 
@@ -37,7 +38,7 @@ function SemInternet() {
                 </ul>
                 <button type="button" className="btn btn-sm btn-outline-secondary" disabled={preparando} onClick={preparar}>{preparando ? 'Preparando…' : 'Preparar agora'}</button>
             </div>
-            <p className="small text-muted mb-4">Sem internet funcionam entrada e saída de estadia. Não recarregue nem feche o app à toa sem internet.</p>
+            <p className="small text-muted mb-4">{OFFLINE.length ? `Sem internet funcionam ${OFFLINE.map((m) => m.DESCRICAO).join(' e ')}. ` : ''}Não recarregue nem feche o app à toa sem internet.</p>
         </>
     )
 }

@@ -1,10 +1,22 @@
 # Histórico de alterações do ERP
 
-Alterações do ERP Local, da mais nova para a mais antiga. Um bloco por dia (`## dd/mm/aaaa`), do mais novo para o mais antigo; dentro do dia, cada alteração é um `### título`, a mais nova em cima. Alteração nova entra **no topo** do dia (ou abre o bloco do dia): o que mudou e arquivos.
+Alterações do sistema, da mais nova para a mais antiga. Um bloco por dia (`## dd/mm/aaaa`), do mais novo para o mais antigo; dentro do dia, cada alteração é um `### título`, a mais nova em cima. Alteração nova entra **no topo** do dia (ou abre o bloco do dia): o que mudou e arquivos.
 
 ---
 
 ## 25/11/2026
+
+### PDV por módulo (base comum + telas de cada ramo)
+
+- O app do celular continua um só. **Base no núcleo:** pareamento, PIN, caixa, Pix, impressão, tema, voltar e o modo sem internet. **Módulo Estacionamento** encaixa as telas de entrada, saída, estadias e lavagens, os atalhos e cartões do Início, as rotas de estadia que o celular responde sem internet e os dados do ticket e dos recibos.
+- **Servidor:** `App\Servicos\Pdv\SemInternet` (núcleo) monta o pacote e sobe a fila; cada módulo soma a parte dele (`Modulo::pdvPacote`) e declara as ações que lança (`Modulo::pdvAcoes`; no Estacionamento, `EstadiasSemInternet`: entrada e saída de estadia e a conferência da saída enviada muito depois). `PdvAcao` voltou para o núcleo (`App\Models\PdvAcao`); o nome de cada tipo de ação vem do módulo (`SemInternet::rotulo`). `/api/pdv/inicio`, `/pacote` e `/sincronizar` são do núcleo (`InicioPdvController` com `Modulo::pdvInicio`, `SemInternetController`); `/ticket` ficou no módulo (`TicketPdvController`). `/api/pdv/eu` devolve os módulos ligados.
+- **Celular:** `pdv/App.jsx` monta o Início e abre o componente `Telas` do módulo (`resources/js/Modulos/Estacionamento/pdv/index.jsx`); `pdv/modulos.js` e `pdv/offline/modulos.js` listam os módulos; `pdv/offline/local.js` ficou só com a base e `pdv/offline/ajuda.js` com o que a base e os módulos usam; o resto foi para `Modulos/Estacionamento/pdv/offline.js` e `pdv/impressao.js`. Mesmas rotas, mesmas respostas e mesmos textos.
+- Testes: 309 de 310 (o que falha é a permissão de arquivo do Windows deste ambiente, já falhava antes); JavaScript 7 de 7; build ok. **Falta testar num celular de verdade** (entrada, saída, lavagem, caixa e ida e volta sem internet) antes de publicar.
+- Docs: `docs/saas/04-multiplos-produtos.md` (item 3.1 e passo 10), `docs/saas/02-decisoes.md`, `docs/15-plano-pdv.md`, `docs/17-auditoria-seguranca.md`.
+
+### Docs: limpeza das referências ao endereço local e ao sistema anterior
+
+- README (endereço local do WAMP, pasta e banco do sistema anterior; instalação passa a usar `erp:instalar`), `CLAUDE.md` (cabeçalho, ambiente em `C:\wamp64\www\saas`, seção do sistema anterior virou "Regras herdadas"), cabeçalho de todos os `docs/*.md`, `docs/01`, `docs/12`, `docs/14`, `docs/15`, `docs/saas/01`, `02` e `04` e entradas antigas deste histórico.
 
 ### SaaS: um repositório para vários produtos (núcleo + módulos por ramo)
 
@@ -14,7 +26,7 @@ Alterações do ERP Local, da mais nova para a mais antiga. Um bloco por dia (`#
 - O núcleo não chama mais o estacionamento direto em LGPD (bloqueios, exportação e anonimização das estadias), no Início (convênios a fechar) e no contador de pendências do PDV: passa por `Modulos`. Ainda chamam (lista em docs/saas/04, item 5): vínculos da ordem de serviço e do cliente com estadia/convênio, `lgpd:limpar`, importação do sistema antigo e partes do PDV.
 - **Telas:** `resources/js/Modulos/Estacionamento` com Pages (Pátio, Convênios, Tabelas de estadia, Etapas da lavagem; nome `Estacionamento/Pages/...`), Components (AbasPatio, PatioLinha), `menu.js` (itens do menu e abas de Configurações, juntados em `lib/menu.js` só para módulos ligados) e as telas do PDV de estadia e lavagem com o tarifador do celular. Atalho `@/` = `resources/js` no Vite; `config/inertia.php` procura telas também em `resources/js/Modulos`.
 - **Testes:** os do estacionamento foram para `tests/Modulos/Estacionamento` (suíte nova "Modulos" no `phpunit.xml`). Teste novo `ModuloTest` (módulo ligado, permissões, telas e dados do Início). Resultado: 309 de 310 passando; o que falha (`BackupDriveTest`, permissão de arquivo no Windows deste ambiente) já falhava antes. Testes de JavaScript: 7 de 7.
-- **Ligação com o ERP Local cortada:** remoto `upstream` retirado; correções do Local não chegam mais por merge. Migração do Local para o SaaS sem prazo.
+- **Ligação com o repositório de origem cortada:** remoto `upstream` retirado; correções não chegam mais por merge. Migração do Local para o SaaS sem prazo.
 - Docs: `docs/saas/04-multiplos-produtos.md` reescrito (estrutura, como criar um módulo, o que ainda liga o núcleo ao estacionamento), `docs/saas/02-decisoes.md`, `docs/13-desenvolvimento.md`, `docs/17-auditoria-seguranca.md` (caminho novo), `docs/README.md`, `CLAUDE.md`.
 
 ### Docs: organização para vários produtos SaaS
@@ -214,7 +226,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 ### Backup criptografado no Google Drive
 
 - **Configurações › Backup** (aba nova): passo a passo para criar o acesso no Google Cloud (Drive API, tela de consentimento publicada, ID do cliente OAuth "Aplicativo da Web" com o endereço de retorno para copiar); campos do ID e da chave do cliente (criptografados), **senha do backup** (mín. 12, com confirmação, guardada criptografada) e dias de guarda no Drive (padrão 30); conectar e desconectar a conta; "Fazer backup agora"; situação (último backup no servidor, último envio, última falha).
-- **Backup diário (03:10)**: depois do .sql.gz no servidor, cada arquivo é criptografado (AES-256-CBC, chave da senha por PBKDF2-SHA256 com 200 mil voltas, formato do OpenSSL) e enviado para a pasta "Backups ERP Local Estacionamento" no Drive; apaga da pasta os mais velhos que os dias de guarda, mantendo sempre os 3 mais novos. Falha no Drive não mexe no backup do servidor e aparece na tela.
+- **Backup diário (03:10)**: depois do .sql.gz no servidor, cada arquivo é criptografado (AES-256-CBC, chave da senha por PBKDF2-SHA256 com 200 mil voltas, formato do OpenSSL) e enviado para a pasta de backups no Drive; apaga da pasta os mais velhos que os dias de guarda, mantendo sempre os 3 mais novos. Falha no Drive não mexe no backup do servidor e aparece na tela.
 - Permissão no Google: só `drive.file` (o ERP vê apenas os arquivos que ele mesmo cria).
 - Abrir um backup baixado: `php artisan backup:abrir arquivo.sql.gz.enc` (pede a senha) ou `openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -md sha256 -in arquivo.sql.gz.enc -out arquivo.sql.gz`.
 - Política de privacidade: Google (Drive) na lista de compartilhamento e na transferência internacional; prazo do backup fora do servidor.
@@ -569,7 +581,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 
 ### WhatsApp: régua de cobrança (etapa 7b)
 
-- **Decisão:** API oficial da Meta (Cloud API), direto, sem plataforma intermediária, com número próprio para os avisos. Empresa verificada no Meta Business e app "ERP Local Estacionamento" criado em 16/11/2026.
+- **Decisão:** API oficial da Meta (Cloud API), direto, sem plataforma intermediária, com número próprio para os avisos. Empresa verificada no Meta Business e app próprio criado em 16/11/2026.
 - **Régua de cobrança** (`App\Servicos\WhatsApp\Regua`): cada cobrança em aberto recebe um aviso por passo (padrão: 3 dias antes, no dia, 3 e 10 dias depois do vencimento), uma vez só. Com boleto, conta o vencimento do boleto. Para quando a cobrança é paga ou cancelada. Ligar a régua tarde não despeja avisos atrasados (tolerância de 2 dias; só o passo mais recente). Cliente "não recebe avisos" fica de fora; celular inválido aparece com o motivo.
 - **Cobranças › Avisos** (`/avisos`): lista do dia com "Abrir WhatsApp" (wa.me, texto pronto, marca como enviado), "Enviar pela API"/"Enviar todos" quando a API está ligada, "Dispensar" e os enviados (enviado, entregue, lido).
 - **Configurações › WhatsApp**: credenciais (token, ID do número, ID da conta, chave secreta do app) guardadas criptografadas, teste de conexão, régua (passos, horário, envio automático), modelos de mensagem (3 textos fixos, criados na Meta pelo botão; aprovação da Meta) e os dados para colar no app da Meta (URL e código do webhook, URL da política de privacidade).
@@ -940,4 +952,4 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - **Comparativo com o mercado decidido, ponto a ponto:** cobrança imutável, ajustes, extrato do cliente, plano de contas, centro de custo (lista cadastrada), contas financeiras e conciliação, formas de pagamento com taxas e prazo em dias, vigência de preços, pausa (pode ser cobrada) e cancelamento agendado, inadimplência a partir do primeiro vencimento, régua de cobrança (com WhatsApp), situação do pagamento (com Inter), campos fiscais, numeração própria, capacidade e ocupação. Atualizados 03, 05, 06, 11, 12.
 - **Contas a pagar:** uma permissão só (`contas_pagar`); registrado em 08 e 12.
 - **Termos definidos:** "ordem de serviço" é todo item que o cliente deve; "cobrança" (no lugar de "fatura") agrupa as ordens e gera o boleto; etapa da lavagem fica na própria ordem; cancelamento de ordem com permissão e motivo. Novo `docs/00-glossario.md`; ajustados 01, 03, 04, 05, 06, 07, 10, 11, 12, README e CLAUDE.md.
-- **Início do projeto:** pasta `erplocal`, documentação detalhada em `docs/` (visão, tecnologia, modelo de dados, migração, regras de negócio, módulos, PDV, segurança, SaaS, plano de etapas, comparativo com o mercado, registro de decisões), `README.md`, `CLAUDE.md`, `.gitignore`.
+- **Início do projeto:** pasta do projeto, documentação detalhada em `docs/` (visão, tecnologia, modelo de dados, migração, regras de negócio, módulos, PDV, segurança, SaaS, plano de etapas, comparativo com o mercado, registro de decisões), `README.md`, `CLAUDE.md`, `.gitignore`.

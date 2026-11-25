@@ -12,7 +12,7 @@
 - **Módulos por ramo:** Estacionamento (o atual), Agenda, Locação e outros que surgirem. Cada empresa assinante tem um ramo e os módulos que contratou. O menu e as rotas respeitam isso (ligar/desligar por empresa entra com o painel, Fase 2 do [plano](01-plano-comercializacao.md#fase-2--painel-da-plataforma-mínimo)).
 - **Cada produto com marca e domínio próprios** (ex.: um endereço para o estacionamento e outro para a agenda), todos apontando para o mesmo sistema. A marca, o logo e os termos da tela vêm da configuração do produto ou da empresa, nunca do código.
 - **Nada de repositório por produto.** As regras de dinheiro (ordem, cobrança, baixa, estorno, Inter, NFS-e) são a parte mais testada e mais sensível; com uma cópia por produto, cada correção teria que ser repetida em vários lugares.
-- **Sem ligação com o ERP Local.** Este repositório não recebe mais as correções do `erp-local` pelo `upstream` (a reorganização das pastas tornou o merge inviável). Correção urgente que valha para os dois é feita nos dois. A migração do Local para dentro do SaaS (o Local como uma empresa daqui) fica sem prazo.
+- **Sem ligação com o repositório de origem.** Este repositório não recebe mais correções pelo `upstream` (a reorganização das pastas tornou o merge inviável). Correção urgente que valha para os dois é feita nos dois. A migração do Local para dentro do SaaS (o Local como uma empresa daqui) fica sem prazo.
 
 ## 2. Estrutura de pastas
 
@@ -25,12 +25,12 @@ app/
     Estacionamento/
       EstacionamentoServiceProvider.php   o módulo (chave "estacionamento") e o que ele soma ao núcleo
       rotas.php               telas da gestão (pátio, estadias, lavagens, convênios, tabelas de estadia, etapas)
-      rotas-api.php           API do PDV para estadia, lavagem, início e modo sem internet (/api/pdv/...)
+      rotas-api.php           API do PDV para estadia, lavagem e ticket (/api/pdv/...)
       permissoes.php          patio_corrigir, convenios (entram nos grupos de config/permissoes.php)
-      Models/                 Estadia, Tarifa (+ faixas, pacotes), Convenio, ConvenioRegra, EtapaLavagem, OrdemEtapa, PdvAcao
+      Models/                 Estadia, Tarifa (+ faixas, pacotes), Convenio, ConvenioRegra, EtapaLavagem, OrdemEtapa
       Servicos/               Estadias, Tarifador, Tarifas (tabela vigente), Patio, Convenios, EtapasLavagem, Vendas,
-                              Pdv/Lavagens, Pdv/SemInternet
-      Http/Controllers/       Estadia, Lavagem, Patio, Convenio, Tarifa, EtapaLavagem; Pdv/ (EstadiaPdv, LavagemPdv, InicioPdv, SemInternet)
+                              Pdv/Lavagens, Pdv/EstadiasSemInternet (pacote e ações de estadia do modo sem internet)
+      Http/Controllers/       Estadia, Lavagem, Patio, Convenio, Tarifa, EtapaLavagem; Pdv/ (EstadiaPdv, LavagemPdv, TicketPdv)
       migrations/             (quando houver) tabelas novas do módulo
 config/modulos.php            módulos instalados
 resources/js/
@@ -39,6 +39,9 @@ resources/js/
     Pages/                    Patio/, Convenios/, Configuracoes/ (Tarifas, TarifaForm, Etapas)
     Components/               AbasPatio, PatioLinha
     menu.js                   itens do menu e abas de Configurações do módulo
+    pdv/index.jsx             o que o módulo encaixa no PDV: atalhos e cartões do Início, telas e navegação entre elas
+    pdv/offline.js            modo sem internet do módulo: rotas que o celular responde sozinho, ações da fila
+    pdv/impressao.js          dados do ticket e dos recibos de estadia e lavagem
     pdv/telas/                Entrada, Saida, Estadias, EstadiaEntrada, EstadiaSaida, Lavagens
     pdv/offline/tarifador.js  tarifador do celular (modo sem internet)
 tests/
@@ -46,7 +49,7 @@ tests/
   Modulos/Estacionamento/     testes do módulo (suíte "Modulos" no phpunit.xml)
 ```
 
-**Ficaram no núcleo de propósito:** veículo, tipo de veículo, placa e mensalidade (o dinheiro do núcleo ainda depende deles; ver item 5), preço de serviço (`Precos`), caixa, Pix e pareamento do PDV.
+**Ficaram no núcleo de propósito:** veículo, tipo de veículo, placa e mensalidade (o dinheiro do núcleo ainda depende deles; ver item 5), preço de serviço (`Precos`) e a **base do PDV** (item 3.1).
 
 **Migrations antigas** continuam em `database/migrations` (várias criam tabelas do núcleo e do estacionamento juntas e já rodaram em produção). Tabela nova de um módulo vai para `app/Modulos/<Nome>/migrations`.
 
@@ -61,11 +64,30 @@ tests/
 | `anonimizar` | LGPD: apagar dados nas tabelas do módulo | placa, celular e retirada das estadias; dados das ações do PDV |
 | `inicio` | dados a mais na tela Início | convênios a fechar |
 | `compartilhado` | dados para todas as telas (contadores) | pendências do PDV sem internet |
+| `pdvInicio` | números do Início do PDV | carros no pátio, lavagens em andamento |
+| `pdvPacote` | modo sem internet: a parte do módulo na cópia do celular | tabelas de estadia, convênios, pátio, mensalistas, último ticket |
+| `pdvAcoes` | modo sem internet: ações que o módulo lança quando sobem | entrada e saída de estadia (e a conferência da saída enviada muito depois) |
 
 - Ponto novo entra em `Modulo` (com resposta vazia por padrão) e em `Modulos`; o núcleo chama `Modulos::<ponto>()`.
 - **Módulo pode usar o núcleo à vontade** (`Ordens`, `Baixa`, `Cobrancas`, `Cliente`…). O contrário não.
 - **Telas:** o nome da tela de módulo é `<Nome>/Pages/...` (ex.: `Inertia::render('Estacionamento/Pages/Patio/Index')`). Componentes do núcleo são importados com `@/` (ex.: `import Campo from '@/Components/Campo'`).
 - **Menu:** cada módulo tem `menu.js` com `MENU` (grupo e posição com `antes`/`depois`) e `CONFIGURACOES`; o `lib/menu.js` junta tudo e só mostra os itens dos módulos ligados (`props.modulos`).
+
+### 3.1 PDV: um app só, cada módulo com as suas telas
+
+O PDV (app do celular) é um só. A **base** fica no núcleo e vale para todos os ramos: pareamento do aparelho, PIN de quem atende, caixa (abrir, sangria, fechar), Pix com QR, receber conta do cliente, impressão Bluetooth, tema, voltar do celular e o modo sem internet (fila com código único, PIN trancado, hora do celular, pendências). Cada módulo **encaixa** o que é dele:
+
+| Lado | Base (núcleo) | O módulo fornece |
+|---|---|---|
+| Telas | `resources/js/pdv/App.jsx` monta o Início e abre a tela do módulo; `pdv/modulos.js` lista os módulos ligados (`eu.modulos`) | `pdv/index.jsx`: `MODULO`, `INICIO` (atalhos e cartões, com o número de cada um), `TELAS` (nomes que abre) e o componente `Telas` (navegação interna; volta ao Início por `onSair`) |
+| Sem internet (celular) | `pdv/offline/local.js` responde `/eu`, `/inicio` e o PIN; `pdv/api.js` decide quando responder no celular e põe o código único; `pdv/offline/modulos.js` lista os módulos | `pdv/offline.js`: `ROTAS` e `responder()` (rotas que o celular responde sozinho), `ACOES` (ações que vão para a fila), `SO_LOCAL`, `preparar()`, `inicio()` e `DESCRICAO` (texto "funcionam sem internet") |
+| Sem internet (servidor) | `App\Servicos\Pdv\SemInternet` (pacote, sincronizar, pendências, `registrarNaHora`, `resolver`), modelo `App\Models\PdvAcao` | `pdvPacote()` e `pdvAcoes()` no provedor do módulo (no Estacionamento, `EstadiasSemInternet`) |
+| Início | `/api/pdv/inicio` devolve o caixa aberto | `pdvInicio()` com os números (ex.: carros no pátio) |
+| Impressão | papéis, modelo editável, Bluetooth (`pdv/impressao/`) | `pdv/impressao.js` com os dados de cada papel do ramo |
+
+A parte sem tela (`offline.js`) fica separada de `index.jsx` de propósito: a base do modo sem internet não depende das telas dos módulos.
+
+**Antes de publicar qualquer mudança no PDV:** testar num celular de verdade a entrada, a saída, a lavagem, o caixa e uma ida e volta sem internet. Os testes automáticos cobrem o servidor e o tarifador do celular, não as telas.
 
 ## 4. Como criar um módulo novo (ex.: Agenda)
 
@@ -78,6 +100,7 @@ tests/
 7. Telas em `resources/js/Modulos/Agenda/Pages`, menu em `resources/js/Modulos/Agenda/menu.js`.
 8. Testes em `tests/Modulos/Agenda`, incluindo leitura de dados de outra empresa.
 9. Se o módulo guarda dado pessoal: implementar `bloqueiosAnonimizar`, `dadosPessoais` e `anonimizar`.
+10. Se usa o PDV: `resources/js/Modulos/Agenda/pdv/index.jsx` (Início e telas) e, se funciona sem internet, `pdv/offline.js` mais `pdvPacote()` e `pdvAcoes()` no provedor (item 3.1). Caixa, Pix, PIN e impressão já vêm da base.
 
 ## 5. O que ainda liga o núcleo ao estacionamento
 
@@ -95,7 +118,8 @@ Ficou de fora da reorganização por mexer em dinheiro ou no PDV sem ganho imedi
 - **Termos da tela:** o [glossário](../00-glossario.md) ganha os termos por ramo (ex.: "pátio" e "veículo" só no estacionamento).
 
 **PDV (celular)**
-- `pdv/App.jsx` importa as telas do módulo direto; a tela Início do PDV, os modelos de impressão (ticket, recibos de estadia e lavagem, em `pdv/impressao/modelo.js`) e o modo sem internet (`pdv/offline/local.js`, que usa o tarifador do módulo) ainda misturam núcleo e estacionamento. Separar quando um segundo ramo usar o PDV.
+- Os tipos de papel e os campos do modelo de impressão (`pdv/impressao/modelo.js`: ticket, recibo com placa, entrada e saída) e o exemplo do editor ainda são do estacionamento. Cada módulo deve poder declarar os papéis dele.
+- A tabela `pdv_acoes` tem a coluna `estadia_id` (e `PdvAcao::estadia()`); ações de outros ramos guardam o vínculo em `dados` ou ganham coluna própria.
 
 **Outros**
 - `lgpd:limpar` usa a última estadia para saber há quanto tempo o cliente não aparece (consulta direta na tabela `estadias`).

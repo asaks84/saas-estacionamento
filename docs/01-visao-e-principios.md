@@ -1,6 +1,6 @@
 # Visão e princípios
 
-> Parte da documentação do ERP Local. Índice: [docs/README.md](README.md)
+> Parte da documentação do sistema. Índice: [docs/README.md](README.md)
 
 O sistema será refeito em Laravel como um produto completo para o Local Estacionamento, já desenhado para virar SaaS depois, sem ser vendido agora. A gestão nova nasce com os módulos previstos (venda de serviços, baixa unificada com forma de pagamento, cobrança e gestão de gastos) e com a API que o PDV vai usar.
 
@@ -16,6 +16,5 @@ O sistema será refeito em Laravel como um produto completo para o Local Estacio
 
 ## Contexto
 
-- O sistema atual (CodeIgniter 2, em `C:\wamp64\www\senna` e em produção em `/sys/senna/`) continua oficial até a virada e só recebe correções.
-- O ERP novo é desenvolvido em `C:\wamp64\www\erplocal`.
+- O sistema anterior (CodeIgniter 2) fica só para consulta.
 - Objetivo de produto: ficar pronto do jeito que o Cauê espera, rodar no Local Estacionamento, e só então estruturar a venda como SaaS.

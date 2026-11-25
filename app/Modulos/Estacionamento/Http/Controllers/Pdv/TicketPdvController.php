@@ -3,29 +3,12 @@
 namespace App\Modulos\Estacionamento\Http\Controllers\Pdv;
 
 use App\Http\Controllers\Controller;
-use App\Models\Caixa;
-use App\Modulos\Estacionamento\Models\Estadia;
-use App\Models\OrdemServico;
-use App\Modulos\Estacionamento\Servicos\EtapasLavagem;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-/** API do PDV, visual novo (8.8): os números do Início e a saída que aceita qualquer ticket. */
-class InicioPdvController extends Controller
+/** API do PDV, visual novo (8.8): a saída que aceita qualquer ticket (estadia ou lavagem). */
+class TicketPdvController extends Controller
 {
-    /** carros no pátio, lavagens em andamento e o caixa aberto (sem abrir um caixa só por olhar) */
-    public function resumo(): JsonResponse
-    {
-        $caixa = Caixa::where('situacao', 'aberto')->orderBy('id')->first();
-
-        return response()->json([
-            'patio' => Estadia::where('situacao', 'patio')->count(),
-            'lavagens' => OrdemServico::where('tipo', 'servico')->whereNull('principal_id')->whereNotNull('etapa')
-                ->where('situacao', '<>', 'cancelada')->where('etapa', '<>', EtapasLavagem::ULTIMA)->count(),
-            'caixa' => $caixa ? ['desde' => $caixa->aberto_em->format('H:i')] : null,
-        ]);
-    }
-
     /**
      * Saída do Início: QR, número ou placa de qualquer ticket. Procura estadia no pátio e lavagem em andamento;
      * achou só uma, abre; achou as duas (ex.: busca pela placa de um carro com estadia e lavagem), pergunta.

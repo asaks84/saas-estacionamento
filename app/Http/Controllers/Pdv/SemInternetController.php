@@ -1,12 +1,11 @@
 <?php
 
-namespace App\Modulos\Estacionamento\Http\Controllers\Pdv;
+namespace App\Http\Controllers\Pdv;
 
 use App\Http\Controllers\Controller;
-use App\Modulos\Estacionamento\Servicos\Pdv\SemInternet;
+use App\Servicos\Pdv\SemInternet;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Pdv\PdvController;
 
 /** API do PDV, modo sem internet (8.7): a cópia que o celular guarda e a subida da fila. */
 class SemInternetController extends Controller

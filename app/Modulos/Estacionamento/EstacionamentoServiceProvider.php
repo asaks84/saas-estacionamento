@@ -2,13 +2,16 @@
 
 namespace App\Modulos\Estacionamento;
 
+use App\Models\Aparelho;
 use App\Models\Cliente;
 use App\Models\OrdemServico;
+use App\Models\PdvAcao;
 use App\Models\Usuario;
 use App\Modulos\Estacionamento\Models\Convenio;
 use App\Modulos\Estacionamento\Models\Estadia;
-use App\Modulos\Estacionamento\Models\PdvAcao;
 use App\Modulos\Estacionamento\Servicos\Convenios;
+use App\Modulos\Estacionamento\Servicos\EtapasLavagem;
+use App\Modulos\Estacionamento\Servicos\Pdv\EstadiasSemInternet;
 use App\Modulos\Modulo;
 use App\Support\Placa;
 use Illuminate\Support\Carbon;
@@ -85,5 +88,25 @@ class EstacionamentoServiceProvider extends Modulo
             // pendências do PDV sem internet (8.7), na aba do Pátio
             'pdv_pendencias' => fn () => $u ? PdvAcao::where('situacao', 'pendente')->count() : 0,
         ];
+    }
+
+    /** Início do PDV: carros no pátio e lavagens em andamento */
+    public function pdvInicio(): array
+    {
+        return [
+            'patio' => Estadia::where('situacao', 'patio')->count(),
+            'lavagens' => OrdemServico::where('tipo', 'servico')->whereNull('principal_id')->whereNotNull('etapa')
+                ->where('situacao', '<>', 'cancelada')->where('etapa', '<>', EtapasLavagem::ULTIMA)->count(),
+        ];
+    }
+
+    public function pdvPacote(Aparelho $a): array
+    {
+        return EstadiasSemInternet::pacote($a);
+    }
+
+    public function pdvAcoes(): array
+    {
+        return EstadiasSemInternet::acoes();
     }
 }

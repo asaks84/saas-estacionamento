@@ -2,6 +2,7 @@
 
 namespace App\Modulos;
 
+use App\Models\Aparelho;
 use App\Models\Cliente;
 use App\Models\Usuario;
 use Illuminate\Support\Collection;
@@ -87,6 +88,31 @@ abstract class Modulo extends ServiceProvider
 
     /** dados compartilhados com todas as telas (chave => função), como contadores do menu */
     public function compartilhado(?Usuario $usuario): array
+    {
+        return [];
+    }
+
+    // ---- PDV (o app do celular é um só; cada módulo encaixa as telas dele em resources/js/Modulos/<Nome>/pdv/index.js) ----
+
+    /** números do Início do PDV (chave => valor), ex.: carros no pátio */
+    public function pdvInicio(): array
+    {
+        return [];
+    }
+
+    /** modo sem internet: a parte do módulo na cópia que o celular guarda (chave => valor) */
+    public function pdvPacote(Aparelho $aparelho): array
+    {
+        return [];
+    }
+
+    /**
+     * modo sem internet: ações que o celular faz sem internet e o módulo lança quando sobem.
+     * tipo => ['rotulo' => nome, 'executar' => callable(PdvAcao, array $dados): void,
+     *          'conferir' => (opcional) callable(PdvAcao, Carbon $feita, Carbon $recebida, Usuario): ?string]
+     * "executar" roda dentro de uma transação, na hora do celular; ValidationException vira pendência.
+     */
+    public function pdvAcoes(): array
     {
         return [];
     }

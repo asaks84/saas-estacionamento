@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Pdv\CaixaPdvController;
+use App\Http\Controllers\Pdv\InicioPdvController;
 use App\Http\Controllers\Pdv\PdvController;
 use App\Http\Controllers\Pdv\PixPdvController;
+use App\Http\Controllers\Pdv\SemInternetController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,6 +17,11 @@ Route::prefix('pdv')->middleware('publica')->group(function () {
 
     Route::middleware(['aparelho', 'throttle:120,1,pdv'])->group(function () {
         Route::get('/eu', [PdvController::class, 'eu']);
+        // Início: caixa aberto + os números de cada módulo de ramo
+        Route::get('/inicio', [InicioPdvController::class, 'resumo']);
+        // modo sem internet (8.7): a cópia guardada no celular e a fila que sobe quando a internet volta
+        Route::get('/pacote', [SemInternetController::class, 'pacote']);
+        Route::post('/sincronizar', [SemInternetController::class, 'sincronizar'])->middleware('throttle:30,1,pdv-fila');
         Route::post('/pin/conferir', [PdvController::class, 'conferirPin'])->middleware('throttle:30,1,pdv-pin');
         Route::post('/pin/cadastrar', [PdvController::class, 'cadastrarPin'])->middleware('throttle:20,1,pdv-cadastro');
         // caixa (8.3)

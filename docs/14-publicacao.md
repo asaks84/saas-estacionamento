@@ -1,6 +1,6 @@
 # Publicação e virada (etapa 5)
 
-> Parte da documentação do ERP Local. Índice: [docs/README.md](README.md)
+> Parte da documentação do sistema. Índice: [docs/README.md](README.md)
 
 O ERP fica em **https://erp.localestacionamento.com.br**, na mesma conta da Hostinger do sistema atual. Desde a **virada (24/11/2026)** o ERP é o sistema oficial e o sistema atual fica só para consulta. Durante o paralelo (12/11 a 24/11/2026) o ERP espelhava o sistema atual de hora em hora e comparava os números na tela Sistema › Conferência; o espelho e essa tela saíram na virada.
 
@@ -58,7 +58,7 @@ As tarefas agendadas rodam dentro do próprio `schedule:run` (`Schedule::call`),
 
 - O espelho de hora em hora (`legado:espelhar`), a comparação automática e a tela Sistema › Conferência saíram; a tabela `conferencias` foi apagada (migration `2026_12_11_000001_remover_conferencias`). A variável `ERP_ESPELHO_ATIVO` do `.env` do servidor deixou de ser usada e pode ser apagada.
 - O ERP é o oficial: o que veio do sistema atual (mensalidades, pagamentos importados, fichas do link antigo, dados de cliente para a LGPD) passa a ser ajustado aqui.
-- O sistema atual fica só para consulta. O link do cadastro público dele (`/sys/senna/cadastro`, o do QR code do balcão) redireciona para `https://erp.localestacionamento.com.br/cadastro` (302, no `application/controllers/cadastro.php` do sistema atual).
+- O sistema atual fica só para consulta. O link do cadastro público dele (o do QR code do balcão) redireciona para `https://erp.localestacionamento.com.br/cadastro` (302, no `application/controllers/cadastro.php` do sistema atual).
 - `legado:comparar` continua como comando manual (só gera o relatório em `storage/app/private/relatorios/`).
 - Backup diário continua (inclui o banco do sistema atual enquanto ele existir).
 

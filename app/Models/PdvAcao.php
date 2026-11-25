@@ -1,16 +1,15 @@
 <?php
 
-namespace App\Modulos\Estacionamento\Models;
+namespace App\Models;
 
 use App\Models\Concerns\PertenceAEmpresa;
+use App\Modulos\Estacionamento\Models\Estadia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\Aparelho;
-use App\Models\Modelo;
-use App\Models\Usuario;
 
 /**
  * Ação do PDV com código único (8.7). Sem internet, o celular guarda a ação numa fila e manda depois; o código
  * impede lançar duas vezes. O que não fechou na volta fica "pendente" até o gerente resolver.
+ * Os tipos de ação (e o nome de cada um) vêm dos módulos de ramo: App\Servicos\Pdv\SemInternet::rotulo().
  */
 class PdvAcao extends Modelo
 {
@@ -19,11 +18,6 @@ class PdvAcao extends Modelo
     protected $table = 'pdv_acoes';
 
     protected $attributes = ['situacao' => 'ok', 'sem_internet' => false];
-
-    public const TIPOS = [
-        'estadia_entrada' => 'Entrada de estadia',
-        'estadia_saida' => 'Saída de estadia',
-    ];
 
     protected function casts(): array
     {
@@ -40,6 +34,7 @@ class PdvAcao extends Modelo
         return $this->belongsTo(Usuario::class);
     }
 
+    /** estadia da ação (módulo Estacionamento; coluna estadia_id da tabela, ver docs/saas/04 item 5) */
     public function estadia(): BelongsTo
     {
         return $this->belongsTo(Estadia::class);

@@ -1,6 +1,6 @@
 # Tecnologia e infraestrutura
 
-> Parte da documentação do ERP Local. Índice: [docs/README.md](README.md)
+> Parte da documentação do sistema. Índice: [docs/README.md](README.md)
 
 Um servidor Laravel concentra gestão, regras e API; o PDV é um app leve no celular que conversa com essa API.
 
