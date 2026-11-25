@@ -22,6 +22,11 @@ Os quatro módulos previstos entram já no sistema novo, sobre o modelo de dados
 - Sequência de avisos ligada ao vencimento; padrão inicial: 3 dias antes, no dia, 3 e 10 dias depois. Dias e textos configuráveis; cada etapa liga/desliga.
 - Para sozinha quando o cliente paga; registra cada aviso (quando, para quem, canal); clientes marcados como "não recebe avisos".
 
+**Pátio na gestão (Operação › Pátio)**
+
+- Estadias e lavagens em andamento numa lista só, com o histórico e as pendências do PDV. Entrada e saída de verdade são do PDV; a gestão acompanha, recebe lavagem e corrige (permissão "Corrigir no pátio").
+- **Nova entrada (adaptação sem o PDV):** botão no alto do pátio que abre a **Estadia avulsa**, igual à do sistema atual: escolhe o cliente (nome, código ou placa) e digita o valor. Vira uma ordem de serviço de estadia em aberto na conta do cliente, com a data de hoje, e entra na próxima cobrança. Não registra o carro no pátio nem calcula tarifa. Qualquer usuário logado pode lançar (como o "Lançar" do cliente e o sistema atual); a janela fica aberta para lançar a próxima. Passa pelo mesmo `Ordens::lancarNaConta()` do "Lançar › Estadia" do cadastro do cliente.
+
 **Capacidade e ocupação**
 
 - Cada unidade cadastra vagas por tipo de veículo e quantas são reservadas para mensalistas; com as estadias do PDV, o sistema mostra a ocupação em tempo real e os horários de pico.

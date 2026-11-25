@@ -6,6 +6,8 @@ import AbasPatio from '../../Components/AbasPatio'
 import Janela from '../../Components/Janela'
 import Campo from '../../Components/Campo'
 import CampoDataHora from '../../Components/CampoDataHora'
+import CampoValor from '../../Components/CampoValor'
+import BuscaCliente from '../../Components/BuscaCliente'
 import ContaDe from '../../Components/ContaDe'
 import { Como, Entrada, SeloTipo, Servico, Valor, Veiculo } from '../../Components/PatioLinha'
 import { moeda } from '../../lib/formato'
@@ -107,6 +109,36 @@ function Acoes({ acao, tipos, formas, onFechar }) {
     return <Janela aberta titulo={titulo} rotuloOk={ok} perigo={perigo} onFechar={onFechar} onEnviar={onEnviar} ocupado={form.processing}>{corpo}</Janela>
 }
 
+/**
+ * Nova entrada, como a Estadia Avulsa do sistema atual: cliente e valor viram uma estadia em aberto na conta do
+ * cliente, com a data de hoje (entra na próxima cobrança). Não põe o carro no pátio: é para a adaptação sem o PDV.
+ */
+function NovaEntrada({ onFechar }) {
+    const form = useForm({ cliente_id: '', valor: 0 })
+    const [cliente, setCliente] = useState(null)
+    const escolher = (c) => { setCliente(c); form.setData('cliente_id', c.id) }
+    const enviar = () => form.post('/patio/estadia-avulsa', {
+        preserveScroll: true,
+        onSuccess: () => { form.reset(); setCliente(null) },
+    })
+    return (
+        <Janela aberta titulo="Estadia avulsa" rotuloOk="Lançar" onFechar={onFechar} onEnviar={enviar} ocupado={form.processing}>
+            <div className="mb-3">
+                <div className="small fw-semibold mb-1">Cliente</div>
+                {cliente ? (
+                    <div className="d-flex align-items-center gap-2">
+                        <strong>{cliente.nome}</strong>
+                        <button type="button" className="btn btn-link btn-sm p-0" onClick={() => { setCliente(null); form.setData('cliente_id', '') }}>trocar</button>
+                    </div>
+                ) : <BuscaCliente autoFocus onEscolher={escolher} />}
+                {form.errors.cliente_id && <div className="text-danger small mt-1">{form.errors.cliente_id}</div>}
+            </div>
+            <CampoValor rotulo="Valor da estadia" value={form.data.valor} onChange={(v) => form.setData('valor', v)} erro={form.errors.valor} />
+            <p className="small text-muted mb-0">Fica em aberto na conta do cliente, com a data de hoje, e entra na próxima cobrança. Não registra o carro no pátio. A janela continua aberta para a próxima.</p>
+        </Janela>
+    )
+}
+
 /** Operação › Pátio › Agora: estadias e lavagens em andamento numa lista só. Entrada e saída são do PDV. */
 export default function PatioIndex({ linhas, totais, tipos, formas }) {
     const pode = usePode()
@@ -114,6 +146,7 @@ export default function PatioIndex({ linhas, totais, tipos, formas }) {
     const [tipo, setTipo] = useState('todos')
     const [busca, setBusca] = useState('')
     const [acao, setAcao] = useState(null)
+    const [nova, setNova] = useState(false)
     // atualiza tempos e valores a cada minuto
     useEffect(() => {
         const t = setInterval(() => router.reload({ only: ['linhas', 'totais'], preserveScroll: true }), 60000)
@@ -129,7 +162,9 @@ export default function PatioIndex({ linhas, totais, tipos, formas }) {
     return (
         <div className="pagina">
             <AbasPatio />
-            <TituloPagina titulo="Pátio" descricao="Estadias e lavagens em andamento. A entrada e a saída são feitas no PDV; aqui é para acompanhar e corrigir." />
+            <TituloPagina titulo="Pátio" descricao="Estadias e lavagens em andamento. A entrada e a saída são feitas no PDV; aqui é para acompanhar e corrigir. Sem o PDV, “Nova entrada” lança a estadia na conta do cliente.">
+                <button type="button" className="btn btn-primary" onClick={() => setNova(true)}>Nova entrada</button>
+            </TituloPagina>
             <div className="row g-2 mb-3">
                 <Total rotulo="Estadias no pátio" valor={totais.estadias} sub={`${moeda(totais.estadias_valor)} se saíssem agora`} />
                 <Total rotulo="Lavagens em andamento" valor={totais.lavagens} sub={moeda(totais.lavagens_valor)} />
@@ -175,6 +210,7 @@ export default function PatioIndex({ linhas, totais, tipos, formas }) {
                 </div>
             </div>
             <Acoes acao={acao} tipos={tipos} formas={formas} onFechar={() => setAcao(null)} />
+            {nova && <NovaEntrada onFechar={() => setNova(false)} />}
         </div>
     )
 }

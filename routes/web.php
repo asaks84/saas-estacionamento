@@ -150,6 +150,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/patio', [PatioController::class, 'index']);
         Route::get('/patio/historico', [PatioController::class, 'historico']);
         Route::get('/patio/pendencias', [PatioController::class, 'pendencias']);
+        // adaptação sem o PDV: estadia avulsa (cliente e valor) na conta do cliente, como o "Lançar" do cliente
+        Route::post('/patio/estadia-avulsa', [PatioController::class, 'estadiaAvulsa']);
         Route::redirect('/estadias', '/patio');
         Route::redirect('/estadias/historico', '/patio/historico');
         Route::get('/estadias/placa', [EstadiaController::class, 'placa']);

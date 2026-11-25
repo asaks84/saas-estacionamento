@@ -138,4 +138,24 @@ class PatioTest extends TestCase
         $l3 = $this->lavagem('LAV3A33');
         $this->actingAs($this->a->operador)->post("/patio/lavagens/{$l3->id}/cancelar", ['motivo' => 'x'])->assertForbidden();
     }
+
+    /** Nova entrada (adaptação sem o PDV): cliente e valor viram estadia em aberto na conta, como a Estadia Avulsa do sistema atual */
+    public function test_nova_entrada_lanca_estadia_avulsa_na_conta_do_cliente(): void
+    {
+        $c = $this->criarCliente($this->a)->cliente;
+        $this->actingAs($this->a->operador)->from('/patio')->post('/patio/estadia-avulsa', ['cliente_id' => $c->id, 'valor' => '25,50'])
+            ->assertRedirect('/patio')->assertSessionHas('sucesso');
+        $o = OrdemServico::where('cliente_id', $c->id)->sole();
+        $this->assertSame(['estadia', 'aberta', '25.50', 'Estadia avulsa', '2026-11-10', '2026-11-10'],
+            [$o->tipo, $o->situacao, (string) $o->valor, $o->descricao, $o->data->toDateString(), $o->vencimento->toDateString()]);
+        $this->assertSame(0, Estadia::count());                       // não põe carro no pátio
+
+        // sem cliente, sem valor, cliente de outra empresa
+        $this->actingAs($this->a->operador)->post('/patio/estadia-avulsa', ['valor' => 10])->assertSessionHasErrors('cliente_id');
+        $this->actingAs($this->a->operador)->post('/patio/estadia-avulsa', ['cliente_id' => $c->id, 'valor' => 0])->assertSessionHasErrors('valor');
+        $b = $this->criarEmpresa('b');
+        $outro = $this->criarCliente($b)->cliente;
+        $this->actingAs($this->a->operador)->post('/patio/estadia-avulsa', ['cliente_id' => $outro->id, 'valor' => 10])->assertSessionHasErrors('cliente_id');
+        $this->assertSame(1, OrdemServico::withoutGlobalScopes()->where('tipo', 'estadia')->count());
+    }
 }

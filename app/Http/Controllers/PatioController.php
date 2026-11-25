@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cliente;
 use App\Models\Estadia;
 use App\Models\FormaPagamento;
 use App\Models\OrdemServico;
@@ -9,16 +10,22 @@ use App\Models\PdvAcao;
 use App\Models\TipoVeiculo;
 use App\Servicos\Estadias;
 use App\Servicos\FormasPagamento;
+use App\Servicos\Ordens;
 use App\Servicos\Patio;
 use App\Servicos\Pdv\SemInternet;
+use App\Support\EmpresaAtual;
 use App\Support\Formato;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
-/** Operação › Pátio: estadias e lavagens numa lista só. Entrada e saída são do PDV; aqui, ver e corrigir. */
+/**
+ * Operação › Pátio: estadias e lavagens numa lista só. Entrada e saída são do PDV; aqui, ver e corrigir. Para a
+ * adaptação sem o PDV, "Nova entrada" lança a estadia avulsa na conta do cliente (cliente e valor).
+ */
 class PatioController extends Controller
 {
     public function index(): Response
@@ -34,6 +41,24 @@ class PatioController extends Controller
             'tipos' => TipoVeiculo::where('ativo', true)->ordenados()->get(['id', 'nome']),
             'formas' => FormaPagamento::where('ativa', true)->orderBy('ordem')->get(['id', 'nome', 'tipo', 'parcelas_max']),
         ]);
+    }
+
+    /**
+     * "Nova entrada" do pátio, como a Estadia Avulsa do sistema atual: cliente e valor viram uma ordem de estadia
+     * em aberto na conta do cliente, com a data de hoje (entra na próxima cobrança). Não põe carro no pátio nem
+     * calcula tarifa: é para a adaptação, enquanto o balcão não usa o PDV. Mesmo serviço do "Lançar › Estadia" do cliente.
+     */
+    public function estadiaAvulsa(Request $r): RedirectResponse
+    {
+        $r->merge(['valor' => is_string($r->input('valor')) ? str_replace(',', '.', $r->input('valor')) : $r->input('valor')]);
+        $d = $r->validate([
+            'cliente_id' => ['required', 'integer', Rule::exists('clientes', 'id')->where('empresa_id', app(EmpresaAtual::class)->id())],
+            'valor' => ['required', 'numeric', 'gt:0', 'max:99999'],
+        ], ['cliente_id.required' => 'Escolha o cliente.', 'cliente_id.exists' => 'Cliente não encontrado.', 'valor.gt' => 'Informe o valor da estadia.']);
+        $cliente = Cliente::findOrFail($d['cliente_id']);
+        $o = Ordens::lancarNaConta($cliente, 'estadia', (float) $d['valor'], 'Estadia avulsa');
+
+        return back()->with('sucesso', 'Estadia de '.Formato::moeda($o->valor).' lançada na conta de '.$cliente->nome.'.');
     }
 
     /**

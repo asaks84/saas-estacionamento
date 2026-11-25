@@ -1,22 +1,40 @@
 # Histórico de alterações do ERP
 
-Alterações do ERP Local, da mais nova para a mais antiga. Cada alteração entra **no topo**: data, o que mudou e arquivos.
+Alterações do ERP Local, da mais nova para a mais antiga. Um bloco por dia (`## dd/mm/aaaa`), do mais novo para o mais antigo; dentro do dia, cada alteração é um `### título`, a mais nova em cima. Alteração nova entra **no topo** do dia (ou abre o bloco do dia): o que mudou e arquivos.
 
 ---
 
-## 24/11/2026 — Notas fiscais: aba Ordens de serviço e total da competência
+## 24/11/2026
+
+### Pátio: botão Nova entrada (Estadia avulsa, para a adaptação sem o PDV)
+
+- Operação › Pátio ganha o botão **Nova entrada**, que abre a janela **Estadia avulsa** do sistema atual: cliente (nome, código ou placa) e valor. Vira uma estadia em aberto na conta do cliente, com a data de hoje, e entra na próxima cobrança. Não põe o carro no pátio. A janela fica aberta para lançar a próxima.
+- Rota `POST /patio/estadia-avulsa` (qualquer usuário logado), que chama `Ordens::lancarNaConta()`, o mesmo do "Lançar › Estadia" do cliente. Cliente de outra empresa é recusado.
+- Arquivos: `app/Http/Controllers/PatioController.php`, `routes/web.php`, `resources/js/Pages/Patio/Index.jsx`, teste `test_nova_entrada_lanca_estadia_avulsa_na_conta_do_cliente` (PatioTest). docs/06 e docs/12 atualizados.
+
+### Histórico reorganizado por dia
+
+- HISTORICO.md: um bloco por dia (`## dd/mm/aaaa`) e cada alteração do dia como `### título`. Os textos ficaram iguais; só os títulos mudaram de nível. As duas entradas sem título (10/11 e 09/11) ganharam um.
+
+### Notas fiscais: quadro da competência alinhado; CampoData aceita outra margem
+
+- Quadro **Emitidas na competência**: competência, total e notas na mesma linha, espalhados pela largura (`justify-content-between`); detalhes (ISS, federais, canceladas, enviando, testes) centralizados embaixo; o campo da competência sem margem de baixo.
+- `CampoData`: com uma margem `mb-*` no `className`, usa essa margem no lugar do `mb-3` padrão. Efeito colateral: as margens que já eram passadas passam a valer (vencimento do boleto em `BoletoCobranca.jsx` com `mb-0`; filtros De/Até de `Ordens/Index.jsx` e `Pagar/Index.jsx` com `mb-2`).
+- Arquivos: `resources/js/Components/CampoData.jsx`, `resources/js/Pages/NotasFiscais/Index.jsx`.
+
+### Notas fiscais: aba Ordens de serviço e total da competência
 
 - Nova aba **Ordens de serviço** em Gestão › Notas fiscais: filtro De/Até pela data da ordem; um cliente por linha com os serviços sem nota do período; marca e vai para o mesmo Conferir e emitir (uma nota por cliente).
 - Quadro **Emitidas na competência** no alto da página: total e quantidade de notas emitidas na produção na competência escolhida, com ISS e federais retidos; testes, canceladas e "enviando" à parte.
 - Arquivos: `app/Servicos/Nfse/Notas.php` (`semNotaDoPeriodo`), `app/Http/Controllers/NfseController.php`, `resources/js/Pages/NotasFiscais/Index.jsx` e `Conferir.jsx`, teste `test_aba_ordens_de_servico_por_periodo_e_total_da_competencia`. docs/16 e docs/12 atualizados.
 
-## 24/11/2026 — NFS-e: aceita no ambiente de testes e na produção
+### NFS-e: aceita no ambiente de testes e na produção
 
 - Com o certificado A1 da empresa, na produção restrita: nota emitida (leiaute da NT 009, sem o código complementar municipal) e cancelada pelo ERP.
 - **Produção:** primeira nota real emitida pelo ERP e aceita (leiaute antigo, de antes da virada da NT 009).
 - Pendente: conferir a primeira nota de produção a partir de 01/12/2026, quando a DPS passa para o leiaute da NT 009 (`Dps::NT009_PRODUCAO`). docs/16 atualizado.
 
-## 24/11/2026 — NFS-e: código complementar municipal opcional (rejeição E0314)
+### NFS-e: código complementar municipal opcional (rejeição E0314)
 
 - O ambiente de testes recusou a DPS com "E0314: O código de tributação municipal informado não existe ou não está administrado pelo município". O 004 (11.01.01.004) é o da nota real e vale na produção; nos testes, o cadastro de Santos não tem.
 - Configurações › Nota fiscal: o **Código Complementar Municipal pode ficar em branco** (antes era obrigatório). Em branco, a DPS vai sem cTribMun, e a tela explica quando usar. Em branco agora fica em branco: não volta mais sozinho para o 004.
@@ -24,7 +42,7 @@ Alterações do ERP Local, da mais nova para a mais antiga. Cada alteração ent
 - Testes: NfseTest grava o código em branco e confere a DPS sem cTribMun.
 - Arquivos: app/Servicos/Nfse/ConfigNfse.php, app/Http/Controllers/NfseController.php, resources/js/Pages/Configuracoes/Nfse.jsx, tests/Feature/NfseTest.php, docs/16-nfse.md, docs/12-decisoes.md.
 
-## 24/11/2026 — NFS-e: leiaute da NT 009 (rejeição E1235)
+### NFS-e: leiaute da NT 009 (rejeição E1235)
 
 - O ambiente de testes passou a recusar a DPS com "E1235: ... invalid child element 'cLocEmi' ... expected 'cMotivoEmisTI, finNFSe'". É o leiaute novo da NT SE/CGNFS-e 009: **finNFSe = 0** (NFS-e regular) entra depois do tpEmit, e a **descrição (xDescServ) passa para o fim do cServ**, depois do cNBS.
 - Testes: sempre no leiaute novo. Produção: leiaute antigo até 30/11/2026 e o novo a partir de 01/12/2026 (constante `Dps::NT009_PRODUCAO`), sem precisar publicar no dia da virada.
@@ -32,14 +50,14 @@ Alterações do ERP Local, da mais nova para a mais antiga. Cada alteração ent
 - docs/16 e docs/12 atualizados.
 - Arquivos: app/Servicos/Nfse/Dps.php, tests/Feature/NfseTest.php, docs/16-nfse.md, docs/12-decisoes.md.
 
-## 24/11/2026 — NFS-e: XML com a declaração UTF-8 (rejeição E1229)
+### NFS-e: XML com a declaração UTF-8 (rejeição E1229)
 
 - O Sistema Nacional recusava a DPS com "E1229: Xml não está utilizando codificação UTF-8": o XML assinado saía sem a primeira linha `<?xml version="1.0" encoding="UTF-8"?>`. Agora a DPS e o evento de cancelamento saem com ela. A assinatura não muda, porque é calculada só sobre o infDPS/infPedReg.
 - DPS já guardada sem a declaração (nota "enviando" reenviada pelo "Conferir") ganha a declaração na hora do envio.
 - Testes: NfseTest confere a declaração na DPS enviada e guardada e no evento de cancelamento.
 - Arquivos: app/Servicos/Nfse/AssinaturaXml.php, app/Servicos/Nfse/SefinNacional.php, tests/Feature/NfseTest.php.
 
-## 24/11/2026 — Ficha do cadastro público igual à do sistema atual
+### Ficha do cadastro público igual à do sistema atual
 
 - **Obrigatórios com * vermelho** no rótulo: CPF/CNPJ, nome, celular, CEP, endereço, número, bairro, cidade, UF, placa, marca, modelo, cor e a autorização. Aviso "* Preenchimento obrigatório" no topo. Outro telefone, e-mail e complemento continuam opcionais.
 - **Marca e cor passam a ser obrigatórias** (antes eram opcionais no ERP; no sistema atual sempre foram).
@@ -49,7 +67,7 @@ Alterações do ERP Local, da mais nova para a mais antiga. Cada alteração ent
 - Testes: CadastroPublicoTest com a ficha nova (marca e cor exigidas, tipo ignorado); 33 testes da área passando.
 - Arquivos: resources/js/Components/Campo.jsx, CamposCliente.jsx, CamposVeiculo.jsx, resources/js/Pages/Cadastro/Publico.jsx, app/Http/Controllers/CadastroPublicoController.php, tests/Feature/CadastroPublicoTest.php, docs/05-regras-de-negocio.md, docs/12-decisoes.md.
 
-## 24/11/2026 — Virada: sai a Conferência e o espelho do sistema atual; o ERP passa a ser o oficial
+### Virada: sai a Conferência e o espelho do sistema atual; o ERP passa a ser o oficial
 
 - **Saiu:** a tela Sistema › Conferência (e o item do menu), os dois avisos do Início ("números vêm da importação de..." e "a importação parou"), o comando `legado:espelhar` e o agendamento dele de hora em hora, a configuração `ERP_ESPELHO_ATIVO` e a tabela `conferencias` (migration `2026_12_11_000001_remover_conferencias`).
 - **Travas "durante o paralelo" que caíram** (obrigavam a ajustar num sistema que agora é só consulta):
@@ -63,7 +81,9 @@ Alterações do ERP Local, da mais nova para a mais antiga. Cada alteração ent
 - Testes: os 75 testes das áreas mexidas passam. Na suíte completa, as falhas restantes não vêm desta mudança: PDV sem internet e Nfse falham neste ambiente pelo OpenSSL (falham igual sem a mudança), o backup no Drive é a falha conhecida do Windows, e os demais erros foram uma queda do MySQL no meio da execução (passaram ao rodar de novo).
 - Arquivos: app/Console/Commands/LegadoEspelhar.php, app/Http/Controllers/ConferenciaController.php, app/Models/Conferencia.php, resources/js/Pages/Sistema/Conferencia.jsx (removidos); app/Console/Commands/LegadoImportar.php, LegadoComparar.php, LimparLgpd.php, app/Http/Controllers/InicioController.php, ClienteController.php, PendenteController.php, app/Servicos/Baixa.php, Contratos.php, DadosPessoais.php, config/erp.php, deploy/env-producao.exemplo, routes/web.php, routes/console.php, resources/js/lib/menu.js, resources/js/Pages/Inicio.jsx, Clientes/Show.jsx, Pendentes/Index.jsx, Pendentes/Revisar.jsx, Convenios/Form.jsx, Resultado/Mes.jsx, database/migrations/2026_12_11_000001_remover_conferencias.php, testes (Paralelo, Contratos, DadosPessoais, LimparLgpd, NumeracaoClientes, Importacao*).
 
-## 22/11/2026 — Organização: consultas e regras que estavam em controladores vão para os serviços
+## 22/11/2026
+
+### Organização: consultas e regras que estavam em controladores vão para os serviços
 
 - Revisão do projeto, item 7. Sete funções que outras telas, o PDV e até um serviço chamavam direto de um controlador foram para `app/Servicos`, **com o mesmo conteúdo** (recortadas e coladas, sem mudar a regra):
   - novo `Relatorios`: contas em aberto por cliente (antes em ContaController), recebido por categoria (RelatorioController) e total baixado (InicioController);
@@ -74,14 +94,14 @@ Alterações do ERP Local, da mais nova para a mais antiga. Cada alteração ent
 - Testes: 306 de 307, igual a antes da mudança (o que falha é o do backup no Drive, que só falha no Windows por arquivo travado).
 - Arquivos: app/Servicos/Relatorios.php, app/Servicos/Inter/Boletos.php, app/Servicos/Estadias.php, app/Servicos/Convenios.php, app/Servicos/Pdv/SemInternet.php, app/Http/Controllers/ContaController.php, InicioController.php, RelatorioController.php, CobrancaController.php, EstadiaController.php, ExtratoController.php, Pdv/CaixaPdvController.php, Pdv/EstadiaPdvController.php, Pdv/LavagemPdvController.php, app/Http/Middleware/HandleInertiaRequests.php, tests/Feature/OperacaoTest.php, tests/Feature/PdvEstadiaTest.php, docs/13-desenvolvimento.md.
 
-## 22/11/2026 — Datas pelo CampoData; zip e SQL de limpeza fora do Git
+### Datas pelo CampoData; zip e SQL de limpeza fora do Git
 
 - **Datas:** os dois últimos `<input type="date">` viraram `CampoData` (dd/mm/aaaa com o calendário em pt-BR): vencimento do boleto na cobrança e data da retirada do sócio. O limite do vencimento (hoje até 90 dias) continua conferido pelo servidor, com a mensagem de sempre. Conserto junto: a data sugerida da retirada usava a hora de Londres (UTC) e, depois das 21h, vinha com o dia seguinte, que o servidor recusava.
 - **.gitignore:** `erp-base.zip` e a pasta `sql-limpeza/` (scripts que apagam dados) ficam só na máquina. Os arquivos continuam na pasta; a `sql-limpeza` só deixou de ser acompanhada pelo Git (versões antigas seguem no histórico).
 - **Atalhos .bat removidos:** `importar-legado.bat` e `recriar-banco.bat` (da etapa 3) foram apagados a pedido do Cauê; o `recriar-banco` apagava o banco local sem pedir confirmação. Os comandos continuam existindo (`php artisan legado:importar`, `legado:comparar`; `migrate:fresh` recria o banco) e os arquivos podem ser recuperados pelo histórico do Git.
 - Arquivos: resources/js/Components/BoletoCobranca.jsx, resources/js/Pages/Resultado/Caixas.jsx, .gitignore, importar-legado.bat e recriar-banco.bat (removidos).
 
-## 22/11/2026 — Retirada do sócio: cancelar com motivo em vez de apagar; formatos só pelo sistema
+### Retirada do sócio: cancelar com motivo em vez de apagar; formatos só pelo sistema
 
 - **Retirada do sócio (Resultado e caixa › Caixa do PDV):** o botão "Apagar" virou **"Cancelar"**, com janela que pede o motivo (obrigatório). A retirada não some mais do banco: fica na lista, riscada, com o selo "Cancelada", data, quem cancelou e o motivo. Deixa de contar no Resultado ("Ficou na empresa"), no fluxo de caixa e no total do mês. Para corrigir valor ou data, cancela e registra a certa. A do PDV continua sem cancelamento pela gestão. Antes, apagar mudava o resultado de um mês já conferido e só deixava uma frase no registro de atividades.
 - Migration `2026_12_10_000001_caixa_movimentos_cancelamento` (caixa_movimentos.cancelada_em, cancelada_por, motivo_cancelamento). Rota nova `POST /resultado/retiradas/{id}/cancelar`; a de apagar saiu.
@@ -89,19 +109,21 @@ Alterações do ERP Local, da mais nova para a mais antiga. Cada alteração ent
 - Versão do cache do PDV subida (pdv-app-v5 → v6) para os aparelhos instalados pegarem a mudança.
 - Arquivos: database/migrations/2026_12_10_000001_caixa_movimentos_cancelamento.php, app/Models/CaixaMovimento.php, app/Servicos/Pdv/Caixas.php, app/Servicos/Resultado.php, app/Http/Controllers/CaixaController.php, routes/web.php, resources/js/Pages/Resultado/Caixas.jsx, resources/js/lib/formato.js, resources/js/Components/RegrasBoleto.jsx, resources/js/Pages/Resultado/Mes.jsx, resources/js/pdv/impressao/modelo.js, resources/js/pdv/telas/Aparelho.jsx, public/pdv-sw.js, tests/Feature/PdvCaixaTest.php, tests/js/formato.test.mjs, docs/12-decisoes.md, docs/13-desenvolvimento.md, docs/15-plano-pdv.md.
 
-## 21/11/2026 — PDV: conserto do voltar que recarregava o app (splash)
+## 21/11/2026
+
+### PDV: conserto do voltar que recarregava o app (splash)
 
 - O botão Voltar do celular estava recarregando o PDV (aparecia o splash) em vez de ser capturado dentro do app. Numa tela interna isso caía no Início e parecia funcionar; no Início, o recarregamento aparecia puro (splash). Causa: a âncora no histórico que segura o Voltar só era criada se ainda não existisse; quando o Android reabria o app reaproveitando o estado antigo (tela fixada, volta do segundo plano), vinha sem âncora e o Voltar saía do app.
 - A âncora passa a ser criada sempre na abertura, e é reposta também quando o app é reaberto a partir do cache do navegador (evento pageshow/bfcache). Agora o Voltar volta uma etapa e, no Início, não faz nada — sem splash.
 - Versão do cache do PDV subida (pdv-app-v4 → v5) para os aparelhos já instalados pegarem a correção.
 - Arquivos: resources/js/pdv/voltar.js, resources/js/pdv/offline/prontidao.js, public/pdv-sw.js.
 
-## 21/11/2026 — PDV: formas de pagamento e tamanhos sempre atualizados na estadia
+### PDV: formas de pagamento e tamanhos sempre atualizados na estadia
 
 - O PDV buscava a lista de formas de pagamento, tamanhos e convênios da estadia uma vez só, ao abrir o app. Forma desativada na gestão continuava aparecendo até recarregar a página. Agora busca de novo a cada entrada e saída de estadia. A lavagem e o caixa já buscavam ao abrir a tela, e o servidor já mandava só as formas ativas.
 - Arquivo: resources/js/pdv/App.jsx.
 
-## 21/11/2026 — Cobranças: desconto de pontualidade por cliente, pausa no meio do mês e Configurações › Cobranças
+### Cobranças: desconto de pontualidade por cliente, pausa no meio do mês e Configurações › Cobranças
 
 - **Desconto de pontualidade do cliente:** novo card na ficha. O valor é o total em R$ por mês, digitado pelo usuário (ex.: 2 carros = R$ 40), e vale no lugar da regra da empresa. Vazio = regra da empresa; 0 = sem desconto. Exige a permissão de mudar valor de mensalidade. O desconto saiu das regras específicas do boleto (multa, juros e baixa continuam lá).
 - **Avisos:** reajuste, encerramento e pausa da mensalidade e remoção do veículo de quem tem desconto abrem o card com o aviso para revisar o valor. O sistema não recalcula.
@@ -116,17 +138,17 @@ Alterações do ERP Local, da mais nova para a mais antiga. Cada alteração ent
 - Migration `2026_12_09_000001_clientes_desconto_pontualidade` (clientes.desconto_pontualidade).
 - Arquivos: database/migrations/2026_12_09_000001_clientes_desconto_pontualidade.php, app/Models/Cliente.php, app/Servicos/Inter/Boletos.php, app/Servicos/Pontualidade.php, app/Servicos/Contratos.php, app/Http/Controllers/ClienteController.php, app/Http/Controllers/ContratoController.php, app/Http/Controllers/VeiculoController.php, app/Http/Controllers/InterController.php, app/Http/Controllers/FormaPagamentoController.php, app/Http/Middleware/HandleInertiaRequests.php, app/Servicos/Inter/InterCliente.php, app/Servicos/Pdv/PixPdv.php, routes/web.php, resources/js/Pages/Clientes/Show.jsx, resources/js/Components/RegrasBoletoCliente.jsx, resources/js/Components/RegrasBoleto.jsx, resources/js/Pages/Configuracoes/Pagamentos.jsx, resources/js/Pages/Configuracoes/Inter.jsx, resources/js/Pages/Configuracoes/WhatsAppMensagens.jsx, resources/js/Pages/Cobrancas/Show.jsx, resources/js/Pages/Cobrancas/Imprimir.jsx, resources/js/Pages/Cobrancas/Publica.jsx, resources/js/Pages/Inicio.jsx, resources/js/lib/menu.js, tests/Feature/PontualidadeTest.php, tests/Feature/ContratosTest.php, tests/Feature/InterTest.php, docs/05-regras-de-negocio.md, docs/12-decisoes.md, docs/13-desenvolvimento.md.
 
-## 21/11/2026 — PDV: campo Modelo só abre o teclado quando está vazio
+### PDV: campo Modelo só abre o teclado quando está vazio
 
 - Entrada de estadia e nova lavagem: quando a placa já é conhecida e o modelo vem preenchido, o campo Modelo não ganha mais o foco, e o teclado do celular não abre sozinho. Com o modelo vazio, continua igual: o campo ganha o foco para digitar.
 - Arquivos: resources/js/pdv/telas/EstadiaEntrada.jsx, resources/js/pdv/telas/Lavagens.jsx.
 
-## 21/11/2026 — Segurança: cadastro de PIN com o mesmo limite do login
+### Segurança: cadastro de PIN com o mesmo limite do login
 
 - Observação menor da auditoria: o cadastro de PIN no PDV aceitava 20 tentativas por minuto, contra 5 da tela de login. Agora 5 senhas erradas por minuto (por login e IP) travam até completar o minuto; com o código de cadastro (quem é só do PDV), 5 códigos errados por minuto por IP. PIN recusado por ser óbvio ou repetido não conta, para a pessoa poder escolher outro.
 - Arquivos: app/Servicos/Pdv/Pins.php, tests/Feature/PdvBaseTest.php, tests/Feature/UsuarioSoPdvTest.php, docs/17-auditoria-seguranca.md, docs/12-decisoes.md, docs/13-desenvolvimento.md.
 
-## 21/11/2026 — Segurança: PIN do PDV sem internet e webhook do WhatsApp (auditoria)
+### Segurança: PIN do PDV sem internet e webhook do WhatsApp (auditoria)
 
 Correções dos três achados da auditoria de segurança (skill security-audit, rotas públicas e API do PDV).
 - **Achado 1 (médio):** a cópia do sistema que vai para o celular trazia a versão do PIN de cada pessoa da unidade, gerentes incluídos. Com 10 mil combinações, dava para descobrir todos os PINs em minutos num computador. Agora vai só uma dica (2 caracteres; gerente 1), que pega erro de digitação e mostra o nome, mas não revela o PIN. O celular deixou de guardar a versão completa de quem usou o PIN com internet; guarda só a dica.
@@ -135,24 +157,24 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - App do PDV 0.8.0. Ação feita sem internet em celular com app ou cópia antigos vira pendência, em vez de ser lançada.
 - Arquivos: app/Servicos/Pdv/Pins.php, app/Servicos/Pdv/SemInternet.php, app/Http/Controllers/Pdv/SemInternetController.php, app/Http/Controllers/WhatsAppWebhookController.php, app/Http/Controllers/WhatsAppController.php, resources/js/pdv/offline/pins.js, resources/js/pdv/offline/local.js, resources/js/pdv/offline/fila.js, resources/js/pdv/offline/servidor.js, resources/js/Pages/Configuracoes/WhatsApp.jsx, tests/Feature/PdvSemInternetTest.php, tests/Feature/WhatsAppTest.php, tests/Feature/MensagensWhatsAppTest.php, tests/js/pin.test.mjs, docs/07-pdv.md, docs/15-plano-pdv.md, docs/12-decisoes.md, docs/13-desenvolvimento.md.
 
-## 21/11/2026 — Auditoria de segurança rápida (rotas públicas e API do PDV)
+### Auditoria de segurança rápida (rotas públicas e API do PDV)
 
 - Novo documento `docs/17-auditoria-seguranca.md` com o relatório: 3 achados em aberto (2 médios no modo sem internet do PDV: PINs quebráveis no pacote e fila que aceita autor e hora sem conferência; 1 baixo: assinatura opcional no webhook do WhatsApp). Nenhuma mudança no código.
 - Arquivos: docs/17-auditoria-seguranca.md, docs/README.md.
 
-## 21/11/2026 — LGPD: aviso no campo de observações do cliente; ROPA e documento para o advogado
+### LGPD: aviso no campo de observações do cliente; ROPA e documento para o advogado
 
 - Cadastro do cliente (ERP): o campo Observações ganhou a dica "Só o que ajuda no atendimento. Não anote saúde, religião, conflitos pessoais nem dados de outras pessoas (LGPD)."
 - Fora do código: registro simplificado das operações de tratamento (ROPA) e documento de pontos para revisão jurídica (15 perguntas com a decisão adotada em cada uma, texto da política e da ciência, prazos de guarda), como documentos compartilháveis.
 - Arquivo: resources/js/Components/CamposCliente.jsx.
 
-## 21/11/2026 — SQL de limpeza dos testes do PDV e do cliente 1012 (versão nova)
+### SQL de limpeza dos testes do PDV e do cliente 1012 (versão nova)
 
 - `sql-limpeza/1-conferir.sql` (só lê) e `sql-limpeza/2-apagar.sql` (transação), a partir do modelo anterior: do cliente 1012 (CAUÊ CARRERA, conferido pelo nome) saem as contas, cobranças, boletos, avisos, pagamentos, ajustes e estornos criados no ERP; cadastro, veículos e contas vindas do sistema atual ficam. Do PDV saem estadias dos aparelhos, contas lançadas pelo PDV, pagamentos, Pix com QR, caixas, movimentos, despesas pagas pelo caixa e, novo, o registro de ações dos aparelhos (pdv_acoes). Contas de outros clientes recebidas no PDV voltam a ficar em aberto.
 - Novo em relação ao modelo antigo (o banco mudou): apaga pdv_acoes antes das estadias e desliga a NFS-e do pagamento apagado (a nota fica); sem isso o modelo antigo pararia com erro de chave estrangeira.
 - Testado num banco com dados gerados pela API do PDV.
 
-## 21/11/2026 — LGPD: prazos de guarda automáticos
+### LGPD: prazos de guarda automáticos
 
 - Rotina diária `lgpd:limpar` às 03:40 (depois do backup), só com o que a lei obriga:
   - **Fila de espera:** cadastro que não virou cliente é apagado depois de 120 dias (`erp.lgpd_fila_dias`).
@@ -162,7 +184,9 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - Política de privacidade: prazos atualizados (5 anos sem movimento; fila de espera 120 dias).
 - Arquivos: app/Console/Commands/LimparLgpd.php, config/erp.php, routes/console.php, Pages/Privacidade.jsx, tests/Feature/LimparLgpdTest.php, docs 12 e 13.
 
-## 20/11/2026 — Backup criptografado no Google Drive
+## 20/11/2026
+
+### Backup criptografado no Google Drive
 
 - **Configurações › Backup** (aba nova): passo a passo para criar o acesso no Google Cloud (Drive API, tela de consentimento publicada, ID do cliente OAuth "Aplicativo da Web" com o endereço de retorno para copiar); campos do ID e da chave do cliente (criptografados), **senha do backup** (mín. 12, com confirmação, guardada criptografada) e dias de guarda no Drive (padrão 30); conectar e desconectar a conta; "Fazer backup agora"; situação (último backup no servidor, último envio, última falha).
 - **Backup diário (03:10)**: depois do .sql.gz no servidor, cada arquivo é criptografado (AES-256-CBC, chave da senha por PBKDF2-SHA256 com 200 mil voltas, formato do OpenSSL) e enviado para a pasta "Backups ERP Local Estacionamento" no Drive; apaga da pasta os mais velhos que os dias de guarda, mantendo sempre os 3 mais novos. Falha no Drive não mexe no backup do servidor e aparece na tela.
@@ -171,7 +195,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - Política de privacidade: Google (Drive) na lista de compartilhamento e na transferência internacional; prazo do backup fora do servidor.
 - Arquivos: app/Servicos/Backup/{Cofre,GoogleDrive}.php, Pages/Privacidade.jsx, app/Console/Commands/{BackupBanco,AbrirBackup}.php, app/Http/Controllers/BackupController.php, routes/web.php, resources/js/lib/menu.js, Pages/Configuracoes/Backup.jsx, tests/Feature/BackupDriveTest.php, docs 12 e 13. Sem migração (usa a tabela integracoes, tipo google_drive).
 
-## 20/11/2026 — LGPD: Sistema › Incidentes (roteiro e registro)
+### LGPD: Sistema › Incidentes (roteiro e registro)
 
 - Novo item **Incidentes (LGPD)** no menu Sistema (permissão de usuários, como o registro de atividades).
 - **Roteiro** na própria tela (aberto enquanto não há incidente): o que conta como incidente e os cinco passos: conter (desativar aparelho, trocar senha e chaves), registrar no mesmo dia, avaliar o risco (régua baixo × relevante), comunicar ANPD e clientes em até 6 dias úteis se relevante, encerrar com justificativa.
@@ -180,7 +204,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - Encerrar exige risco decidido, contenção, justificativa e, se relevante, as duas comunicações. Encerrado não muda; não há exclusão.
 - Migração `2026_12_08_000002_create_incidentes`. Arquivos: app/Models/Incidente.php, app/Http/Controllers/IncidenteController.php, routes/web.php, resources/js/lib/menu.js, Pages/Sistema/Incidentes.jsx, tests/Feature/IncidentesTest.php, docs 12 e 13.
 
-## 20/11/2026 — LGPD: exportar e anonimizar cliente
+### LGPD: exportar e anonimizar cliente
 
 - **Cliente › LGPD: pedido do cliente** (permissão de excluir cadastro):
   - **Exportar dados do cliente:** abre em outra aba tudo o que o sistema guarda sobre ele (cadastro, veículos e trocas de placa, mensalidades, serviços, estadias, cobranças, pagamentos, notas, quem paga por ele, avisos de WhatsApp, atualizações pelo link e com quem compartilha), com "Imprimir ou salvar em PDF" e "Baixar arquivo (JSON)". Fica no registro de atividades.
@@ -189,7 +213,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - A importação do sistema atual não sobrescreve cliente anonimizado, os veículos nem os pagadores dele.
 - Migração `2026_12_08_000001_clientes_anonimizado` (clientes.anonimizado_em). Arquivos: app/Servicos/DadosPessoais.php (novo), ClienteController, Concerns/ImportaCadastros, Models/Cliente, routes/web.php, Pages/Clientes/{Show,DadosPessoais (nova)}.jsx, tests/Feature/DadosPessoaisTest.php (novo), docs 12 e 13.
 
-## 20/11/2026 — LGPD: política de privacidade revista e aceite dos formulários
+### LGPD: política de privacidade revista e aceite dos formulários
 
 - Primeira rodada da skill `lgpd-audit` (etapas L0 e L1): relatórios em `.lgpd/` (STATUS, discovery, gaps), só na máquina (fora do Git). Enquadramento: agente de pequeno porte (ME/EPP pelo cartão CNPJ).
 - **Política de privacidade** (`/privacidade`) reescrita: identifica o controlador (razão social, CNPJ, endereço); lista os dados por tipo de titular (clientes, balcão, ticket perdido, quem paga por outro, formulários), finalidades e bases legais (contrato, obrigação legal, legítimo interesse) e compartilhamento (Inter, Sistema Nacional da NFS-e no lugar de "prefeitura", Meta, Hostinger, Cloudflare), com a transferência internacional (Meta e Cloudflare); prazos de guarda, direitos com prazo de resposta (15 dias), canal de privacidade e dispensa de encarregado (ATPP), segurança.
@@ -197,17 +221,17 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - **Formulários públicos** (cadastro e atualização): o "Autorizo…" (consentimento) virou ciência da política, com link: "Li a política de privacidade. Meus dados são usados para o cadastro, o contato e a cobrança do serviço contratado." As telas de revisão dizem "ciência da política de privacidade em".
 - Arquivos: app/Http/Controllers/{PrivacidadeController (novo),EmpresaController,CadastroPublicoController,AtualizarPublicoController}.php, routes/web.php, Pages/{Privacidade,Empresa/Edit,Cadastro/Publico,Atualizacao/Publico,Atualizacao/Revisar,Pendentes/Revisar}.jsx, tests/Feature/PrivacidadeTest.php (novo), docs 12 e 13.
 
-## 20/11/2026 — Skills de LGPD no projeto (.claude/skills)
+### Skills de LGPD no projeto (.claude/skills)
 
 - Instaladas em `.claude/skills/` as 19 skills de LGPD de github.com/goul4rt/lgpd-skills (v1.3.0, MIT; licença em `.claude/skills/LICENSE-lgpd-skills.txt`), sem alteração: o maestro `lgpd-audit` e as sub-skills (mapeamento de dados, base legal, encarregado, retenção, DSAR, incidentes, ROPA, RIPD, política de privacidade e outras). O Claude Code passa a usá-las neste projeto ("audite LGPD", "como estamos de LGPD").
 - Os exemplos de código delas são TypeScript/Prisma/Postgres; aqui (Laravel/MySQL) servem de referência e precisam ser adaptados.
 - Os artefatos que elas geram ficam em `.lgpd/` (raiz do projeto). `.claude/` e `.lgpd/` não vão para o servidor (deploy/rsync-excluir.txt). A `.lgpd/` também fica fora do Git (.gitignore): os relatórios ficam só na máquina.
 
-## 20/11/2026 — Registro: impressora Bluetooth e leitor de QR testados
+### Registro: impressora Bluetooth e leitor de QR testados
 
 - Teste do Cauê no balcão: a impressora térmica imprime por Bluetooth BLE direto pelo Chrome (sem RawBT nem app próprio) e o leitor de QR Code do PDV funciona perfeitamente. Registrado na decisão 2 de docs/15-plano-pdv.md. Sem mudança de código.
 
-## 20/11/2026 — Notas fiscais: lista pelas cobranças do mês; "Emitir nota" na cobrança
+### Notas fiscais: lista pelas cobranças do mês; "Emitir nota" na cobrança
 
 - **Aba Cobranças** (era Clientes): no lugar de De/Até, escolhe o mês e a lista mostra as cobranças que vencem nele (em aberto, parciais ou pagas; canceladas e levadas para a seguinte ficam fora), com cliente, nº, situação, vencimento, total e o valor dos serviços ainda sem nota. Cobrança com tudo em nota sai da lista (o rodapé conta quantas). Quem teve nota no mês passado vem marcado. O total da seleção conta uma vez o serviço que está em duas cobranças.
 - O controle continua por serviço: a cobrança só escolhe quais serviços vão para a tela de conferir. O que já entrou em nota, por esta cobrança ou por outra, não aparece de novo. A tela de conferir e emitir não mudou (duas cobranças do mesmo cliente viram uma nota).
@@ -216,32 +240,34 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - Avulsos sem mudança.
 - Arquivos: app/Servicos/Nfse/Notas.php, NfseController, CobrancaController, Pages/NotasFiscais/{Index,Conferir}.jsx, Pages/Cobrancas/Show.jsx, tests/Feature/NfseTest.php, docs 12 e 16.
 
-## 20/11/2026 — PDV: dados do veículo em maiúsculas e botões com fundo; ordem dos tamanhos
+### PDV: dados do veículo em maiúsculas e botões com fundo; ordem dos tamanhos
 
 - **Maiúsculas:** marca, modelo, cor e identificação do veículo gravam sempre em maiúsculas (veículos, estadias, ordens de serviço e cadastros do link público), venha do PDV, do ERP ou da importação. No PDV o campo já mostra em maiúsculas enquanto digita. A migração passa os dados já gravados para maiúsculas. O exemplo do campo Modelo deixou de sugerir cor ("Ex.: ONIX").
 - **Botões de tamanho no PDV:** botões contornados ganharam o fundo de cartão; o desenho do fundo da tela não aparece mais por dentro deles.
 - **Ordem dos tamanhos:** em Configurações › Tipos de veículo, setas sobem e descem cada tipo ativo. A ordem vale para o PDV (estadia e lavagem), cadastro de veículo, link público, pendentes, pátio, tabelas de estadia, serviços e mensalistas. Tipo novo entra no fim. O campo numérico "ordem" saiu da tela.
 - Migração `2026_12_07_000001_veiculos_maiusculas_ordem_tipos`. Arquivos: app/Models/{Concerns/Maiusculas,Veiculo,Estadia,OrdemServico,CadastroPendente,TipoVeiculo,Tarifa}.php, TipoVeiculoController e os controllers que listam tipos (Tarifa, Patio, Servico, Mensalistas, Veiculo, CadastroPublico, Estadia, Pendente, Pdv/LavagemPdv), routes/web.php, Pages/Configuracoes/Tipos.jsx, Components/Icone.jsx, pdv/telas/{EstadiaEntrada,Lavagens}.jsx, scss/_pdv.scss, testes (Configuracoes, Patio, PdvEstadia, PdvLavagem), docs 12 e 13.
 
-## 19/11/2026 — NFS-e: cidade do tomador pelo CEP e data na descrição
+## 19/11/2026
+
+### NFS-e: cidade do tomador pelo CEP e data na descrição
 
 - **Cidade do tomador pelo CEP:** a nota pede o código IBGE da cidade; quando a cidade não está na lista da Baixada, o ERP consulta o CEP do cliente no ViaCEP na emissão e guarda o código no cadastro (com o CEP usado; se o CEP mudar, consulta de novo). Antes, cliente de cidade fora da lista saía sem endereço na nota.
 - **Descrição** como o Cauê emite: modelo e depois placa ("POLO - TMA2G79"); estadia e serviço avulso levam a data na frente ("05/10 - POLO - TMA2G79 - R$ 60,00"); mensalidade continua com o mês. Sem modelo no cadastro do veículo, vai a marca (ou o tipo). Carro fora do cadastro lançado na conta do cliente (ex.: o da esposa): o modelo digitado no lançamento e a placa da própria ordem (sem modelo, o tipo do veículo). A primeira linha (descrição base) passou a ser opcional e vem em branco: a descrição fica só com as linhas dos serviços, como nas notas feitas no Emissor.
 - Migração `2026_12_06_000003_clientes_cidade_ibge`. Arquivos: app/Servicos/Nfse/{Dps,ConfigNfse}.php, NfseController, Pages/Configuracoes/Nfse.jsx, tests/Feature/NfseTest.php, docs 12, 13 e 16.
 
-## 19/11/2026 — DPS conferida contra uma nota real do Emissor Nacional
+### DPS conferida contra uma nota real do Emissor Nacional
 
 - O XML de uma nota real emitida pelo Emissor Nacional (Simples, tomador CNPJ em Santos, ISS retido a 2,01%) confirmou a estrutura da DPS montada pelo ERP: mesmos elementos e mesma ordem, inclusive tribMun (tribISSQN, tpRetISSQN, pAliq), tribFed (CST 00, tpRetPisCofins 0) e totTrib (pTotTribSN). Novo teste compara as duas estruturas.
 - A inscrição municipal do prestador deixou de ir na DPS (o Emissor não manda; vem do cadastro nacional) e saiu da tela de configuração.
 - Arquivos: app/Servicos/Nfse/Dps.php, Pages/Configuracoes/Nfse.jsx, tests/Feature/NfseTest.php, docs 13 e 16.
 
-## 19/11/2026 — Opções de nota no cadastro do cliente; ícone de engrenagem
+### Opções de nota no cadastro do cliente; ícone de engrenagem
 
 - **Cadastro do cliente › Nota fiscal (NFS-e):** emitir com os dados do tomador, ISS retido pelo tomador e retenção de tributos federais. Tudo desligado por padrão; sem os dados do tomador, as retenções ficam desligadas. É o padrão da tela de conferir e emitir (dá para mudar na hora, só para aquela nota). Substitui o "lembrar a última nota".
 - Ícone de engrenagem (menu Configurações, conferir notas) trocado pelo do Lucide; o anterior parecia um sol.
 - Migração `2026_12_06_000002_clientes_nota_fiscal`. Arquivos: ClienteController, Models/Cliente, Components/CamposCliente.jsx, Pages/Clientes/Form.jsx, NfseController, Pages/NotasFiscais/Conferir.jsx, Components/{EscolhasNota,Icone}.jsx, Pages/Configuracoes/Nfse.jsx, tests/Feature/NfseTest.php, docs 12, 13 e 16.
 
-## 19/11/2026 — NFS-e por serviço: lista de clientes, conferir e emitir em lote, avulsos
+### NFS-e por serviço: lista de clientes, conferir e emitir em lote, avulsos
 
 - **Notas fiscais** agora parte dos **serviços sem nota** (pagos ou não), e não mais dos recebimentos. Abas:
   - **Clientes:** cada cliente com serviços sem nota no período (De/Até; padrão do início do mês anterior ao fim do mês atual), com quantidade e total. Marque os clientes e veja o total das notas; quem teve nota no mês passado já vem marcado. "Conferir e emitir" abre a próxima tela.
@@ -251,7 +277,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - Cada serviço guarda a nota em que entrou (ordens_servico.nfse_id): a nota pode sair antes do pagamento (clientes que fecham o mês) e o pagamento que chega depois não pede nota de novo. Rejeitada ou cancelada, os serviços voltam a ficar sem nota. Crédito e débito (ajustes) não entram.
 - Migração `2026_12_06_000001_nfse_por_servico`. Arquivos: app/Servicos/Nfse/{Notas,Dps}.php, NfseController, Models/{Nfse,OrdemServico}, routes/web.php, Pages/NotasFiscais/{Index,Conferir}.jsx, Components/{EscolhasNota,Avisos}.jsx, lib/json.js, tests/Feature/NfseTest.php, docs 12, 13 e 16.
 
-## 19/11/2026 — NFS-e igual ao Emissor Nacional, alíquotas do mês e escolhas por cliente
+### NFS-e igual ao Emissor Nacional, alíquotas do mês e escolhas por cliente
 
 - **Configurações › Nota fiscal** reorganizada nos passos do Emissor Nacional (Emitente, Serviço, Tributação municipal, Série), com os mesmos nomes e opções. Códigos já preenchidos para o Local: 11.01.01 (nacional), 11.01.01.004 (complementar municipal de Santos) e NBS 106043000; aceita colar o código com pontos, como o Emissor mostra. Código complementar e NBS agora são obrigatórios (o Emissor de Santos pede).
 - **Especificar cada serviço** (Configurações): ligado, cada linha da descrição diz o serviço ("ABC1D23 - Fiat Uno - Lavagem simples - R$ 40,00"); desligado (padrão), só a mensalidade é nomeada e o resto sai "placa - veículo - valor". Para não citar na nota serviço sem CNAE.
@@ -263,7 +289,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - Migrações `2026_12_05_000001_nfse_aliquotas_retencao` e `2026_12_05_000002_nfse_retencao_federal`.
 - Arquivos: app/Servicos/Nfse/{ConfigNfse,Dps,Notas}.php, NfseController, Models/Nfse, as duas migrações, routes/web.php, Pages/Configuracoes/Nfse.jsx, Pages/NotasFiscais/Index.jsx, tests/Feature/NfseTest.php, docs 12, 13 e 16.
 
-## 19/11/2026 — NFS-e pelo Sistema Nacional (Emissor Nacional)
+### NFS-e pelo Sistema Nacional (Emissor Nacional)
 
 - **Gestão › Notas fiscais:** recebimentos sem nota ("A emitir", com o botão Emitir) e as notas emitidas, com PDF, XML, "Conferir" (quando o envio ficou sem resposta) e cancelamento com motivo. Uma nota por recebimento; cliente com CPF/CNPJ vai como tomador, sem documento a nota sai para consumidor.
 - **Configurações › Nota fiscal (NFS-e):** certificado A1 (o .pfx é aberto no navegador: a senha não sai do computador; guardado criptografado e conferido contra o CNPJ da empresa), regime (Simples, híbrido com ISS por fora, fora do Simples), códigos do serviço, série da DPS e o botão Testes/Produção. Começa em testes (produção restrita, sem valor fiscal).
@@ -273,7 +299,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - Migração: `2026_12_04_000001_create_nfses`.
 - Arquivos: `app/Servicos/Nfse/*` (novos: ConfigNfse, Dps, AssinaturaXml, SefinNacional, SemResposta, Notas), `app/Models/Nfse.php`, `app/Http/Controllers/NfseController.php`, `config/permissoes.php`, `routes/web.php`, `resources/js/lib/menu.js`, `resources/js/Pages/Configuracoes/Nfse.jsx`, `resources/js/Pages/NotasFiscais/Index.jsx`, `package.json`, `package-lock.json`, `tests/Feature/NfseTest.php`, docs 12, 13 e 16 (novo).
 
-## 19/11/2026 — PDV: PINs da unidade valem sem internet (8.7 encerrada)
+### PDV: PINs da unidade valem sem internet (8.7 encerrada)
 
 - A cópia do sistema que o celular guarda passa a trazer, de quem tem PIN na unidade do aparelho, uma versão do PIN para conferir sem internet (PBKDF2 com o sal da empresa; o PIN em si nunca sai do servidor). Funcionário novo ou PIN trocado já vale sem internet na próxima cópia, sem precisar usar o PIN naquele celular antes. PINs de antes disto ganham a versão no primeiro uso com internet.
 - Este aparelho mostra "PIN sem internet de: ...".
@@ -282,7 +308,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - Migração: `2026_12_03_000001_pin_sem_internet` (`usuarios.pin_offline_hash`).
 - Arquivos: `app/Servicos/Pdv/Pins.php`, `app/Servicos/Pdv/SemInternet.php`, `app/Models/Usuario.php`, `resources/js/pdv/offline/pins.js`, `prontidao.js`, `telas/Aparelho.jsx`, `tests/Unit/PinOfflineTest.php`, `tests/js/pin.test.mjs`, `tests/Feature/PdvSemInternetTest.php`, docs 12, 13 e 15.
 
-## 19/11/2026 — PDV: conferir se o celular está pronto para ficar sem internet
+### PDV: conferir se o celular está pronto para ficar sem internet
 
 - Em **Este aparelho**, novo bloco "Sem internet": mostra se o app está guardado no celular, de quando é a cópia do sistema e de quem é o PIN guardado, com o botão "Preparar agora". Se faltar algo, diz o que fazer.
 - O service worker guarda a página primeiro e cada arquivo por conta própria (antes, uma falha ao ler a lista do Vite impedia guardar a página, e o app não abria sem internet).
@@ -291,7 +317,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - Quando o app não está guardado, o bloco diz o motivo (guardador não instalado, página não guardada com o erro, arquivos faltando, versão do guardador).
 - Arquivos: `public/pdv-sw.js`, `resources/js/pdv/offline/prontidao.js` (novo), `resources/js/pdv/telas/Aparelho.jsx`, `resources/js/pdv/main.jsx`, `resources/scss/_pdv.scss`.
 
-## 19/11/2026 — Usuário só do PDV (sem login e sem senha)
+### Usuário só do PDV (sem login e sem senha)
 
 - Novo no cadastro de usuário: **"Acessa a gestão"** (ligado por padrão). Desligado, a pessoa fica sem login e sem senha, só com o PIN, e não entra na gestão. Quem virar só PDV com a sessão aberta é desconectado; a senha antiga é apagada. Para voltar a acessar a gestão, precisa de login e senha.
 - **Código de cadastro do PIN:** a gestão gera um código de 6 dígitos (vale 24 horas e uma vez; guardado só como hash). No PDV, em Este aparelho › Cadastrar ou trocar meu PIN › **Tenho um código**, a pessoa digita o código e escolhe o próprio PIN, sem o gerente ficar sabendo. Usuário só do PDV criado sem PIN já sai com o código na tela. Na lista de usuários: "Só PDV", "Aguardando PIN" e "gerar código".
@@ -300,7 +326,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - Migração: `2026_12_02_000001_usuarios_so_pdv` (login e senha opcionais, `acessa_gestao`, código do PIN).
 - Arquivos: `app/Models/Usuario.php`, `app/Http/Controllers/UsuarioController.php`, `Auth/LoginController.php`, `Pdv/PdvController.php`, `app/Servicos/Pdv/Pins.php`, `app/Http/Middleware/Permissao.php`, `HandleInertiaRequests.php`, `routes/web.php`, `resources/js/Pages/Usuarios/Index.jsx` e `Form.jsx`, `resources/js/Components/CodigoPin.jsx` (novo), `resources/js/pdv/telas/CadastrarPin.jsx`, `tests/Feature/UsuarioSoPdvTest.php`, docs 12 e 13.
 
-## 19/11/2026 — PDV 8.7, primeira entrega: estadias sem internet
+### PDV 8.7, primeira entrega: estadias sem internet
 
 - **O PDV abre e registra estadias sem internet.** Entrada e saída (por hora, diária, diária paga na entrada, convênio, mensalista, ticket perdido, dinheiro com troco, cartão, Pix pela chave fixa), busca do ticket e impressão funcionam sem internet. Lavagem, caixa e cancelamento pedem internet nesta entrega.
 - Faixa no alto: "Sem internet · N para enviar". Quando a internet volta, a fila sobe sozinha, na ordem, com a hora em que cada coisa aconteceu; nada duplica (código único por ação, também com internet).
@@ -311,22 +337,22 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - Migração: `2026_12_01_000001_pdv_sem_internet` (tabela `pdv_acoes`, `estadias.numero_impresso`).
 - Arquivos: `app/Servicos/Pdv/SemInternet.php`, `app/Models/PdvAcao.php`, `app/Http/Controllers/Pdv/SemInternetController.php`, `EstadiaPdvController.php`, `PdvController.php`, `PatioController.php`, `app/Servicos/Estadias.php`, `HandleInertiaRequests.php`, `routes/api.php`, `routes/web.php`, `resources/js/pdv/offline/*` (novos), `api.js`, `App.jsx`, `main.jsx`, `comum.jsx`, `Pages/Patio/Pendencias.jsx`, `Components/AbasPatio.jsx`, `scss/_pdv.scss`, `public/pdv-sw.js`, `package.json`, `.github/workflows/publicar.yml`, testes (`PdvSemInternetTest`, `TarifadorParidadeTest`, `tests/js/`), docs 12, 13 e 15 (seção 8j).
 
-## 19/11/2026 — PDV: conteúdo não sobe quando as barras do celular aparecem
+### PDV: conteúdo não sobe quando as barras do celular aparecem
 
 - O app passa a rolar dentro da própria caixa (`.pdv-app`), não a página. Quando as barras do Android aparecem e a tela muda de tamanho, o conteúdo fica no lugar.
 - Na prévia do papel, texto comprido sem espaço (como o link do QR) quebra dentro da bobina em vez de vazar.
 - Arquivos: `resources/scss/_pdv.scss`, `resources/js/pdv/visual.jsx` (rolarAoTopo), `App.jsx`, `telas/Lavagens.jsx`, `telas/Caixa.jsx`, `impressao/Papel.jsx`.
 
-## 19/11/2026 — PDV: tela não pula quando as barras do celular aparecem; topo do Início fixo
+### PDV: tela não pula quando as barras do celular aparecem; topo do Início fixo
 
 - Em tela cheia, ao puxar as barras do Android, a tela inteira se deslocava (o espaço do entalhe da câmera mudava). O PDV não ocupa mais a área do entalhe, então nada se mexe. Arquivo: `resources/views/pdv.blade.php` (tirado `viewport-fit=cover`).
 - O topo do Início (logo, aparelho e caixa) fica fixo ao rolar, como o das outras telas. Arquivo: `resources/scss/_pdv.scss`.
 
-## 19/11/2026 — Menu do celular não arrasta a página
+### Menu do celular não arrasta a página
 
 - Com o menu lateral aberto no celular, rolar o menu (ou o fundo escuro) não rola mais a página de trás. Arquivo: `resources/scss/_layout.scss`.
 
-## 19/11/2026 — PDV: voltar do celular e tela cheia (modo quiosque)
+### PDV: voltar do celular e tela cheia (modo quiosque)
 
 - **Voltar do celular** agora fica dentro do app: faz o mesmo que a setinha do topo (volta uma etapa, ou ao Início) e fecha o PIN e as confirmações. No Início não faz nada; o app nunca fecha pelo voltar. Com a tela fixada (fixar app do Android), o app não trava mais.
 - **Tela cheia:** instalado como app, o PDV abre em tela cheia, sem as barras do celular. No navegador, botão "Tela cheia" em Este aparelho (some quando instalado). Topo e resumo descem o espaço do entalhe da câmera.
@@ -334,12 +360,12 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - App do PDV 0.6.1. Para valer a tela cheia num celular que já tinha o PDV instalado: desinstalar e instalar de novo.
 - Arquivos: `resources/js/pdv/voltar.js` (novo), `App.jsx`, `visual.jsx`, `comum.jsx`, `Pin.jsx`, `telas/Aparelho.jsx`, `api.js`, `scss/_pdv.scss`, `public/pdv.webmanifest`, `public/imagens/pdv-192.png`, `pdv-512.png`, `pdv-maskable-512.png`.
 
-## 19/11/2026 — Avisos do ERP no popup do PDV
+### Avisos do ERP no popup do PDV
 
 - As mensagens depois de salvar (sucesso, erro, aviso) agora descem do topo da tela, por cima de tudo, no mesmo modelo do PDV: verde some sozinha em 4 s com a barrinha de tempo; erro (laranja) e aviso (amarelo) ficam até clicar no X. Aparecem de novo mesmo se a mensagem se repetir; a atualização automática do Pátio não repete a anterior.
 - ERP e PDV usam o mesmo componente (`Components/AvisosTopo.jsx`) e o mesmo estilo (`scss/_avisos-topo.scss`); os estilos de aviso saíram do `_pdv.scss`.
 
-## 19/11/2026 — Pátio unificado na gestão
+### Pátio unificado na gestão
 
 - **Operação › Pátio** substitui Estadias e Lavagens no menu. Aba **Agora**: estadias e lavagens em andamento numa lista só (estadia com o valor se saísse agora; lavagem com a etapa e "Estadia R$ x" pela regra de Configurações › Etapas, R$ 0 quando não cobra). Aba **Histórico**: as duas juntas por data, com filtro de tipo e situação e os totais.
 - A gestão não dá mais entrada nem saída (é do PDV). **Ações** por linha: receber lavagem a receber e, com a nova permissão **Corrigir no pátio**, corrigir placa/modelo/tamanho, cancelar, encerrar estadia esquecida (sem receber, com o valor registrado para conferência, ou na conta de um cliente) e marcar lavagem como entregue.
@@ -347,14 +373,14 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - Migração `2026_11_30_000001_patio` (observação da estadia encerrada). 3 testes novos (250).
 - Planejamento da 8.7 (modo sem internet e servidor local) registrado em docs/15-plano-pdv.md, seção 8i.
 
-## 19/11/2026 — Editor de impressão do PDV
+### Editor de impressão do PDV
 
 - **Configurações › Impressão (PDV):** editor visual de três papéis: ticket de entrada (estadia e lavagem), recibo de pagamento (estadia, lavagem, contas de cliente: todo pagamento) e fechamento do caixa. Clique numa linha do papel para alinhar, pôr em negrito ou letra grande, subir, descer ou esconder; insira espaço, linha tracejada ou texto livre. "Voltar ao padrão" por papel.
 - **Logo da impressão:** enviado no editor e convertido para preto e branco, do tamanho da bobina.
 - O PDV imprime e mostra a prévia pelo modelo salvo (o Teste de impressão também). Papel não editado sai como antes.
 - 2 testes novos (247).
 
-## 19/11/2026 — PDV, parte 8.8: visual novo e tema escuro
+### PDV, parte 8.8: visual novo e tema escuro
 
 - **Início novo:** atalhos Entrada (estadia ou lavagem) e Saída (lê o QR de qualquer ticket e abre a saída da estadia ou a entrega da lavagem), cartões com os números do momento (carros no pátio, lavagens em andamento), situação do caixa no topo, Impressão e Este aparelho.
 - **Todas as telas:** topo com voltar, título e bolinhas da etapa; resumo fixo em cartão; placa no estilo Mercosul; formas de pagamento com ícone; botões no vermelho da marca.
@@ -363,7 +389,9 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - **Tema** Automático, Claro ou Escuro em Este aparelho (PIN e pareamento também foram para lá).
 - App do PDV 0.6.0. 1 teste novo (245).
 
-## 18/11/2026 — PDV, parte 8.5: Pix com QR
+## 18/11/2026
+
+### PDV, parte 8.5: Pix com QR
 
 - **Configurações › Banco Inter:** novo quadro "Pix com QR no PDV" com a chave Pix e o botão "Testar Pix".
 - **PDV:** escolhendo Pix (estadia, lavagem, receber conta), aparece o QR do valor exato com o copia e cola; quando o Pix cai, a tela mostra "Pix recebido" com o nome de quem pagou, pede o PIN e registra. Desistiu: o QR sai do ar. "Cliente pagou sem o QR" continua possível (fica marcado para conferir no extrato).
@@ -372,33 +400,33 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - O app do PDV relê a configuração ao voltar ao Início (antes, ligar o Pix na gestão só valia depois de reabrir o app); o quadro do Pix em Configurações diz por que está desligado (Inter desligado ou falta a chave).
 - Migração `2026_11_29_000001_pix_pdv` (tabela `pix_cobrancas`, coluna `pagamentos.pix_txid`). App do PDV 0.5.0. 5 testes novos (244).
 
-## 18/11/2026 — Plano do PDV: parte 8.8 (visual do app)
+### Plano do PDV: parte 8.8 (visual do app)
 
 - Entrou no plano a parte 8.8: estilizar o app do PDV a partir de referências de apps que o Cauê vai escolher (só aparência).
 
-## 18/11/2026 — Busca de cliente no celular
+### Busca de cliente no celular
 
 - Corrigido: no celular, tocar num resultado da busca de cliente (ex.: no Início) às vezes abria a tela que estava embaixo da lista (o card "Em aberto" levava a Contas em aberto). A escolha agora acontece no clique, e não no início do toque, então o "clique fantasma" não cai mais no link de baixo.
 
-## 18/11/2026 — PDV: PIN pelo teclado do celular e dados do carro entre estadia e lavagem
+### PDV: PIN pelo teclado do celular e dados do carro entre estadia e lavagem
 
 - O PIN agora é digitado no teclado numérico do próprio celular (na tela aparecem só as 4 bolinhas sendo preenchidas) (campo com os dígitos escondidos, sem senha salva do navegador), no lugar do teclado na tela; confere sozinho ao completar 4 dígitos e, se errar, o campo volta selecionado.
 - Placa avulsa que já passou pela lavagem traz modelo, tamanho e celular na entrada da estadia, e vice-versa (vale a visita mais recente, estadia ou lavagem).
 - O PDV avisa o navegador para encolher a tela quando o teclado abre, para nada ficar escondido atrás dele. 1 teste novo (239).
 
-## 18/11/2026 — PDV, parte 8.4: lavagem
+### PDV, parte 8.4: lavagem
 
 - **PDV › Lavagem:** nova lavagem em etapas (placa, modelo e tamanho, serviço com o preço do tamanho, adicionais, celular, na entrega ou pagar agora com troco, ticket próprio), lista das em andamento com a próxima etapa em um toque, e entrega em etapas (convênio escolhido na hora, pagar agora, na conta do cliente ou de outro, recibo com troco).
 - **Carro em estadia que pede lavagem:** ticket novo da lavagem e a pergunta do que fazer com a estadia: continuar cobrando ou cancelar (PIN de gerente).
 - **Estadia depois de pronta** (Configurações › Etapas da lavagem): cobrar ou não e a tolerância; cobrada na entrega pelo PDV.
 - Contas lançadas pelo PDV ficam com origem "pdv"; modelo do veículo avulso fica na venda. 3 testes novos (238).
 
-## 18/11/2026 — Histórico de estadias
+### Histórico de estadias
 
 - Estadias ganhou abas **Pátio | Histórico** (o histórico existia, mas só por um botão no canto).
 - Histórico: filtro por situação (todas, finalizadas, canceladas, no pátio), busca também por modelo, e os **totais do período** (estadias, total cobrado, pago na hora com as diárias pagas na entrada, na conta, convênios). A lista mostra modelo, tamanho, diária marcada, se veio do PDV, ticket perdido e o motivo do cancelamento. 1 teste novo (235).
 
-## 18/11/2026 — PDV, parte 8.3: caixa
+### PDV, parte 8.3: caixa
 
 - **PDV › Caixa:** receber conta de cliente no balcão (cliente, contas, forma, troco, recibo); **Retirada** com PIN de gerente: sangria (cofre, depósito no banco ou retirada do sócio) ou pagamento de despesa com o dinheiro da gaveta (vira despesa paga em Contas a pagar, com a categoria); **Suprimento**; **Fechar o caixa** (recebido por serviço e por forma, dinheiro que deveria ter, contado, diferença, troco que fica, resumo impresso). O troco deixado abre o próximo caixa.
 - Tudo o que é recebido pelo PDV cai no caixa aberto; recebido pela gestão não.
@@ -407,33 +435,35 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - **Resultado do mês:** "(−) Retiradas dos sócios" abaixo do lucro e "Ficou na empresa"; fluxo de caixa mostra a retirada como saída.
 - Migration `2026_11_28_000001_caixa_pdv` (caixas, caixa_movimentos, pagamentos.caixa_id). 2 testes novos (234).
 
-## 17/11/2026 — WhatsApp: excluir modelo
+## 17/11/2026
+
+### WhatsApp: excluir modelo
 
 - No editor de mensagens (Configurações › WhatsApp › Mensagens), versões já enviadas à Meta ganharam **Excluir**, com confirmação: apaga o modelo na Meta pela API e no ERP (o nome fica bloqueado na Meta por 30 dias; se já tinha sido apagado lá, só some daqui). Não deixa a régua sem mensagem nem tirar a única versão aprovada de uma mensagem da régua. Com a integração desligada, exclui só no ERP e avisa para apagar no Gerenciador do WhatsApp. 1 teste novo (232).
 
-## 17/11/2026 — WhatsApp: primeiro aviso real pela API
+### WhatsApp: primeiro aviso real pela API
 
 - Modelos aprovados pela Meta; aviso de cobrança enviado pela API e entregue, com o botão "Ver cobrança" abrindo a página da cobrança; a situação passou a "Entregue" pelo webhook. Envio automático segue desligado por enquanto.
 - Registrado para os arremates: o cliente gerar Pix na página da cobrança quando não houver boleto.
 
-## 17/11/2026 — Listas: inativos embaixo
+### Listas: inativos embaixo
 
 - Nas listas de cadastro com itens ativos e inativos, os inativos ficam embaixo de todos os ativos: tabelas de estadia (encerradas embaixo das vigentes e futuras), formas de pagamento e contas, tipos de veículo, convênios e unidades. Serviços, usuários, funcionários, fornecedores, cartões, despesas recorrentes e aparelhos já eram assim. Ordens de serviço, cobranças e outras listas por data continuam por data.
 
-## 17/11/2026 — Máscara de valores em todo o sistema
+### Máscara de valores em todo o sistema
 
 - Todo campo de valor (R$ e %) da gestão e do PDV usa a máscara de maquininha: sempre mostra 0,00 e os números entram pelos centavos (1 → 0,01 → 0,15 → 1,50 → 15,00), com o cursor sempre no fim e o teclado numérico no celular. Vale para contas a pagar, recebimentos, mensalidades, reajuste, pausa, tarifas, serviços, formas de pagamento, convênios, funcionários, fluxo de caixa, juros e multa do boleto (que antes era um campo de número comum) e o troco das estadias.
 - PDV: a cada etapa da entrada e da saída, o campo de digitar (placa, modelo, valor recebido, cliente da conta, ticket perdido, motivo do cancelamento) já vem selecionado com o teclado aberto; Enter na placa avança.
 - Nas listas de convênio (venda de lavagem, entrada e saída da estadia, saída no PDV) aparece só o nome do convênio, sem o resumo das regras.
 - Campos opcionais (preço por tamanho do serviço, taxa por parcela, desconto negociado, saldo inicial do fluxo, limite do convênio): zerado conta como vazio, como antes.
 
-## 17/11/2026 — PDV: entrada e saída da estadia em etapas
+### PDV: entrada e saída da estadia em etapas
 
 - A saída no PDV mostra uma decisão por vez, com o resumo e o **A pagar** fixos no alto: (1) convênio, ticket perdido e **Pagar agora / Na conta de um cliente / Mensalista**; (2) forma de pagamento (ou o cliente da conta); (3) em dinheiro, **Quanto o cliente deu?** (valor exato e notas prontas). Confirmado o valor, vai o PIN e aparece o **troco** em destaque junto com "Imprimir o recibo?". "Voltar" volta uma etapa. Mesmas regras de antes.
 - A **entrada** também vai em etapas, com placa, modelo e tamanho fixos no alto: (1) placa (avisos de já no pátio e de mensalista); (2) modelo e tamanho; (3) **Por hora** ou uma das diárias; (4) diária **paga agora** ou **na saída**; (5) forma de pagamento; (6) em dinheiro, quanto o cliente deu. Confirmado, vai o PIN e o troco aparece com "Imprimir o ticket?". Tamanho sem diária na tabela registra direto no passo 2.
 - Campo do valor recebido (saída e diária paga na entrada) com máscara de dinheiro: sempre mostra 0,00 e os números entram pelos centavos (1 → 0,01 → 0,15 → 1,50 → 15,00). Na área verde, só o troco.
 
-## 17/11/2026 — PDV, parte 8.2: estadia no PDV
+### PDV, parte 8.2: estadia no PDV
 
 - **PDV › Estadia:** entrada (placa, modelo e tamanho vindos do cadastro ou da última visita; aviso de mensalista e de veículo já no pátio; marcar diária, paga agora ou na saída; troco), saída (QR pela câmera, número ou placa; convênio escolhido na saída; paga agora, na conta de um cliente ou mensalista; ticket perdido com nome e documento), lista do pátio e cancelar entrada com PIN de gerente. Cada ação pede PIN e pergunta se imprime o ticket ou o recibo.
 - **Impressão:** o PDV usa o último caminho que deu certo no Teste de impressão.
@@ -442,13 +472,13 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - **API:** `/api/pdv/estadias/...` (opções, pátio, placa, buscar, cálculo, entrada, saída, cancelar) e `/api/pdv/clientes`. Pagamento feito pelo PDV fica com origem "pdv" e o aparelho.
 - Migration `2026_11_27_000001_estadias_pdv` (estadias: código do QR, modelo, diária, pago na entrada, quem retirou com ticket perdido, aparelho; pagamentos: aparelho). 5 testes novos (231).
 
-## 17/11/2026 — PIN do PDV pela gestão e campos de PIN
+### PIN do PDV pela gestão e campos de PIN
 
 - **Usuários › novo/editar:** campo opcional "PIN do PDV" (com repetição), mesmas regras do PDV (4 números, nada óbvio, único; repetido cancela o do outro). PIN recusado no cadastro novo: o usuário é criado e a tela volta para a edição pedindo outro PIN.
 - **Campos de PIN** (gestão e PDV): abrem o teclado numérico e escondem os números sem ser campo de senha, então o navegador não preenche mais a senha salva no lugar do PIN.
 - 1 teste novo (226).
 
-## 17/11/2026 — PDV, parte 8.1: aparelhos, pareamento, PIN e teste de impressão
+### PDV, parte 8.1: aparelhos, pareamento, PIN e teste de impressão
 
 - **Configurações › Aparelhos (PDV):** cadastra o celular do balcão e gera um código de 6 dígitos (15 min, uso único); "Parear de novo" e "Desativar" cortam o celular antigo na hora; memória do PIN (a cada ação ou 1 a 10 min).
 - **App do PDV em `/pdv`** (React próprio, instalável pelo Chrome): pareamento pelo código, tela inicial, testar PIN, cadastrar/trocar PIN (com login e senha do sistema) e **teste de impressão** (ticket de exemplo por Bluetooth BLE, app RawBT ou impressão do Android; 80/58 mm, acentos, QR como imagem).
@@ -456,7 +486,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - Ideia registrada no fim de `docs/15-plano-pdv.md`: gestão de pátio com câmera de placa (para depois). Consulta de placa em serviço externo descartada.
 - Migration `2026_11_26_000001_create_aparelhos` (tabela `aparelhos`, `pin_hash` nos usuários). 8 testes novos (225).
 
-## 17/11/2026 — Convênio por serviço e "na conta de" outro cliente
+### Convênio por serviço e "na conta de" outro cliente
 
 - **Na conta de outro cliente:** na venda de lavagem e na saída da estadia, "Na conta de um cliente" abre o campo **Na conta de** (vem com o dono do veículo; "trocar" busca qualquer cliente). A ordem fica com a placa que entrou e o cliente que paga. Ex.: mensalista traz o carro do pai e a lavagem vai para a mensalidade dele.
 - **Convênio por serviço:** a tela do convênio lista a Estadia e cada serviço (lavagens e adicionais); cada um marcado tem pagamento integral, pagamento parcial (o convênio paga até um valor; o que passar, quem usou paga) ou limite de tempo (só estadia). Serviço não marcado: quem usou paga. Sai o modo "desconto" (convênio nele aparece "Reconfigurar"). Na venda, quando o convênio paga só parte, o excedente vira uma conta de quem usou, ligada à mesma venda.
@@ -464,14 +494,16 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - **Paralelo:** o convênio continua vindo do sistema atual; as regras por serviço são montadas a partir do modo de lá a cada importação, até o convênio ser salvo no ERP.
 - Migration `2026_11_25_000001_convenio_por_servico` (tabela `convenio_regras`, fechamento no convênio; converte os convênios existentes). 5 testes novos (217).
 
-## 17/11/2026 — Etapa 8 (PDV): plano aberto
+### Etapa 8 (PDV): plano aberto
 
 - Novo documento `docs/15-plano-pdv.md`: o que já existe e é reaproveitado, escopo da primeira versão (um aparelho e uma impressora), como fica montado (app separado em `/pdv`, API com token do aparelho, servidor calcula tudo), Pix imediato com confirmação por consulta (o aviso do Inter exige mTLS, que a Hostinger não tem), caminhos de impressão conforme a impressora, ordem de construção (8.1 a 8.7) e as decisões em aberto.
 - Decisão: o PDV começa com um aparelho; o desenho segue aceitando vários.
 - Respostas do Cauê (decisões 1 a 4): celular Android (Samsung de entrada a comprar; testes no A56), impressora de 80 mm a comprar, balcão hoje todo em papel, PDV entra junto da virada. Decisões 5 a 7: mensalista não registra entrada; ticket perdido pela tabela normal com identificação de quem retira; conteúdo do ticket impresso (com tamanho do veículo e espaço para carimbo do convênio). Decisões 8 a 12: impressão perguntando, fechamento diário pelo gerente, PIN de gerente para sangria/cancelamento/desconto, atendentes com nível operador, crédito e débito separados; o PDV ganha receber conta de cliente. Decisão 13: a permissão de Pix do Inter já cobre a cobrança imediata e só tem itens de receber (devolução vai só para quem pagou); estorno por devolução do Inter anotado como ideia. Fluxo da estadia avulsa (desenho do Cauê) registrado na seção 8a do plano: convênio na saída, troco na tela, leitura do ticket pela câmera. Fluxo da lavagem na seção 8b: serviço e adicionais na entrada, "Pronta" com PIN, estadia depois de pronta configurável com tolerância, "Pagar agora" como exceção. Estadia com opção de marcar diária na entrada (paga na entrada ou na saída; excedente pela regra da tabela).
 - `07-pdv.md`, `10-plano-de-etapas.md`, `12-decisoes.md` e o índice atualizados. Nenhum código nesta entrada.
 
-## 16/11/2026 — Mensagens do WhatsApp: cabeçalho e rodapé
+## 16/11/2026
+
+### Mensagens do WhatsApp: cabeçalho e rodapé
 
 - No editor de mensagens: **cabeçalho** (linha em negrito no topo, até 60 caracteres, até uma informação variável, sem emoji nem formatação) e **rodapé** (linha cinza no fim, até 60 caracteres, texto fixo). Vão para a Meta como HEADER (texto) e FOOTER; no envio pela API, o valor da informação do cabeçalho vai junto.
 - No envio manual (wa.me) não há cabeçalho nem rodapé: o cabeçalho entra em negrito no começo do texto e o rodapé no fim.
@@ -479,7 +511,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - Mídia no cabeçalho (imagem, documento) fica para a etapa de marketing.
 - Migration `2026_11_24_000002_add_cabecalho_rodape_to_modelos_mensagem`. 1 teste novo (212).
 
-## 16/11/2026 — WhatsApp: área para editar as mensagens
+### WhatsApp: área para editar as mensagens
 
 - **Configurações › WhatsApp › Mensagens** (`/configuracoes/whatsapp/mensagens`): criar e editar as mensagens do WhatsApp antes de valerem. Nome (só no sistema), tipo (aviso de cobrança ou propaganda), texto com botões para inserir as informações ({nome}, {empresa}, {valor}, {vencimento}, {valor_com_desconto}, {desconto_ate}, {placa}), botão "Ver cobrança" opcional e prévia em balão de WhatsApp com um cliente de exemplo.
 - **Rascunho** fica só no ERP e já vale no envio manual (wa.me). **Enviar para aprovação** manda para a Meta (as informações viram {{1}}, {{2}}... com os exemplos obrigatórios) e trava a versão. A situação (em análise, aprovado, recusado com o motivo em português) vem da Meta ao abrir a tela e pelo webhook (campo `message_template_status_update`).
@@ -491,26 +523,26 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - As três mensagens atuais viram a versão 1 de "Lembrete", "Vence hoje" e "Em atraso", com os mesmos nomes na Meta. O botão "Criar na Meta" saiu (agora é por mensagem).
 - Migration `2026_11_24_000001_create_modelos_mensagem`. `App\Servicos\WhatsApp\Modelos` reescrito; `MensagemController`; tela `Configuracoes/WhatsAppMensagens`. 4 testes novos (211).
 
-## 16/11/2026 — Desconto de pontualidade na cobrança (opção, começa desligada)
+### Desconto de pontualidade na cobrança (opção, começa desligada)
 
 - Nova opção em **Configurações › Banco Inter › Regras do boleto**: "Desconto de pontualidade vale para qualquer forma de pagamento". **Desligada** de início: tudo continua como antes (desconto só no boleto).
 - Ligada, o desconto das regras do boleto (só mensalidade do mês, até o vencimento) aparece na **tela da cobrança** ("Pagando até X: R$ …"), na **cobrança impressa** (linha abaixo do Total), na **página pública** `/c/<código>` e entra no **balcão (Receber)** e na **conferência do extrato**: pago até o vencimento, a diferença pode ser lançada como "Desconto de pontualidade" sem precisar da permissão de desconto. Depois do vencimento, ou diferença maior que o desconto, continua exigindo a permissão.
 - Cobrança com desconto negociado não tem desconto de pontualidade (como no boleto). Com boleto emitido, vale o desconto que o Inter calculou.
 - Serviço `App\Servicos\Pontualidade`; `Baixa::receber` aceita a falta "desconto" quando é pontualidade. Sem migration (a opção fica nas configurações da empresa). 5 testes novos (207).
 
-## 16/11/2026 — Abas das Configurações quebram linha
+### Abas das Configurações quebram linha
 
 - As abas de Configurações (Empresa e unidades, Tipos de veículo... WhatsApp) ficavam numa linha só, rolando para o lado, e parte sumia da tela. Agora quebram linha e ficam todas à vista, como botões arredondados; a aba atual fica destacada. No celular, um pouco menores.
 
-## 16/11/2026 — Avisos: reenviar
+### Avisos: reenviar
 
 - Em Cobranças › Avisos, os avisos já enviados ganham **Reenviar** (abre o WhatsApp com o texto de novo) e, com a API ligada, **Reenviar pela API**. Antes, o aviso enviado à mão sumia de "Para enviar" e não dava mais para mandar pela API. Reenvio que falha não muda o aviso (ele já tinha saído); só mostra o erro. Se a cobrança não está mais em aberto ou o celular é inválido, aparece "Não dá para reenviar".
 
-## 16/11/2026 — Botões de WhatsApp e Ligar nos clientes
+### Botões de WhatsApp e Ligar nos clientes
 
 - Ficha do cliente (quadro Dados) e lista de clientes: botão **WhatsApp** (abre a conversa no wa.me; só aparece se o número for de celular, DDD + 9 + 8 dígitos) e **Ligar** (abre o discador no celular ou o aplicativo de chamadas no computador). Na lista, só os ícones; no celular, o botão "Abrir" sai da lista (a linha toda já abre o cliente). Componente `Contato`.
 
-## 16/11/2026 — WhatsApp: régua de cobrança (etapa 7b)
+### WhatsApp: régua de cobrança (etapa 7b)
 
 - **Decisão:** API oficial da Meta (Cloud API), direto, sem plataforma intermediária, com número próprio para os avisos. Empresa verificada no Meta Business e app "ERP Local Estacionamento" criado em 16/11/2026.
 - **Régua de cobrança** (`App\Servicos\WhatsApp\Regua`): cada cobrança em aberto recebe um aviso por passo (padrão: 3 dias antes, no dia, 3 e 10 dias depois do vencimento), uma vez só. Com boleto, conta o vencimento do boleto. Para quando a cobrança é paga ou cancelada. Ligar a régua tarde não despeja avisos atrasados (tolerância de 2 dias; só o passo mais recente). Cliente "não recebe avisos" fica de fora; celular inválido aparece com o motivo.
@@ -522,37 +554,39 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - Migration `2026_11_23_000001_create_avisos_whatsapp` (tabela avisos, cobrancas.token).
 - **Ainda não:** textos editáveis (são fixos, iguais aos modelos da Meta), receber e mostrar as respostas dos clientes, resposta automática, envio do recadastro em lote pela API.
 
-## 16/11/2026 — Extrato: entrada já baixada no sistema atual; totais em Recebimentos
+### Extrato: entrada já baixada no sistema atual; totais em Recebimentos
 
 - **Problema:** mensalidade baixada à mão no sistema atual e, depois, o Pix dela confirmado no Extrato bancário do ERP. Como o cliente não tinha mais conta em aberto, a conferência lançou um pagamento novo (Pix) que virou crédito do cliente: o dinheiro contou duas vezes em "Por forma de pagamento" e não apareceu em "Pelo que foi pago".
 - **Conferência do extrato:** quando o cliente tem uma baixa vinda do sistema atual com o mesmo valor e data próxima (até 10 dias), a entrada mostra o aviso e vem marcada como **Só registrar**: não lança pagamento nem crédito, só registra a entrada e passa a forma escolhida (Pix) para o pagamento de lá. A importação reaplica a forma a cada hora (`Extrato::religarRegistros`). Cliente sem contas em aberto e sem essa baixa: aviso em vermelho de que o valor vai virar pagamento novo/crédito.
 - **Recebimentos:** linha de **Total** nas duas tabelas; quando os totais diferem, o rodapé mostra de quanto é a diferença e os motivos possíveis.
 - Migration `2026_11_22_000001_add_so_registro_to_extrato_lancamentos`.
 
-## 14/11/2026 — Celular gravado no campo telefone
+## 14/11/2026
+
+### Celular gravado no campo telefone
 
 - Cliente com o celular vazio e um número de celular (DDD + 9 + 8 dígitos, com ou sem 55) no campo telefone: o número passa para o celular e o telefone fica vazio. Feito na importação (a cada hora, para não voltar) e uma vez para todos na publicação (migration `2026_11_21_000005_celular_no_campo_telefone`, inclui os clientes criados no ERP). Fixo de verdade, número com cara de inventado, número sem o 9 e cliente que atualizou o telefone pelo recadastro não mudam. `App\Support\Telefone`.
 - Sistema atual: `celular-legado.sql` (entregue à parte, rodado pelo Cauê no phpMyAdmin) faz a mesma correção na origem.
 
-## 14/11/2026 — Placas sem traço
+### Placas sem traço
 
 - Placa exibida sempre junta, só letras e números (antes as antigas apareciam como "ABC-1234" e as Mercosul juntas). Os campos de placa só aceitam letras e números.
 - Migration `2026_11_21_000004_placas_sem_traco`: tira traço e espaço de todas as placas gravadas (veículos, histórico de placas, fila de cadastro, ordens, itens de cobrança, estadias). Na identificação de veículo sem placa, só o que for placa brasileira entra no padrão (o resto é texto livre: quadro, série, apelido).
 - A importação já gravava a placa limpa; a identificação de placa repetida também passa a vir limpa.
 - Sistema atual: `placas-legado.sql` (entregue à parte, rodado pelo Cauê no phpMyAdmin) tira espaço e traço das placas de lá, com conferência antes e depois.
 
-## 14/11/2026 — Código dos clientes: correção do cliente duplicado
+### Código dos clientes: correção do cliente duplicado
 
 - **Problema:** o código do cliente é o id. O cliente de teste, criado no ERP, ficou com o 1009. O Matheus mandou a ficha pelo link do sistema atual, que foi aprovada primeiro no ERP por engano (virou 1010, com a placa) e depois no sistema atual (1009 lá); a importação o trouxe como 1011, sem placa e sem CPF por estarem repetidos.
 - **Correção automática na publicação** (migration `2026_11_21_000003_corrigir_numeracao_clientes`, serviço `NumeracaoClientes`): o cadastro criado no ERP que é o mesmo cliente de um importado (mesmo CPF ou mesma placa) é **excluído** com veículo, mensalidade e contas geradas no ERP, liberando o código (só se não tiver pagamento, boleto ou outro registro; senão fica um aviso). O CPF e a placa passam para o importado. Importado com código diferente volta ao código do sistema atual; cliente criado no ERP que estiver nesse código vai para o próximo número livre. Cada mudança fica no Registro de atividades ("Sistema").
 - A numeração continua a sequência normal (sem faixa separada para o ERP).
 - **Fila de espera:** ficha que veio do link do sistema atual não se aprova nem se recusa mais no ERP (selo "Aprovar no sistema atual" e aviso na revisão).
 
-## 14/11/2026 — Mensalistas: marcar os cadastrados só no ERP
+### Mensalistas: marcar os cadastrados só no ERP
 
 - Clientes › Mensalistas contava também os contratos criados no ERP (cliente de teste, cadastro feito aqui), por isso ficava acima do relatório do sistema atual, enquanto a Conferência (que compara só o que veio do sistema atual) dava "Igual". Agora esses veículos têm o selo **Só no ERP** na lista e a nota abaixo diz quantos são e quanto somam.
 
-## 14/11/2026 — Extrato e saldo pela API do Inter
+### Extrato e saldo pela API do Inter
 
 - **Extrato bancário › Banco Inter:** saldo disponível no Inter (carregado depois da tela, guardado por 10 minutos) e **Buscar do Inter** por período (até 90 dias, sem datas futuras). Abre a mesma conferência do CSV: o sistema sugere o cliente de cada Pix (nome e CPF/CNPJ do pagador vêm da API) e nada é baixado sem confirmar. O CSV continua como reserva.
 - Recebimentos de boleto (e o Pix do boleto, pelo txid, código ou nosso número) não entram: já foram baixados pela cobrança; a conferência mostra quantos ficaram de fora. Pix já baixado antes pelo CSV (outro identificador, mesma data, valor e pagador) aparece como processado.
@@ -560,27 +594,29 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - Token do extrato pedido à parte (permissão `extrato.read`): se a permissão faltar, o boleto continua funcionando.
 - **Aviso de vencimento do certificado** do Inter (30 dias antes) no Início e em Configurações › Banco Inter: boleto, baixa automática e extrato param juntos quando vence.
 
-## 14/11/2026 — Estorno ao cliente
+### Estorno ao cliente
 
 - **Estornar** (ficha do cliente, com crédito a favor dele; permissão de editar contas): registra a devolução do crédito. O Pix ou a transferência é feito no app do banco; aqui vão valor (até o crédito livre, descontadas as contas em aberto), data, como foi devolvido (Pix, transferência, dinheiro) e motivo obrigatório. Usa os créditos mais antigos primeiro; se o estorno for parcial, a sobra vira um crédito novo. Lista "Estornos" na ficha, com **Desfazer** (o crédito volta).
 - O estorno entra no **fluxo de caixa** como saída ("Estorno a cliente") e no **Resultado pelo olhar de caixa** como "(−) Estornos a clientes" (no olhar de referência não entra: o crédito nunca foi receita do mês). O extrato do cliente mostra a linha do estorno.
 - O antigo "Estornar" dos pagamentos (ficha e Recebimentos) passou a se chamar **Desfazer** ("Desfeito" no selo): desfaz um pagamento lançado errado e as contas voltam a ficar em aberto. Não devolve dinheiro.
 - Migration `2026_11_21_000002_create_estornos`. Serviço `App\Servicos\Estornos`.
 
-## 14/11/2026 — Desconto negociado na cobrança; Inter confirmado em produção
+### Desconto negociado na cobrança; Inter confirmado em produção
 
 - **Desconto negociado** (só na cobrança unitária): campos "Desconto negociado" e "Motivo do desconto" na emissão pela ficha do cliente e no quadro do boleto da cobrança. Exige a permissão de dar desconto; o motivo é obrigatório. O total das ordens continua o mesmo (relatórios); a tela da cobrança e a impressão mostram Total, Desconto e **Total a pagar**. O boleto sai com o valor em aberto menos o desconto e, nesse caso, sem o desconto de pontualidade. Pago, a diferença vira desconto na baixa, com o motivo. Com boleto ativo, o desconto só muda cancelando o boleto. Migration `2026_11_21_000001_add_desconto_to_cobrancas` (cobrancas.desconto, desconto_motivo, desconto_por).
 - **Inter confirmado em produção:** boleto emitido, QR Code e Pix na tela sozinhos, pago com Pix e baixa automática conferida (cobrança e mensalidade pagas).
 - **Registrado para o PDV** (docs/07-pdv.md): Pix com confirmação automática na tela, sem botão de atualizar.
 
-## 14/11/2026 — Boleto de cobrança vencida
+### Boleto de cobrança vencida
 
 - **Correção:** "Gerar boleto" numa cobrança cujo vencimento já passou não fazia nada na tela. O sistema recusava, mas a mensagem não aparecia. Agora o erro do boleto aparece no quadro do boleto.
 - **Vencimento do boleto sempre editável:** o quadro do boleto mostra o campo "Vencimento do boleto", já preenchido com o vencimento da cobrança + o prazo do boleto (Configurações › Banco Inter). Se essa data já passou, a sugestão vai para o mesmo dia no mês seguinte. Dá para trocar a data (entre hoje e 90 dias). A cobrança continua com o vencimento original; só o boleto vence na data do campo.
 - A geração em lote (Gerar cobranças com boleto) segue a mesma regra: cobrança vencida sai com o boleto para o mês seguinte, em vez de dar erro.
 - O desconto de pontualidade só entra se a cobrança ainda não venceu (vale até o vencimento combinado); multa e juros contam a partir do vencimento do boleto.
 
-## 13/11/2026 — Recadastro (atualização cadastral dos clientes)
+## 13/11/2026
+
+### Recadastro (atualização cadastral dos clientes)
 
 - **Clientes › Recadastro** (`/atualizacao-cadastral`, permissão de aprovar cadastros): resumo e duas tabelas, **CPF/CNPJ com problema** (dígitos que não conferem, quantidade errada, em branco, repetido em outro cliente) e **sem celular válido** (sem celular, telefone fixo, sem o 9, formato inválido, número suspeito tipo 99999-9999). Contador no menu com as respostas para revisar.
 - **Cartões: escolher o que imprimir.** A tela de cartões abre com todos os links abertos (ou só os clientes marcados na lista) e tem busca, marcar/desmarcar todos e um checkbox por cliente. Os cartões escolhidos são distribuídos em folhas A4 em pé, 8 por folha (2 × 4), com quebra de página entre as folhas. "Marcar como entregues" vale só para os escolhidos.
@@ -592,7 +628,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - **180 testes automáticos.**
 - Arquivos: `app/Servicos/Atualizacoes.php`, `app/Models/AtualizacaoCadastral.php`, `app/Http/Controllers/AtualizacaoController.php`, `AtualizarPublicoController.php`, `CobrancaController.php`, `app/Http/Middleware/HandleInertiaRequests.php`, `app/Console/Commands/Concerns/ImportaCadastros.php`, `app/Models/Cliente.php`, `routes/web.php`, migration `2026_11_20_000001`, `resources/js/Pages/Atualizacao/` (Index, Revisar, Cartoes, Publico), `resources/js/Pages/Cobrancas/Imprimir.jsx`, `resources/js/Layouts/AppLayout.jsx`, `resources/js/lib/menu.js`, `resources/scss/_impressao.scss`, `tests/Feature/AtualizacaoCadastralTest.php`, `ImportacaoCadastrosTest.php`.
 
-## 13/11/2026 — Telas com a mesma largura (grid do Bootstrap) e prazo do boleto na aba do Inter
+### Telas com a mesma largura (grid do Bootstrap) e prazo do boleto na aba do Inter
 
 - **Prazo do boleto** saiu de Configurações gerais e foi para Configurações › Banco Inter, junto das regras (só faz sentido com o Inter ligado). Rótulos mais curtos: "Prazo do boleto (dias)" e "Baixa automática (dias)", lado a lado.
 - **Todas as telas com a largura do conteúdo.** Saíram as larguras fixas (formulários de 640 px, cobrança, extrato do cliente, tipos de veículo, etapas, plano de contas, formas de pagamento). Os campos se distribuem pelo grid do Bootstrap (`row`/`col-*`): em tela grande ficam lado a lado; no celular, um embaixo do outro.
@@ -600,7 +636,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - Formulários de cliente, veículo, mensalidade, usuário, unidade, nível (permissões em colunas), lançar, conta a pagar e extrato bancário reorganizados em colunas. O cadastro público (QR Code) continua estreito.
 - Arquivos: `resources/scss/app.scss`, `resources/js/Components/CamposCliente.jsx`, `CamposVeiculo.jsx`, `CamposMensalidade.jsx`, `RegrasBoletoCliente.jsx`, `resources/js/Pages/` (Clientes/Form e Extrato, Veiculos/Form, Pendentes/Revisar, Usuarios/Form, Empresa/UnidadeForm e Edit, Niveis/Form, Convenios/Form, Lavagens/Nova, Mensalidades/Primeira, Ordens/Lancar, Pagar/Form, Contas/Receber, Extrato/Index, Cobrancas/Show, Configuracoes/ServicoForm, Pagamentos, Tipos, Etapas, PlanoContas, Inter), `app/Http/Controllers/InterController.php`, `EmpresaController.php`, `tests/Feature/InterTest.php`.
 
-## 13/11/2026 — Desconto de pontualidade só nas mensalidades e prazo do boleto
+### Desconto de pontualidade só nas mensalidades e prazo do boleto
 
 - **Prazo do boleto** (depois movido para Configurações › Banco Inter): quantos dias depois do vencimento do cliente o boleto vence (ex.: mensalidade dia 5, boleto dia 10 = 5; 0 a 30, padrão 0).
 - **Desconto de pontualidade:** vale até o vencimento do cliente (o boleto vence depois, pelo prazo); multa e juros só depois do vencimento do boleto. O ERP calcula o valor e manda ao Inter em reais: % sobre a soma das mensalidades do mês, ou R$ fixo por mensalidade do mês. Lavagens, estadias, débitos e mensalidade atrasada (saldo anterior) não ganham desconto. Cobrança sem mensalidade do mês: boleto sem desconto. Saiu o campo "vale até quantos dias antes do vencimento".
@@ -608,13 +644,13 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - **174 testes automáticos.**
 - Arquivos: `app/Servicos/Inter/Boletos.php`, `app/Http/Controllers/BoletoController.php`, `EmpresaController.php`, `resources/js/Pages/Empresa/Edit.jsx`, `resources/js/Pages/Configuracoes/Inter.jsx`, `resources/js/Components/BoletoCobranca.jsx`, `RegrasBoleto.jsx`, `RegrasBoletoCliente.jsx`, `tests/Feature/InterTest.php`, docs 06, 12 e 13.
 
-## 13/11/2026 — Resultado: multa e juros e descontos em linhas próprias
+### Resultado: multa e juros e descontos em linhas próprias
 
 - **Multa e juros recebidos** (boleto pago com atraso) ganharam linha própria no Resultado, nos dois olhares (por referência e pelo dinheiro), pela data do pagamento. Antes, no olhar por referência, não entravam.
 - **(−) Descontos dados** aparece também no olhar pelo dinheiro (antes, lá, o desconto virava "outras receitas" negativas). Vale para o desconto do boleto e para o dado no Receber contas.
 - Arquivos: `app/Servicos/Resultado.php`, `app/Servicos/Baixa.php`, `tests/Feature/InterTest.php`.
 
-## 13/11/2026 — Boleto sem as regras na primeira mensalidade
+### Boleto sem as regras na primeira mensalidade
 
 - Ao gerar o boleto (tela da cobrança, "Emitir cobrança" na ficha e emissão em lote) há a caixa **"Aplicar as regras do boleto (multa, juros e desconto)"**. Desmarcada, o boleto sai sem multa, juros e desconto; a baixa automática continua.
 - A caixa já vem **desmarcada** quando a cobrança tem a primeira mensalidade do contrato ou uma mensalidade proporcional. No lote, essas cobranças saem sem as regras (selo "Boleto sem regras"); desmarcar no lote tira as regras de todos.
@@ -623,12 +659,12 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - **173 testes automáticos.**
 - Arquivos: `app/Servicos/Inter/Boletos.php`, `app/Http/Controllers/BoletoController.php`, `CobrancaController.php`, `ClienteController.php`, `resources/js/Components/BoletoCobranca.jsx`, `ContasCliente.jsx`, `resources/js/Pages/Cobrancas/Show.jsx`, `Gerar.jsx`, `resources/js/Pages/Clientes/Show.jsx`, `tests/Feature/InterTest.php`, docs 12 e 13.
 
-## 13/11/2026 — Banco Inter: correção no teste de conexão
+### Banco Inter: correção no teste de conexão
 
 - O "Testar conexão" falhava com "CURLOPT_SSLCERT_BLOB ... not supported": o Guzzle não aceita o certificado em memória. Agora o certificado e a chave vão para arquivos temporários em `storage/app/private/inter-tmp` (fora da pasta pública, só o dono lê), apagados ao fim de cada conexão; sobra de processo interrompido é apagada depois de 10 minutos.
 - Arquivo: `app/Servicos/Inter/InterCliente.php`.
 
-## 13/11/2026 — Banco Inter: boleto com Pix (etapa 7)
+### Banco Inter: boleto com Pix (etapa 7)
 
 - **Configurações › Banco Inter:** credenciais (client id, client secret, certificado .crt e chave .key, ambiente produção ou testes, conta corrente opcional), guardadas criptografadas; "Testar conexão" liga a integração; aviso quando o certificado está para vencer. Regras do boleto: multa (% ou R$), juros (% ao mês ou R$ por dia), desconto (% ou R$ até X dias antes do vencimento) e baixa automática (0 a 60 dias depois do vencimento, padrão 30).
 - **Regras específicas por cliente:** na ficha do cliente, "Regras do boleto" com a escolha entre as regras da empresa e regras específicas dele.
@@ -640,7 +676,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - **172 testes automáticos** (10 novos, com a API do Inter simulada).
 - Arquivos: `app/Servicos/Inter/` (InterCliente, Boletos, InterErro), `app/Models/Integracao.php`, `app/Models/Boleto.php`, `app/Console/Commands/InterConsultar.php`, `app/Http/Controllers/InterController.php`, `app/Http/Controllers/BoletoController.php`, `app/Http/Controllers/CobrancaController.php`, `app/Http/Controllers/ContaController.php`, `app/Http/Controllers/ClienteController.php`, `app/Http/Middleware/HandleInertiaRequests.php`, `app/Servicos/Baixa.php`, `app/Models/Cliente.php`, `routes/web.php`, `routes/console.php`, migrations `2026_11_19_000001` e `000002`, `resources/js/Pages/Configuracoes/Inter.jsx`, `resources/js/Components/BoletoCobranca.jsx`, `RegrasBoleto.jsx`, `RegrasBoletoCliente.jsx`, `ContasCliente.jsx`, `resources/js/Pages/Cobrancas/Show.jsx`, `Index.jsx`, `Gerar.jsx`, `resources/js/Pages/Clientes/Show.jsx`, `resources/js/lib/menu.js`, `tests/Feature/InterTest.php`, docs 06, 10, 12, 13 e 14.
 
-## 13/11/2026 — Tabelas de estadia: começar imediatamente e seletor de tempo
+### Tabelas de estadia: começar imediatamente e seletor de tempo
 
 - **Reajustar** ganhou a opção **Começar imediatamente**: a nova versão vale a partir de hoje (a anterior termina ontem). Aviso: veículos que entraram hoje, mesmo antes da mudança, saem pela tabela nova. Sem marcar, continua começando amanhã ou na data escolhida.
 - **Seletor de tempo** nos campos de minutos (tolerância, fração, duração da faixa, bloco e duração do pacote): o campo continua em minutos e pode ser digitado; o relógio abre horas e minutos com atalhos (15 min a 24h) e converte (12h → 720 min).
@@ -648,7 +684,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - Durante o paralelo, mudança de preço continua sendo feita no sistema atual: o espelho de hora em hora sobrescreve as tabelas que vieram de lá.
 - Arquivos: `resources/js/Components/CampoMinutos.jsx` (novo), `resources/js/Pages/Configuracoes/TarifaForm.jsx`, `resources/scss/_layout.scss`.
 
-## 13/11/2026 — Entrada de estadia mostra e deixa trocar o tipo do veículo
+### Entrada de estadia mostra e deixa trocar o tipo do veículo
 
 - O campo **Tipo do veículo** aparece sempre na entrada, já preenchido pelo cadastro da placa e podendo ser trocado (cadastro errado, outro veículo). O tipo escolhido é o que vale na cobrança; um aviso mostra quando ele difere do cadastro.
 - Abaixo do campo aparece a tabela de estadia que vai valer, com as faixas e os pacotes (ex.: "Motos · Diária (12h) R$ 10,00"); a lista de tabelas em Configurações também passa a mostrar a duração do pacote. Tipo sem tabela aparece desabilitado e é **barrado na entrada** (antes o erro só aparecia na saída).
@@ -656,7 +692,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - **162 testes automáticos.**
 - Arquivos: `app/Servicos/Estadias.php`, `app/Http/Controllers/EstadiaController.php`, `app/Http/Controllers/TarifaController.php`, `app/Models/Tarifa.php`, `resources/js/Pages/Estadias/Index.jsx`, `tests/Feature/OperacaoTest.php`, `docs/07-pdv.md`, `docs/12-decisoes.md`, `docs/13-desenvolvimento.md`.
 
-## 13/11/2026 — Desenho do PDV e nova ordem das etapas (só documentação)
+### Desenho do PDV e nova ordem das etapas (só documentação)
 
 - **Etapas 7 e 8 trocadas:** a 7 passa a ser Integrações (Inter e WhatsApp) e a 8, API e PDV.
 - **PDV:** app React separado da gestão, PWA agora e empacotado com Capacitor para a Play Store depois; impressão (ESC/POS) e armazenamento local atrás de portas trocáveis; nenhuma regra de dinheiro no celular.
@@ -664,7 +700,9 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - Corrigido: impressora pelo navegador só funciona com Bluetooth BLE.
 - Arquivos: `docs/02-tecnologia-e-infraestrutura.md`, `docs/06-modulos.md`, `docs/07-pdv.md`, `docs/10-plano-de-etapas.md`, `docs/12-decisoes.md`.
 
-## 12/11/2026 — Cliente excluído: ordens com o nome, remover com conta em aberto, menu Lavagens
+## 12/11/2026
+
+### Cliente excluído: ordens com o nome, remover com conta em aberto, menu Lavagens
 
 - **Espelho:** as ordens, pagamentos e linhas do extrato de cliente excluído no sistema atual continuam ligados ao cliente (inativo no ERP). Antes viravam "sem cliente" a cada hora, e a ficha do cliente perdia o histórico.
 - **Remover cliente com conta em aberto** pergunta o que fazer: **Excluir** (as contas a receber são canceladas com o motivo "Cliente removido" e saem da inadimplência e do resultado; créditos ficam; pede a permissão de alterar contas), **Manter** (o cliente sai e as contas continuam a receber) ou **Receber** (vai para a tela de receber; o cliente não é removido).
@@ -673,7 +711,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - **161 testes automáticos.**
 - Arquivos: `app/Console/Commands/Concerns/ImportaCadastros.php`, `app/Http/Controllers/ClienteController.php`, `app/Http/Controllers/ContaController.php`, `app/Servicos/Resultado.php`, `resources/js/Pages/Clientes/Show.jsx`, `resources/js/Pages/Contas/Abertas.jsx`, `resources/js/Pages/Resultado/Mes.jsx`, `resources/js/Pages/Lavagens/Index.jsx`, `resources/js/lib/menu.js`, `tests/Feature/CadastrosTest.php`, `tests/Feature/ImportacaoDinheiroTest.php`, `docs/12-decisoes.md`, `docs/13-desenvolvimento.md`.
 
-## 12/11/2026 — Relatório de mensalistas e impressão no padrão do sistema atual
+### Relatório de mensalistas e impressão no padrão do sistema atual
 
 - **Clientes › Mensalistas** (permissão "Relatórios de mensalistas"), no lugar de Relatórios › Controle e Lista de mensalistas do sistema atual: resumo com receita mensal e quantidade de carros, motos e caminhões; tabela por tipo e período (Diurno, Noturno, 24 horas) com quantidade e receita; lista dos mensalistas (cliente, veículo, tipo, período, mensalidade) com filtro por tipo de veículo; planilha e **Imprimir**. A receita só aparece para quem tem a permissão de faturamento.
 - **Impressão no padrão do sistema atual** (logo, título e "Emitido em", linha grossa, quadros de resumo, tabela com bordas e total) em Mensalistas, Contas em aberto (com "Só vencidas" sai como "Inadimplência": cliente e placas, situação, vencido desde, contas, vencido e total) e Recebimentos.
@@ -681,24 +719,24 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - **159 testes automáticos.**
 - Arquivos: `app/Http/Controllers/MensalistasController.php`, `app/Http/Controllers/ContaController.php`, `routes/web.php`, `resources/js/Pages/Clientes/Mensalistas.jsx`, `resources/js/Pages/Clientes/Index.jsx`, `resources/js/Components/AbasClientes.jsx`, `resources/js/Components/CabecalhoImpressao.jsx`, `resources/js/Pages/Contas/Abertas.jsx`, `resources/js/Pages/Relatorios/Recebimentos.jsx`, `resources/scss/_impressao.scss`, `tests/Feature/MensalistasTest.php`.
 
-## 12/11/2026 — Gerar mensalidades sem os clientes que saíram
+### Gerar mensalidades sem os clientes que saíram
 
 - **Gerar mensalidades** não lista mais contrato de cliente ou veículo inativo (removido no ERP ou excluído no sistema atual).
 - **Espelho:** mensalista que saiu do sistema atual e teve a mensalidade do mês apagada junto passa a terminar no fim do mês anterior (antes terminava no dia, e o mês aparecia como "vai gerar"). Se a mensalidade do mês continua lá, termina no dia.
 - Arquivos: `app/Servicos/Mensalidades.php`, `app/Console/Commands/Concerns/ImportaCadastros.php`, `app/Console/Commands/LegadoImportar.php`, `tests/Feature/ImportacaoCadastrosTest.php`.
 
-## 12/11/2026 — Imprimir lista de inadimplentes e recebimentos
+### Imprimir lista de inadimplentes e recebimentos
 
 - **Contas em aberto** e **Recebimentos** ganharam o botão **Imprimir**, como os relatórios do sistema atual: A4 em pé, sem menu, filtros e botões; mostra todas as colunas (itens, mais antigo, forma, ordens) e, em Contas em aberto, o total no fim e a data de emissão. Com "Só vencidas", o título vira "Inadimplentes (contas vencidas)".
 - Arquivos: `resources/js/Pages/Contas/Abertas.jsx`, `resources/js/Pages/Relatorios/Recebimentos.jsx`, `resources/scss/_impressao.scss`.
 
-## 12/11/2026 — Agendador e backup funcionando na Hostinger
+### Agendador e backup funcionando na Hostinger
 
 - **Causa do espelho parado:** o agendador abria cada tarefa como um processo separado, e a Hostinger desliga isso (`proc_open`). O cron rodava a cada minuto, mas o espelho (de hora em hora) e o backup (3h10) falhavam com "The Process class relies on proc_open". Agora as tarefas rodam dentro do próprio processo (`Schedule::call` + `Artisan::call`).
 - **Backup em PHP puro**, sem `mysqldump` (que também precisa abrir outro programa): estrutura e dados de todas as tabelas, compactado em `.sql.gz`; colunas geradas ficam fora do INSERT. Testado: restaurado num banco vazio, com as mesmas contagens.
 - Arquivos: `routes/console.php`, `app/Console/Commands/BackupBanco.php`, `tests/Feature/ParaleloTest.php`, `docs/14-publicacao.md`.
 
-## 12/11/2026 — Espelho repassa exclusões; aviso quando a importação para
+### Espelho repassa exclusões; aviso quando a importação para
 
 - **Espelho:** cliente, veículo ou convênio **excluído no sistema atual** fica **inativo** no ERP (com o histórico), como o "Remover" do ERP. Antes ele continuava ativo e a conferência acusava diferença.
 - **Conferência:** compara só clientes, veículos e convênios ativos; mensalidade encerrada pelo espelho no dia (mensalista que saiu ou mensalidade 0, como licença-maternidade) já não conta como mensalista.
@@ -706,11 +744,11 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - **158 testes automáticos.**
 - Arquivos: `app/Console/Commands/Concerns/ImportaCadastros.php`, `app/Console/Commands/LegadoComparar.php`, `app/Http/Controllers/ConferenciaController.php`, `resources/js/Pages/Sistema/Conferencia.jsx`, `resources/js/Pages/Inicio.jsx`.
 
-## 12/11/2026 — Botão Publicar atualizado
+### Botão Publicar atualizado
 
 - `.github/workflows/publicar.yml`: `actions/checkout@v5` e `actions/setup-node@v5` (as v4 rodam em Node.js 20, que o GitHub está desativando) e máquina fixa `ubuntu-24.04` (a `ubuntu-latest` muda para o Ubuntu 26 em outubro de 2026).
 
-## 12/11/2026 — Etapa 6 (parte 4): fatura do cartão de crédito — Etapa 6 concluída
+### Etapa 6 (parte 4): fatura do cartão de crédito — Etapa 6 concluída
 
 - **Contas a pagar › Cartões:** cadastro dos cartões (da empresa ou pessoal do sócio) e importação da fatura pelo arquivo do banco (**OFX**, padrão de quase todos os bancos, ou **CSV do Nubank**). O pagamento da fatura anterior é ignorado; estorno abate. Vencimento pelo nome do arquivo do Nubank (`Nubank_2026-10-23`), pelo dia do cartão ou informado. Arquivo de outro cartão e fatura repetida são recusados.
 - **A fatura vira uma conta a pagar só**, no vencimento, pelo valor que o banco cobra. Paga-se por Contas a pagar, como qualquer conta; o valor não se altera por lá (vem das compras).
@@ -722,7 +760,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - **156 testes automáticos.**
 - Banco: migração `2026_11_18_000001_create_cartoes_tables` (no servidor, roda sozinha ao publicar).
 
-## 12/11/2026 — Etapa 6 (parte 3): resultado do mês, fluxo de caixa e calendário nos campos de data
+### Etapa 6 (parte 3): resultado do mês, fluxo de caixa e calendário nos campos de data
 
 - **Gestão › Resultado e caixa** (permissão nova `resultado`; o Administrador já tem):
   - **Resultado do mês** em dois olhares: *por referência* (o que o mês faturou: mensalidades do mês de referência, estadias e serviços pela data, menos descontos; despesas do mês de referência, pagas ou não) e *pelo dinheiro* (recebimentos do mês e contas pagas no mês). Taxa de cartão/maquininha entra como despesa nos dois. Árvore do plano de contas com os grupos somados, quanto sobrou ou faltou, margem e os últimos 6 meses.
@@ -732,7 +770,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - **152 testes automáticos.**
 - Sem migração nova.
 
-## 12/11/2026 — Etapa 6 (parte 2): funcionários, recibos de salário, diárias e leitura de boleto/guia
+### Etapa 6 (parte 2): funcionários, recibos de salário, diárias e leitura de boleto/guia
 
 - **Ler boleto ou guia** (Contas a pagar › Nova conta): PDF, foto ou código de barras colado. Preenche descrição, fornecedor (pelo CPF/CNPJ do beneficiário), conta do plano, valor, vencimento e mês de referência, e já anexa o arquivo. Reconhece boleto de qualquer banco, DAS (Simples), DARF (INSS) e guia do FGTS Digital. O valor do código de barras é conferido pelos dígitos verificadores; o da guia do FGTS, pela soma FGTS + consignado. A pessoa confere antes de lançar.
 - **OCR no navegador:** quando o PDF é imagem (impressão em PDF, digitalização) ou é foto, o texto é lido no próprio navegador (tesseract.js, arquivos em `public/ocr`, português), sem depender do servidor. A guia do FGTS tem uma 2ª leitura com as cores invertidas, para o vencimento na caixa escura.
@@ -744,7 +782,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - **148 testes automáticos.**
 - Banco: migração `2026_11_17_000001_create_funcionarios_tables` (no servidor, roda sozinha ao publicar).
 
-## 12/11/2026 — Etapa 6 (parte 1): contas a pagar
+### Etapa 6 (parte 1): contas a pagar
 
 - **Gestão › Contas a pagar** (permissão `contas_pagar`): lançar a conta (descrição, fornecedor, conta do plano, valor, vencimento, mês de referência, observação, boleto/nota/comprovante em PDF ou foto), à vista ou em até 24 parcelas mensais, ou já paga. Resumo: atrasadas, vencem hoje, próximos 7 dias e pago no mês.
 - **Pagar:** data, valor pago de fato (com juros ou desconto), forma de pagamento e de onde saiu o dinheiro (caixa, banco...), com comprovante. **Desfazer pagamento** e **cancelar** sempre com motivo; nada é apagado; tudo no registro de atividades.
@@ -757,14 +795,16 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - **143 testes automáticos.**
 - Banco: migração `2026_11_16_000001_create_contas_pagar_tables` (no servidor, roda sozinha ao publicar).
 
-## 12/11/2026 — Paralelo iniciado
+### Paralelo iniciado
 
 - **Primeira publicação** pelo botão Publicar: ERP no ar em `erp.localestacionamento.com.br` (Hostinger, pasta base `/home/u612820499/domains/localestacionamento.com.br/erp`).
 - **Cron** criado (a cada minuto, `schedule:run`) e **primeira importação** feita: conferência igual ao sistema atual.
 - Senha do banco do sistema atual trocada (atualizada no `database.php` do sistema atual e no `.env` do ERP).
 - A partir daqui, a equipe segue só no sistema atual; nada é lançado no ERP de produção até a virada.
 
-## 11/11/2026 — Etapa 5: publicação e paralelo
+## 11/11/2026
+
+### Etapa 5: publicação e paralelo
 
 - **Botão Publicar** (GitHub › Actions › Publicar): roda os testes, gera o build e envia a versão para a Hostinger por SSH; no servidor, cada publicação é uma pasta nova e a troca é instantânea. Ação **voltar para a versão anterior** para desfazer. Arquivos: `.github/workflows/publicar.yml`, `deploy/servidor.sh`, `deploy/voltar.sh`, `deploy/rsync-excluir.txt`, `deploy/env-producao.exemplo`.
 - **Espelho do sistema atual:** `php artisan legado:espelhar` importa e compara; roda sozinho de hora em hora (7h às 23h) quando `ERP_ESPELHO_ATIVO=true`. Cada execução (igual, com diferença ou erro) fica registrada.
@@ -774,11 +814,13 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - **139 testes automáticos.**
 - Banco: migração `2026_11_15_000001_create_conferencias_table` (rodar `php artisan migrate`).
 
-## 10/11/2026 — Anotações em destaque
+## 10/11/2026
+
+### Anotações em destaque
 
 - No Início, as anotações vêm primeiro e em destaque (texto maior e em negrito); o campo de adicionar ficou menor, embaixo do bloco.
 
-## 10/11/2026 — Etapas da lavagem configuráveis
+### Etapas da lavagem configuráveis
 
 - **Configurações › Etapas da lavagem** (aba nova): a empresa escolhe o que registra no quadro de lavagens. Aguardando (entrada) é sempre a primeira e Entregue a última (só mudam de nome); as do meio são criadas, renomeadas, reordenadas com as setas e desativadas. Etapa já usada não é apagada.
 - Padrão do Local: **Aguardando → Pronta → Entregue** ("Lavando" fica criada, desativada). Um detailer pode ter, por exemplo, Lavagem, Descontaminação, Polimento e Vitrificação.
@@ -787,7 +829,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - **135 testes automáticos.**
 - Banco: migração `2026_11_14_000002_create_etapas_lavagem_tables` (rodar `php artisan migrate`).
 
-## 10/11/2026 — Início: anotações e alinhamento
+### Início: anotações e alinhamento
 
 - **Anotações** no Início: cada usuário anota as tarefas que precisa fazer (ex.: cobrar um cliente, ligar para a contabilidade), com data opcional (mostra "hoje" e "atrasada"), marca como feita, edita e apaga. Só quem anotou vê. As 10 últimas feitas ficam em "Ver as feitas".
 - **Busca de cliente do Início** só aparece no celular (no computador ela já está no topo de todas as telas).
@@ -795,14 +837,14 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - **134 testes automáticos.**
 - Banco: migração `2026_11_14_000001_create_anotacoes_table` (rodar `php artisan migrate`).
 
-## 10/11/2026 — Menu reorganizado
+### Menu reorganizado
 
 - **Operação:** Estadias, Lavagens e serviços, Gerar mensalidades e Ordens de serviço.
 - **Gestão:** Contas em aberto, Cobranças, Extrato bancário, Recebimentos e Convênios. O grupo "Contas" deixou de existir.
 - **Sistema › Configurações:** um link só, com abas: Empresa e unidades, Tipos de veículo, Tabelas de estadia, Lavagens e serviços e Formas de pagamento (no celular as abas rolam para o lado). O grupo "Configurações" deixou de existir.
 - Arquivos: `resources/js/lib/menu.js`, novo `Components/AbasConfiguracoes.jsx`, telas de configuração e `_layout.scss`.
 
-## 10/11/2026 — Etapa 4: operação na gestão
+### Etapa 4: operação na gestão
 
 - **Estadias** (menu Operação): entrada pela placa (o sistema reconhece o veículo cadastrado e o mensalista; sem cadastro pede o tipo do veículo e o celular), sem placa com identificação, entrada em outro horário e convênio. Não deixa a mesma placa entrar duas vezes no pátio. Ticket com número da empresa.
 - **Pátio e saída:** lista de quem está dentro com o tempo correndo; na saída o valor é calculado pela tabela de estadia do tipo do veículo (com o detalhe de cada faixa) e dividido com o convênio. A parte de quem usou é paga na hora (forma e parcelas), vai para a conta do cliente cadastrado ou, se for mensalista, sai sem cobrança. Saída dentro da tolerância não gera conta. Estadia lançada por engano pode ser cancelada com motivo enquanto está no pátio. Saídas do dia e **histórico** com busca por placa, identificação ou ticket.
@@ -812,7 +854,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - **132 testes automáticos.**
 - Banco: migração `2026_11_13_000001_create_operacao_tables` (rodar `php artisan migrate`).
 
-## 10/11/2026 — Etapa 3: dinheiro
+### Etapa 3: dinheiro
 
 - **Ordens de serviço:** todo valor do cliente (mensalidade, lavagem/serviço, estadia, débito, crédito) vira uma ordem com número da empresa. Ordem nunca é apagada: em aberto pode ser alterada ou cancelada com motivo (permissão "alterar contas"). Lista em Contas › Ordens de serviço.
 - **Lançar na conta do cliente:** lavagem/serviço com adicionais (preço da tabela pelo tipo do veículo; serviço "até" pede o valor), estadia, e débito/crédito com motivo (permissão "alterar contas").
@@ -833,11 +875,11 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - **119 testes automáticos.**
 - Banco: migração `2026_11_12_000001_create_dinheiro_tables` (rodar `php artisan migrate`).
 
-## 10/11/2026
+### Empresa e unidades: CNPJ e telefone
 
 - **Empresa e unidades:** campo "CNPJ" (empresa é sempre pessoa jurídica), com máscara e conferência dos dígitos; telefone com máscara na empresa e nas unidades. Os dois passam a ser guardados só com os números.
 
-## 10/11/2026 — Etapa 2: cadastros e configurações
+### Etapa 2: cadastros e configurações
 
 - **Clientes:** lista com busca enquanto digita (nome, código, CPF/CNPJ ou placa), ficha com dados, veículos, mensalidade e histórico, cadastro com busca de endereço pelo CEP, CPF/CNPJ conferido pelos dígitos. "Remover" desativa (encerra as mensalidades hoje e guarda o histórico); dá para reativar.
 - **Busca de cliente no topo** de todas as telas (como no sistema atual).
@@ -852,7 +894,9 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - A **primeira cobrança** e a geração das mensalidades ficam para a etapa 3 (até lá, pelo sistema atual).
 - Telas carregadas sob demanda (o sistema abre mais rápido).
 
-## 09/11/2026 (noite) — Etapa 1: fundação
+## 09/11/2026
+
+### Etapa 1: fundação (noite)
 
 - **Projeto Laravel 13 + Inertia 3 + React 19 + Bootstrap 5.3**, com o visual do sistema atual (cores, fonte Inter servida pelo próprio sistema, cantos, tema claro e escuro, menu lateral recolhível, menu de baixo no celular).
 - **Núcleo:** tabelas `empresas`, `unidades`, `niveis`, `usuarios`, `log_atividades`; filtro por empresa em toda consulta (falha fechada: sem empresa, nada aparece e nada grava).
@@ -866,7 +910,7 @@ Correções dos três achados da auditoria de segurança (skill security-audit, 
 - Documentação: novo `docs/13-desenvolvimento.md`; atualizados README, CLAUDE.md, 04, 10, 12.
 - **Instalação no WAMP:** tabelas sempre em InnoDB (o MySQL do WAMP vinha com MyISAM como padrão e travava o `migrate`); configuração dos testes sem a pasta `tests/Unit`; aviso informativo legível no tema escuro.
 
-## 09/11/2026
+### Início do projeto, termos e comparativo com o mercado
 
 - **Comparativo com o mercado decidido, ponto a ponto:** cobrança imutável, ajustes, extrato do cliente, plano de contas, centro de custo (lista cadastrada), contas financeiras e conciliação, formas de pagamento com taxas e prazo em dias, vigência de preços, pausa (pode ser cobrada) e cancelamento agendado, inadimplência a partir do primeiro vencimento, régua de cobrança (com WhatsApp), situação do pagamento (com Inter), campos fiscais, numeração própria, capacidade e ocupação. Atualizados 03, 05, 06, 11, 12.
 - **Contas a pagar:** uma permissão só (`contas_pagar`); registrado em 08 e 12.
